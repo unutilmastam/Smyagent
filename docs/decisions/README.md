@@ -9,5 +9,6 @@
 | [0005](0005-mustafo-persona-ai-disclosure.md) | Client persona "Mustafo" always discloses it is an AI | Accepted |
 | [0006](0006-agent-kill-switch.md) | Global and per-agent kill switch enforced at every external action | Accepted |
 | [0007](0007-cost-optimized-ai.md) | All features at minimal cost: rules first, Haiku default, Sonnet opt-in, Batch, caching, free tier for internal tasks | Accepted |
+| [0008](0008-order-intake-and-price-list.md) | Agent takes orders: approved price list, Order Brief, client confirmation, handoff to owner | Accepted |
 
 Format: Context → Decision → Consequences. New ADRs get the next number; superseded ADRs are marked, never deleted.
