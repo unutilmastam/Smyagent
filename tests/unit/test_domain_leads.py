@@ -23,6 +23,11 @@ S = LeadStage
         (S.AWAITING_APPROVAL, S.PROPOSAL_DRAFTED),  # owner rejects -> redraft
         (S.RESPONDED, S.WON),  # allowed skip
         (S.LOST, S.CANDIDATE),  # reopen
+        (S.RESPONDED, S.ORDER_CONFIRMED),  # client confirmed the Order Brief
+        (S.ORDER_CONFIRMED, S.WON),  # owner accepts
+        (S.ORDER_CONFIRMED, S.MEETING),  # optional meeting
+        (S.ORDER_CONFIRMED, S.RESPONDED),  # owner asks more questions
+        (S.ORDER_CONFIRMED, S.LOST),  # owner rejects
     ],
 )
 def test_allowed_transitions(current: LeadStage, target: LeadStage) -> None:
@@ -38,6 +43,10 @@ def test_allowed_transitions(current: LeadStage, target: LeadStage) -> None:
         (S.CLOSED, S.CANDIDATE),
         (S.WON, S.LOST),
         (S.CANDIDATE, S.CANDIDATE),
+        (S.CANDIDATE, S.ORDER_CONFIRMED),  # an order needs a client conversation first
+        (S.QUALIFIED, S.ORDER_CONFIRMED),
+        (S.CONTACTED, S.ORDER_CONFIRMED),
+        (S.ORDER_CONFIRMED, S.CLOSED),
     ],
 )
 def test_forbidden_transitions(current: LeadStage, target: LeadStage) -> None:
@@ -70,3 +79,9 @@ def test_finished_deals_cannot_be_paused() -> None:
 
 def test_inbound_clients_enter_at_responded() -> None:
     assert INBOUND_ENTRY_STAGE is S.RESPONDED
+
+
+def test_order_confirmed_can_pause_and_resume() -> None:
+    assert can_transition(S.ORDER_CONFIRMED, S.PAUSED)
+    assert can_transition(S.PAUSED, S.ORDER_CONFIRMED, resume_stage=S.ORDER_CONFIRMED)
+    assert can_transition(S.ORDER_CONFIRMED, S.DO_NOT_CONTACT)

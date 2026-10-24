@@ -54,7 +54,7 @@ call. See CLAUDE.md §8 and §13A.
 ## 4. State machines
 
 - Company research: `NEW → RESEARCH_PENDING → RESEARCHED → ANALYZED` (+ `RESEARCH_FAILED`, `ARCHIVED`).
-- Deal pipeline: `CANDIDATE → QUALIFIED → PROPOSAL_DRAFTED → AWAITING_APPROVAL → APPROVED → CONTACTED → RESPONDED → MEETING → WON → CLOSED`
+- Deal pipeline: `CANDIDATE → QUALIFIED → PROPOSAL_DRAFTED → AWAITING_APPROVAL → APPROVED → CONTACTED → RESPONDED → ORDER_CONFIRMED → MEETING → WON → CLOSED` (`ORDER_CONFIRMED`: client confirmed the Order Brief, ADR-0008; `MEETING` optional)
   (+ `LOST`, `DISQUALIFIED`, `DO_NOT_CONTACT`, `PAUSED`, `ERROR`).
 
 Transitions are validated in the domain layer and recorded as
