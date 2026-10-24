@@ -1,0 +1,174 @@
+"""Dashboard pages: login, logout, home."""
+
+from __future__ import annotations
+
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Form, Request
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from sqlalchemy import func, select
+
+from app.api.deps import get_database
+from app.application.auth import AuthError, AuthService, ThrottledError
+from app.core.config import Settings, get_settings
+from app.core.security import new_token, tokens_equal
+from app.domain.agents import GLOBAL_CONTROL, ControlState
+from app.domain.auth import SESSION_ABSOLUTE_LIFETIME
+from app.domain.jobs import JobStatus
+from app.infrastructure.database import Database
+from app.infrastructure.database.models import Company, Job, Lead
+from app.infrastructure.repositories.controls import AgentControlRepository
+from app.web.auth import (
+    LOGIN_CSRF_COOKIE,
+    SESSION_COOKIE,
+    CurrentUser,
+    cookie_secure,
+    get_optional_user,
+    require_csrf,
+    require_user,
+    safe_next_path,
+)
+from app.web.templating import templates
+
+router = APIRouter(include_in_schema=False)
+
+NO_STORE = {"Cache-Control": "no-store"}
+
+
+def _render(request: Request, name: str, context: dict[str, object], status: int = 200) -> Response:
+    response = templates.TemplateResponse(request, name, context, status_code=status)
+    response.headers.update(NO_STORE)
+    return response
+
+
+def _login_page(
+    request: Request,
+    settings: Settings,
+    *,
+    next_path: str,
+    error: str | None = None,
+    status: int = 200,
+) -> Response:
+    csrf = new_token()
+    response = _render(
+        request, "login.html", {"csrf_token": csrf, "next": next_path, "error": error}, status
+    )
+    response.set_cookie(
+        LOGIN_CSRF_COOKIE,
+        csrf,
+        max_age=3600,
+        httponly=True,
+        samesite="strict",
+        secure=cookie_secure(settings),
+        path="/login",
+    )
+    return response
+
+
+@router.get("/login", response_class=HTMLResponse)
+def login_form(
+    request: Request,
+    next: str | None = None,
+    user: CurrentUser | None = Depends(get_optional_user),  # noqa: B008
+    settings: Settings = Depends(get_settings),  # noqa: B008
+) -> Response:
+    if user is not None:
+        return RedirectResponse(safe_next_path(next), status_code=303)
+    return _login_page(request, settings, next_path=safe_next_path(next))
+
+
+@router.post("/login")
+def login_submit(
+    request: Request,
+    username: Annotated[str, Form(max_length=64)],
+    password: Annotated[str, Form(max_length=256)],
+    csrf_token: Annotated[str, Form(max_length=128)] = "",
+    next: Annotated[str, Form(max_length=512)] = "/",
+    database: Database = Depends(get_database),  # noqa: B008
+    settings: Settings = Depends(get_settings),  # noqa: B008
+) -> Response:
+    next_path = safe_next_path(next)
+    if not tokens_equal(csrf_token, request.cookies.get(LOGIN_CSRF_COOKIE)):
+        return _login_page(
+            request,
+            settings,
+            next_path=next_path,
+            error="Sahifa eskirgan. Qaytadan urinib ko'ring.",
+            status=400,
+        )
+    client_ip = request.client.host if request.client else "unknown"
+    error: str | None = None
+    status = 200
+    with database.transaction() as session:
+        service = AuthService(session, secret_key=settings.app_secret_key.get_secret_value())
+        # Failures are caught inside the transaction so the attempt record is committed.
+        try:
+            result = service.login(username, password, client_ip=client_ip)
+            token = result.token
+        except ThrottledError:
+            error, status = "Juda ko'p urinish. 15 daqiqadan so'ng qayta urinib ko'ring.", 429
+        except AuthError:
+            error, status = "Login yoki parol noto'g'ri.", 401
+    if error is not None:
+        return _login_page(request, settings, next_path=next_path, error=error, status=status)
+
+    response = RedirectResponse(next_path, status_code=303)
+    response.set_cookie(
+        SESSION_COOKIE,
+        token,
+        max_age=int(SESSION_ABSOLUTE_LIFETIME.total_seconds()),
+        httponly=True,
+        samesite="lax",
+        secure=cookie_secure(settings),
+        path="/",
+    )
+    response.delete_cookie(LOGIN_CSRF_COOKIE, path="/login")
+    return response
+
+
+@router.post("/logout")
+def logout(
+    request: Request,
+    _: CurrentUser = Depends(require_csrf),  # noqa: B008
+    database: Database = Depends(get_database),  # noqa: B008
+    settings: Settings = Depends(get_settings),  # noqa: B008
+) -> Response:
+    token = request.cookies.get(SESSION_COOKIE)
+    if token:
+        with database.transaction() as session:
+            AuthService(session, secret_key=settings.app_secret_key.get_secret_value()).logout(
+                token
+            )
+    response = RedirectResponse("/login", status_code=303)
+    response.delete_cookie(SESSION_COOKIE, path="/")
+    return response
+
+
+@router.get("/", response_class=HTMLResponse)
+def home(
+    request: Request,
+    user: CurrentUser = Depends(require_user),  # noqa: B008
+    database: Database = Depends(get_database),  # noqa: B008
+) -> Response:
+    with database.transaction() as session:
+        companies = session.scalar(select(func.count()).select_from(Company)) or 0
+        leads = session.scalar(select(func.count()).select_from(Lead)) or 0
+        job_counts = dict(
+            session.execute(select(Job.status, func.count()).group_by(Job.status)).tuples().all()
+        )
+        global_state = (
+            AgentControlRepository(session).states().get(GLOBAL_CONTROL, ControlState.STOPPED)
+        )
+    context: dict[str, object] = {
+        "user": user,
+        "csrf_token": user.csrf_token,
+        "stats": {
+            "companies": companies,
+            "leads": leads,
+            "jobs_queued": job_counts.get(JobStatus.QUEUED, 0),
+            "jobs_running": job_counts.get(JobStatus.RUNNING, 0),
+            "jobs_failed": job_counts.get(JobStatus.FAILED, 0),
+        },
+        "global_state": global_state.value,
+    }
+    return _render(request, "home.html", context)

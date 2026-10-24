@@ -9,7 +9,7 @@ from sqlalchemy import inspect, select
 
 from app.infrastructure.database import Base, Database
 from app.infrastructure.database.models import AgentControl
-from tests.integration.db.conftest import alembic_config
+from tests.integration.conftest import alembic_config
 
 
 def test_upgrade_matches_models_and_downgrade_is_clean(database_url: str) -> None:

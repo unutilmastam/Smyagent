@@ -57,6 +57,7 @@ Some facts cannot be read from the shell (Python versions in the Setup Python Ap
 3. Terminal: `bash scripts/deploy.sh` (added in a later milestone: installs deps, backs up DB, runs migrations, touches `tmp/restart.txt`).
    Until then, from the app virtualenv: `pip install .` → `mysqldump` backup → `alembic upgrade head` → `touch tmp/restart.txt`.
    Create the MySQL database in cPanel with collation `utf8mb4_unicode_ci`; `DATABASE_URL=mysql+pymysql://user:pass@localhost/dbname?charset=utf8mb4`.
+4. First deploy only: create the owner account once — `python -m app.cli create-owner --username <name>` (prompts for the password twice; it is never echoed or logged). Then `python -m app.cli check-config`.
 
 Never deploy without explicit owner authorization.
 

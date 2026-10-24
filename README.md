@@ -39,3 +39,7 @@ First run `scripts/check_environment.py` in cPanel Terminal and share the output
 |---|---|---|
 | GET | `/api/v1/health` | liveness |
 | GET | `/api/v1/ready` | readiness incl. database ping (503 if not ready) |
+| GET/POST | `/login`, POST `/logout` | owner login (CSRF-protected) |
+| GET | `/` | dashboard home (login required) |
+
+CLI: `python -m app.cli create-owner --username <name>`, `python -m app.cli check-config`.

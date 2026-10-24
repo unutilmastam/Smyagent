@@ -8,7 +8,7 @@ Authoritative milestone definitions and acceptance criteria live in
 | M0 | Inspection, architecture docs, ADRs, hosting check script | ✅ done (hosting verification pending owner run) |
 | M1 | FastAPI foundation, settings, logging, health, WSGI bridge, tests, CI | ✅ done |
 | M2 | SQLAlchemy, Alembic, core models, repositories, MariaDB in CI | ✅ done |
-| M3 | Auth, mobile dashboard, owner Telegram bot | ⏭ next |
+| M3 | Auth, mobile dashboard, owner Telegram bot | 🟡 M3a done; M3b-ui, M3c, M3d next |
 | M3b | Agent Control Center (live graph, kill switch) | planned |
 | M4 | Company discovery (manual, CSV, one provider) | planned |
 | M5 | Research & SSRF-safe website audit | planned |
@@ -25,11 +25,12 @@ See `docs/database.md`. Deferred to the milestone that needs them: `company_loca
 `research_findings`, `website_audits` (M5), `opportunities`/scores (M6), contacts and
 phone normalization (M4).
 
-## M3 breakdown (next)
+## M3 breakdown
 
-1. `users`, `roles` (`owner`, `viewer`), `sessions` tables + migration.
-2. `python -m app.cli create-owner` (one-time bootstrap, Argon2 hashing).
-3. Login/logout with HTTP-only SameSite cookie sessions, login rate limit, CSRF tokens, audit log.
-4. Jinja2 + HTMX base layout, mobile-first (bottom nav), company list with search/filter/pagination, company detail.
-5. Owner Telegram bot: webhook with `secret_token`, numeric-ID authorization, `/status`.
-6. Optional TOTP for the owner.
+- ✅ **M3a** `users` (role column: owner/viewer), `sessions`, `login_attempts`; `create-owner` CLI; login/logout, CSRF, throttling, audit log, security headers; mobile-first base layout with bottom nav and a home page with counts.
+- ⏭ **M3b-ui** Company list with search/filter/sort/pagination (HTMX), company detail page, PWA manifest.
+- **M3c** Owner Telegram bot: webhook with `secret_token`, numeric-ID authorization, `/status`.
+- **M3d** Optional TOTP for the owner.
+
+Decision: a `roles` table is not needed for two fixed roles; `users.role` is an enum
+column. A table is introduced with full RBAC if it is ever needed.
