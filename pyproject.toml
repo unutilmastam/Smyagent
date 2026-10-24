@@ -51,6 +51,8 @@ ignore = ["S101"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S", "B", "RUF001"]
+# Russian/Uzbek Cyrillic UI strings are intentional.
+"app/web/i18n.py" = ["RUF001"]
 
 [tool.mypy]
 python_version = "3.10"

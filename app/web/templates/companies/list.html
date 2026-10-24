@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{{ t('companies.title') }} — SMY Agent{% endblock %}
+{% block content %}
+<h1>{{ t('companies.title') }}</h1>
+<form class="filters" method="get" action="/companies" role="search"
+      hx-get="/companies" hx-target="#results" hx-push-url="true"
+      hx-trigger="input changed delay:350ms from:#q, change from:select, submit"
+      hx-indicator="#results">
+  <label class="sr-only" for="q">{{ t('companies.search') }}</label>
+  <input id="q" name="q" type="search" value="{{ query.q }}" maxlength="100"
+         placeholder="{{ t('companies.search') }}" autocomplete="off">
+  <div class="filter-row">
+    <label>{{ t('companies.country') }}
+      <select name="country">
+        <option value="">{{ t('companies.all') }}</option>
+        {% for c in countries %}<option value="{{ c }}" {% if query.country == c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>{{ t('companies.state') }}
+      <select name="state">
+        <option value="">{{ t('companies.all') }}</option>
+        {% for s in states %}<option value="{{ s.value }}" {% if query.state == s %}selected{% endif %}>{{ t('state.' ~ s.value) }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>{{ t('companies.sort') }}
+      <select name="sort">
+        {% for s in sorts %}<option value="{{ s.value }}" {% if query.sort == s %}selected{% endif %}>{{ t('companies.sort.' ~ s.value) }}</option>{% endfor %}
+      </select>
+    </label>
+  </div>
+  <noscript><button type="submit" class="btn-secondary">{{ t('companies.apply') }}</button></noscript>
+</form>
+<div id="results" aria-live="polite">
+  {% include "companies/_results.html" %}
+</div>
+{% endblock %}

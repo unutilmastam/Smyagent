@@ -12,12 +12,10 @@ from app.api.deps import get_database
 from app.application.auth import AuthError, AuthService, ThrottledError
 from app.core.config import Settings, get_settings
 from app.core.security import new_token, tokens_equal
-from app.domain.agents import GLOBAL_CONTROL, ControlState
 from app.domain.auth import SESSION_ABSOLUTE_LIFETIME
 from app.domain.jobs import JobStatus
 from app.infrastructure.database import Database
 from app.infrastructure.database.models import Company, Job, Lead
-from app.infrastructure.repositories.controls import AgentControlRepository
 from app.web.auth import (
     LOGIN_CSRF_COOKIE,
     SESSION_COOKIE,
@@ -28,17 +26,11 @@ from app.web.auth import (
     require_user,
     safe_next_path,
 )
-from app.web.templating import templates
+from app.web.i18n import LANG_COOKIE, normalize_language
+from app.web.layout import layout_context
+from app.web.templating import render
 
 router = APIRouter(include_in_schema=False)
-
-NO_STORE = {"Cache-Control": "no-store"}
-
-
-def _render(request: Request, name: str, context: dict[str, object], status: int = 200) -> Response:
-    response = templates.TemplateResponse(request, name, context, status_code=status)
-    response.headers.update(NO_STORE)
-    return response
 
 
 def _login_page(
@@ -50,7 +42,7 @@ def _login_page(
     status: int = 200,
 ) -> Response:
     csrf = new_token()
-    response = _render(
+    response = render(
         request, "login.html", {"csrf_token": csrf, "next": next_path, "error": error}, status
     )
     response.set_cookie(
@@ -93,7 +85,7 @@ def login_submit(
             request,
             settings,
             next_path=next_path,
-            error="Sahifa eskirgan. Qaytadan urinib ko'ring.",
+            error="login.error.stale",
             status=400,
         )
     client_ip = request.client.host if request.client else "unknown"
@@ -106,9 +98,9 @@ def login_submit(
             result = service.login(username, password, client_ip=client_ip)
             token = result.token
         except ThrottledError:
-            error, status = "Juda ko'p urinish. 15 daqiqadan so'ng qayta urinib ko'ring.", 429
+            error, status = "login.error.throttled", 429
         except AuthError:
-            error, status = "Login yoki parol noto'g'ri.", 401
+            error, status = "login.error.invalid", 401
     if error is not None:
         return _login_page(request, settings, next_path=next_path, error=error, status=status)
 
@@ -144,6 +136,26 @@ def logout(
     return response
 
 
+@router.get("/lang/{code}")
+def set_language(
+    code: str,
+    next: str | None = None,
+    settings: Settings = Depends(get_settings),  # noqa: B008
+) -> Response:
+    """Remember the interface language (harmless preference, so a plain GET link)."""
+    response = RedirectResponse(safe_next_path(next), status_code=303)
+    response.set_cookie(
+        LANG_COOKIE,
+        normalize_language(code),
+        max_age=365 * 24 * 3600,
+        httponly=True,
+        samesite="lax",
+        secure=cookie_secure(settings),
+        path="/",
+    )
+    return response
+
+
 @router.get("/", response_class=HTMLResponse)
 def home(
     request: Request,
@@ -156,19 +168,12 @@ def home(
         job_counts = dict(
             session.execute(select(Job.status, func.count()).group_by(Job.status)).tuples().all()
         )
-        global_state = (
-            AgentControlRepository(session).states().get(GLOBAL_CONTROL, ControlState.STOPPED)
-        )
-    context: dict[str, object] = {
-        "user": user,
-        "csrf_token": user.csrf_token,
-        "stats": {
-            "companies": companies,
-            "leads": leads,
-            "jobs_queued": job_counts.get(JobStatus.QUEUED, 0),
-            "jobs_running": job_counts.get(JobStatus.RUNNING, 0),
-            "jobs_failed": job_counts.get(JobStatus.FAILED, 0),
-        },
-        "global_state": global_state.value,
+        context = layout_context(session, user)
+    context["stats"] = {
+        "companies": companies,
+        "leads": leads,
+        "jobs_queued": job_counts.get(JobStatus.QUEUED, 0),
+        "jobs_running": job_counts.get(JobStatus.RUNNING, 0),
+        "jobs_failed": job_counts.get(JobStatus.FAILED, 0),
     }
-    return _render(request, "home.html", context)
+    return render(request, "home.html", context)
