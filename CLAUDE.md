@@ -93,7 +93,7 @@ When the system communicates with clients (drafts, approved outbound messages, b
 2. If a client asks whether they are talking to a human or a bot, the persona answers **truthfully** and offers a handoff to the owner.
 3. The persona never claims to be a human employee, never invents a personal life, location, credentials or past projects.
 4. The persona speaks **on behalf of** the owner (Bahrullo Nasrulloev / ITcoDe.Uz). Real owner contacts (phone, Telegram) are shown when a human handoff is requested or a deal moves to meeting/contract stage.
-5. **Prices:** the persona may quote **only** prices from the owner-approved **price list** (`pricing_rules` with `status=approved`, e.g. "Landing page — from X UZS, 7–10 days"), always phrased as "from / starting at" plus what is included. Anything else — custom scope, discounts, fixed final price, deadlines outside the list, contracts, payment terms — it never agrees to; it says the owner will confirm and creates an approval request. (Owner decision 2026-10-25, ADR-0008.)
+5. **No prices to clients.** The persona never states a price, price range, discount, deadline commitment, contract or payment term. If a client asks about cost, it answers that the exact price depends on the requirements and that the owner (Bahrullo / ITcoDe.Uz) will send it personally after reviewing the order — and continues collecting the Order Brief (§8.2). Owner pricing rules (M7) are internal reference only and never shown to clients. (Owner decision 2026-10-25, ADR-0008 as amended.)
 6. Persona name, disclosure text, signature and tone are stored in configuration (`persona_settings`), not hardcoded in prompts, and are versioned.
 
 ### 5.2 Signature template (configurable)
@@ -180,14 +180,14 @@ The owner's goal: **the system finds clients, engages them, makes offers, takes 
 
 1. **Find** (Discovery) → **understand** (Research & Audit) → **prioritize** (Opportunity & Scoring).
 2. **Engage** (Conversation/Mustafo): automatic email to public business addresses, assisted Telegram, client-initiated bot chats — all per §13 and M9 limits.
-3. **Offer** (Proposal): proposal built from evidence + approved price list; sent automatically only if it contains nothing outside the approved price list, otherwise owner approval first.
+3. **Offer** (Proposal): a value-focused offer built from verified evidence — what the client's business lacks, what can be built (website, bot, automation, …), and the benefits — **with no prices**. Offers containing no price, commitment or unverified claim may be sent automatically (Quality Gate checks this); anything else needs owner approval.
 4. **Take the order** (Qualification, inside Conversation): when a client shows intent ("qiziqyapman", "qancha turadi", "boshlaylik"), Mustafo runs a short structured interview in the client's language and fills an **Order Brief**: client name/company, contact person and channel, service(s) wanted, goals, required features, examples/references, content they will provide, desired deadline, budget range (only if volunteered), open questions. It then shows the brief back to the client and asks "Hammasi to'g'rimi?" — the client's confirmation is recorded with timestamp and message reference.
-5. **Hand off** (new state `ORDER_CONFIRMED`): the owner immediately gets a Telegram message + dashboard card **"✅ Yangi buyurtma"** with the full brief, the conversation link, the proposal, and buttons *Qabul qilaman / Savol beraman / Rad etaman*. The owner (not the agent) agrees the final price, deadline and payment, then the lead moves to `WON`.
+5. **Hand off** (new state `ORDER_CONFIRMED`): the owner immediately gets a Telegram message + dashboard card **"✅ Yangi buyurtma — <client> <what they want built> yasatishga rozi"** with the full brief, the conversation link, the proposal, and buttons *Qabul qilaman / Savol beraman / Rad etaman*. The owner (not the agent) agrees the final price, deadline and payment, then the lead moves to `WON`.
 6. **Build handoff:** the brief is also exported as a ready-to-use project spec (Markdown) the owner can paste into Claude Code to start building.
 
 Hard limits stay: AI disclosure (§5), no binding commitments by the agent, opt-out respected, kill switch (§13A). Payments/prepayment links (Click/Payme) are **out of scope** until the owner explicitly asks.
 
-Tests: brief is not marked confirmed without an explicit client confirmation message; handoff notification is sent exactly once (idempotent); agent never states a price absent from the approved list; `ORDER_CONFIRMED` requires a confirmed brief.
+Tests: brief is not marked confirmed without an explicit client confirmation message; handoff notification is sent exactly once (idempotent); agent output to clients never contains a price, amount or currency figure; `ORDER_CONFIRMED` requires a confirmed brief.
 
 ---
 
@@ -488,7 +488,7 @@ Templates per service, pricing rules (UZS etc.), `UNAPPROVED` marking, versionin
 
 **M8 — Mustafo conversation bot (client-initiated)**
 Client bot, persona disclosure, language detection, classification, draft replies, owner approval flow, human handoff, opt-out handling, **order intake: Order Brief interview, client confirmation, `ORDER_CONFIRMED` handoff to owner (Telegram + dashboard), Markdown project-spec export (§8.2)**.
-*Accept:* disclosure tests pass in UZ/RU/EN; opt-out creates suppression immediately; no reply sent without approval in default mode; a confirmed brief produces exactly one owner notification; no price outside the approved list is ever stated.
+*Accept:* disclosure tests pass in UZ/RU/EN; opt-out creates suppression immediately; no reply sent without approval in default mode; a confirmed brief produces exactly one owner notification; no price is ever stated to a client.
 
 **M9 — Outbound outreach to public business contacts**
 - **Email (fully automatic mode available):** to public business addresses only (info@, sales@, contact pages). Owner enables auto-send once in settings; afterwards Mustafo sends without per-message approval, within limits: daily cap (default 30, warm-up from 10), max 1 first email + 1 follow-up per company, randomized spacing, opt-out link + "reply STOP", sender = itcode.uz domain with SPF/DKIM/DMARC, auto-pause if bounce rate > 5% or any spam complaint. Messages containing prices still require approval.
