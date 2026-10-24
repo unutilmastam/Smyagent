@@ -10,9 +10,10 @@ from app.core.config import Settings, get_settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import configure_logging
 from app.core.middleware import RequestIdMiddleware
+from app.infrastructure.database import Database
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+def create_app(settings: Settings | None = None, database: Database | None = None) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(settings.log_level)
 
@@ -25,6 +26,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         openapi_url="/openapi.json" if docs_enabled else None,
     )
     app.dependency_overrides[get_settings] = lambda: settings
+    # Engine creation does not connect; the first query does. ASGI lifespan is not
+    # relied upon (ADR-0001), so the database is attached here.
+    app.state.database = database or Database(settings.database_url.get_secret_value())
     register_exception_handlers(app)
     app.add_middleware(RequestIdMiddleware)
     app.include_router(health_router, prefix="/api/v1")

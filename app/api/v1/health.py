@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from typing import Literal
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from pydantic import BaseModel
 
+from app.api.deps import get_database
 from app.core.config import Settings, get_settings
+from app.infrastructure.database import Database
 
 router = APIRouter(tags=["health"])
 
@@ -28,13 +30,18 @@ def health(settings: Settings = Depends(get_settings)) -> HealthResponse:  # noq
 
 
 @router.get("/ready", response_model=ReadinessResponse)
-def ready(settings: Settings = Depends(get_settings)) -> ReadinessResponse:  # noqa: B008
-    # Database check is added in M2 when the DB layer exists.
+def ready(
+    response: Response,
+    database: Database = Depends(get_database),  # noqa: B008
+) -> ReadinessResponse:
+    # Only "ok"/"fail" per check: no versions, hosts or error text (CLAUDE.md §14).
     checks: dict[str, Literal["ok", "fail", "skipped"]] = {
         "config": "ok",
-        "database": "skipped",
+        "database": "ok" if database.ping() else "fail",
     }
     status: Literal["ready", "not_ready"] = (
         "ready" if all(v != "fail" for v in checks.values()) else "not_ready"
     )
+    if status == "not_ready":
+        response.status_code = 503
     return ReadinessResponse(status=status, checks=checks)

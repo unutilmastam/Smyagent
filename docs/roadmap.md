@@ -7,8 +7,8 @@ Authoritative milestone definitions and acceptance criteria live in
 |---|---|---|
 | M0 | Inspection, architecture docs, ADRs, hosting check script | ✅ done (hosting verification pending owner run) |
 | M1 | FastAPI foundation, settings, logging, health, WSGI bridge, tests, CI | ✅ done |
-| M2 | SQLAlchemy, Alembic, core models, repositories, MariaDB in CI | ⏭ next |
-| M3 | Auth, mobile dashboard, owner Telegram bot | planned |
+| M2 | SQLAlchemy, Alembic, core models, repositories, MariaDB in CI | ✅ done |
+| M3 | Auth, mobile dashboard, owner Telegram bot | ⏭ next |
 | M3b | Agent Control Center (live graph, kill switch) | planned |
 | M4 | Company discovery (manual, CSV, one provider) | planned |
 | M5 | Research & SSRF-safe website audit | planned |
@@ -20,11 +20,16 @@ Authoritative milestone definitions and acceptance criteria live in
 | M11 | Analytics, budgets, backups, hardening | planned |
 | M12 | Demo generation | planned |
 
-## M2 breakdown (next)
+## M2 — done
+See `docs/database.md`. Deferred to the milestone that needs them: `company_locations`,
+`research_findings`, `website_audits` (M5), `opportunities`/scores (M6), contacts and
+phone normalization (M4).
 
-1. `app/infrastructure/database/`: engine/session factory, portable `GUID` type, naming conventions.
-2. Alembic setup with `env.py` reading `DATABASE_URL`.
-3. Models: `companies`, `company_domains`, `company_sources`, `research_runs`, `leads`, `jobs`, `job_locks`, `workflow_events`, `audit_logs`, `agent_controls`.
-4. Repositories with explicit transactions.
-5. Tests on SQLite; CI job with MariaDB service running `alembic upgrade head` + repository tests.
-6. `docs/database.md`.
+## M3 breakdown (next)
+
+1. `users`, `roles` (`owner`, `viewer`), `sessions` tables + migration.
+2. `python -m app.cli create-owner` (one-time bootstrap, Argon2 hashing).
+3. Login/logout with HTTP-only SameSite cookie sessions, login rate limit, CSRF tokens, audit log.
+4. Jinja2 + HTMX base layout, mobile-first (bottom nav), company list with search/filter/pagination, company detail.
+5. Owner Telegram bot: webhook with `secret_token`, numeric-ID authorization, `/status`.
+6. Optional TOTP for the owner.
