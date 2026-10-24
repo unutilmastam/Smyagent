@@ -37,7 +37,18 @@ jobs:
         run: mypy
       - name: Pytest
         run: pytest
-      - name: Dependency audit
+      # Audit what ships to the server (runtime deps, pinned as resolved for this Python).
+      # Dev-tool deps are audited separately on the newest Python only: some dev tools
+      # (e.g. filelock via pip-audit) no longer publish fixes for 3.10, which would block
+      # CI without affecting production.
+      - name: Dependency audit (runtime)
+        run: |
+          python -m venv /tmp/rt
+          /tmp/rt/bin/pip install -q .
+          /tmp/rt/bin/pip freeze --exclude smy-agent > /tmp/runtime.txt
+          pip-audit -r /tmp/runtime.txt --no-deps --disable-pip
+      - name: Dependency audit (dev tools)
+        if: matrix.python == '3.12'
         run: pip-audit --skip-editable
 
   secrets:

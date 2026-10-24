@@ -27,6 +27,12 @@
 
 CI on Python 3.10/3.12 runs on the PR; not executed locally for 3.10.
 
+### CI fix
+First CI run: tests passed on 3.10 and 3.12, but `pip-audit` failed on 3.10 — `filelock 4.1.0` (pulled in by pip-audit itself, a dev tool) has CVEs whose fix (4.2.1) requires Python ≥3.11. Runtime dependencies were audited separately on 3.10: no known vulnerabilities. CI now audits pinned runtime deps on every Python, and the full dev environment on 3.12 only.
+
+### Process change
+Owner authorized auto-merge: Claude squash-merges its own PRs once CI is fully green (CLAUDE.md §23).
+
 ### Bug found and fixed
 Telegram bot tokens embedded in API URLs (`.../bot123:ABC.../`) were not redacted because of a word-boundary in the regex. Fixed; covered by `test_redacts_telegram_bot_token_in_message`.
 

@@ -326,7 +326,7 @@ Decided strategy: run FastAPI through **`a2wsgi`** (a maintained ASGI→WSGI ada
 - On a future VPS the same queue interface is served by a persistent worker; business code unchanged.
 
 ### 16.4 Deploy flow (no local computer)
-Claude Code → GitHub PR → GitHub Actions (tests on SQLite + MariaDB, lint, type check, pip-audit) → owner merges from phone → owner clicks "Update from Remote" / pull in cPanel Git Version Control → runs `scripts/deploy.sh` in cPanel Terminal (install deps, run migrations with backup prompt, restart Passenger via `tmp/restart.txt`). Never deploy without explicit owner authorization.
+Claude Code → GitHub PR → GitHub Actions (tests on SQLite + MariaDB, lint, type check, pip-audit) → Claude auto-merges when CI is green (§23) → owner clicks "Update from Remote" / pull in cPanel Git Version Control → runs `scripts/deploy.sh` in cPanel Terminal (install deps, run migrations with backup prompt, restart Passenger via `tmp/restart.txt`). Never deploy without explicit owner authorization.
 
 ### 16.5 Backups
 Daily cron: `mysqldump` → compressed file outside `public_html`, keep N days; weekly copy off-host (documented manual step or approved storage). Restore procedure tested and documented.
@@ -494,7 +494,7 @@ Do not rewrite finished docs without reason. Never claim the platform is finishe
 
 ## 23. GIT
 
-Work on feature branches and open PRs; the owner merges. Commit when the workflow authorizes it. No pushing to `main` without authorization, no force-push, no overwriting remote changes. Never commit secrets, customer data, local DBs, logs or exports. Preserve uncommitted user work. Explain and confirm before risky Git operations.
+Work on feature branches and open PRs. **Auto-merge (authorized by the owner on 2026-10-25):** when a PR's CI is fully green, Claude merges it into `main` itself (squash merge) and reports it — no waiting for the owner. Never merge with failing or pending checks, never bypass checks, never merge a PR that changes production deployment or deletes data without explaining it first. Deploying to hostmaster.uz still requires the owner. Commit when the workflow authorizes it. No pushing directly to `main` without authorization, no force-push, no overwriting remote changes. Never commit secrets, customer data, local DBs, logs or exports. Preserve uncommitted user work. Explain and confirm before risky Git operations.
 
 ---
 
