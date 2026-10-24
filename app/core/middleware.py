@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import re
 import time
@@ -9,11 +10,13 @@ import uuid
 
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
+from app.core.exceptions import error_body
 from app.core.logging import request_id_var
 
 HEADER = "x-request-id"
 _VALID_ID = re.compile(r"^[A-Za-z0-9._-]{8,64}$")
 logger = logging.getLogger("app.request")
+error_logger = logging.getLogger("app.errors")
 
 
 class RequestIdMiddleware:
@@ -30,10 +33,12 @@ class RequestIdMiddleware:
         token = request_id_var.set(rid)
         start = time.perf_counter()
         status = 500
+        response_started = False
 
         async def send_wrapper(message: Message) -> None:
-            nonlocal status
+            nonlocal status, response_started
             if message["type"] == "http.response.start":
+                response_started = True
                 status = message["status"]
                 headers = list(message.get("headers", []))
                 headers.append((HEADER.encode(), rid.encode()))
@@ -42,6 +47,24 @@ class RequestIdMiddleware:
 
         try:
             await self.app(scope, receive, send_wrapper)
+        except Exception as exc:
+            # Handled here (not only in Starlette's outer ServerErrorMiddleware) so the
+            # log line, the response body and the header all carry the request ID.
+            error_logger.exception("unhandled_error", extra={"error_type": type(exc).__name__})
+            if response_started:
+                raise
+            body = json.dumps(error_body("internal_error", "Internal server error")).encode()
+            await send_wrapper(
+                {
+                    "type": "http.response.start",
+                    "status": 500,
+                    "headers": [
+                        (b"content-type", b"application/json"),
+                        (b"content-length", str(len(body)).encode()),
+                    ],
+                }
+            )
+            await send_wrapper({"type": "http.response.body", "body": body})
         finally:
             logger.info(
                 "request",

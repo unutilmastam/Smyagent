@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
 from enum import Enum
 from functools import lru_cache
 from typing import Annotated
@@ -54,7 +55,8 @@ class Settings(BaseSettings):
 
     outbound_sending_enabled: bool = False
     log_level: str = "INFO"
-    daily_ai_budget_usd: float = Field(default=0.0, ge=0)
+    # 0 means "no AI spending allowed" (optional AI calls are deferred), not "unlimited".
+    daily_ai_budget_usd: Decimal = Field(default=Decimal("0"), ge=0)
     daily_search_limit: int = Field(default=0, ge=0)
     default_timezone: str = "Asia/Tashkent"
 
@@ -99,6 +101,8 @@ class Settings(BaseSettings):
                 f"APP_SECRET_KEY must be set to at least {MIN_SECRET_LENGTH} random characters "
                 "in production"
             )
+        if not self.app_base_url.startswith("https://"):
+            raise ValueError("APP_BASE_URL must use https:// in production")
         if self.database_url.get_secret_value().startswith("sqlite"):
             raise ValueError("DATABASE_URL must point to MySQL/MariaDB in production, not SQLite")
         if self.ai_provider and not self.ai_api_key.get_secret_value():

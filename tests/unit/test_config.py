@@ -39,7 +39,23 @@ def test_production_requires_strong_secret() -> None:
 
 def test_production_rejects_sqlite() -> None:
     with pytest.raises(ConfigurationError, match="DATABASE_URL"):
-        load_settings(_env_file=None, app_env="production", app_secret_key="y" * 40)
+        load_settings(
+            _env_file=None,
+            app_env="production",
+            app_secret_key="y" * 40,
+            app_base_url="https://agent.example.uz",
+        )
+
+
+def test_production_requires_https_base_url() -> None:
+    with pytest.raises(ConfigurationError, match="APP_BASE_URL"):
+        load_settings(
+            _env_file=None,
+            app_env="production",
+            app_secret_key="y" * 40,
+            app_base_url="http://agent.example.uz",
+            database_url="mysql+pymysql://u:p@h/db",
+        )
 
 
 def test_production_requires_ai_key_when_provider_set() -> None:
@@ -48,6 +64,7 @@ def test_production_requires_ai_key_when_provider_set() -> None:
             _env_file=None,
             app_env="production",
             app_secret_key="y" * 40,
+            app_base_url="https://agent.example.uz",
             database_url="mysql+pymysql://u:p@h/db",
             ai_provider="anthropic",
         )

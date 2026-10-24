@@ -49,3 +49,16 @@ Telegram bot tokens embedded in API URLs (`.../bot123:ABC.../`) were not redacte
 ### Next task
 Owner: run `scripts/check_environment.py` in cPanel Terminal, paste output.
 Claude: **M2** — SQLAlchemy engine, portable GUID type, Alembic, first models (companies, sources, research_runs, leads, jobs, job_locks, workflow_events, audit_logs, agent_controls), repositories, MariaDB service in CI.
+
+## Session 2 — 2026-10-25 — post-merge review fixes
+
+Review of the merged M0/M1 found:
+- **Bug:** unhandled exceptions (500) lost the request ID — not in the response body, not in the `X-Request-ID` header, not in the error log line — because Starlette's `ServerErrorMiddleware` runs outside `RequestIdMiddleware`. Fixed in `app/core/middleware.py`; test `test_unhandled_error_keeps_request_id`.
+- `scripts/check_environment.py` did not cover several CLAUDE.md §16.1 items. Rewritten (stdlib only, Python 3.5+): MySQL server version (via `~/.my.cnf` if present), cloudlinux-selector versions, throw-away venv + `pip download` test, resource limits, cron entry count (never contents), cPanel layout/log dirs, Passenger `.htaccess` directives, env var names only, home path/username masking, `--offline`, manual checklist. Runs in CI and in `tests/unit/test_check_environment.py`.
+- `passenger_wsgi.py` now `chdir`s to the project root so `.env` is found regardless of Passenger's working directory.
+- Production now requires `APP_BASE_URL` to be `https://`.
+- `DAILY_AI_BUDGET_USD` is `Decimal`; `0` documented as "no AI spending", not unlimited.
+- `.env.example` comments moved to their own lines (safe to copy values into cPanel UI).
+- `tests/conftest.py` also clears `LOG_LEVEL`, `DEFAULT_TIMEZONE`, `OUTBOUND_SENDING_ENABLED`, `DAILY_*`.
+
+Verification (local, Python 3.11 and 3.13): ruff, ruff format, mypy clean; pytest 28 passed. Python 3.10 covered by CI only.

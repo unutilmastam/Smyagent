@@ -57,6 +57,21 @@ def test_unhandled_error_is_generic(settings: Settings) -> None:
     assert "hunter2" not in r.text and "internal detail" not in r.text
 
 
+def test_unhandled_error_keeps_request_id(settings: Settings) -> None:
+    app = create_app(settings)
+
+    @app.get("/boom")
+    def boom() -> None:
+        raise RuntimeError("boom")
+
+    r = TestClient(app, raise_server_exceptions=False).get(
+        "/boom", headers={"X-Request-ID": "trace-12345678"}
+    )
+    assert r.status_code == 500
+    assert r.headers["x-request-id"] == "trace-12345678"
+    assert r.json()["error"]["request_id"] == "trace-12345678"
+
+
 def test_docs_available_in_development(client: TestClient) -> None:
     assert client.get("/openapi.json").status_code == 200
 

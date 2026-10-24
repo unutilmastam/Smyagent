@@ -31,7 +31,9 @@
    (If the repo is private, use cPanel Git Version Control to clone it first and run `python3 scripts/check_environment.py` from the clone.)
 3. Copy the whole output into Claude Code.
 
-The script only reads information and makes HTTPS requests to public API hostnames; it changes nothing.
+The script only reads information and makes unauthenticated HTTPS requests to public API hostnames; it changes nothing (a throw-away virtualenv is created in a temp dir to test `pip`, then deleted). Username and home path are masked in the output. Options: `--offline` skips network tests, `--no-redact` disables masking.
+
+Some facts cannot be read from the shell (Python versions in the Setup Python App dropdown, Resource Usage limits, cron minimum interval, MySQL server version without credentials); the script prints a short checklist of these at the end.
 
 ## 3. Planned deployment layout (after verification)
 

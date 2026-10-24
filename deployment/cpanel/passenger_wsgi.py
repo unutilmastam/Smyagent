@@ -18,6 +18,9 @@ from typing import Any
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
+# Settings read `.env` relative to the working directory; Passenger does not
+# guarantee it is the project root.
+os.chdir(PROJECT_ROOT)
 
 from a2wsgi import ASGIMiddleware  # noqa: E402
 
