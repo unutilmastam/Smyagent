@@ -1,0 +1,28 @@
+<p class="loading-indicator muted">{{ t('companies.loading') }}</p>
+<p class="muted result-count">{{ t('companies.total', n=page.total) }}</p>
+{% if page.items %}
+<ul class="company-list">
+  {% for c in page.items %}
+  <li>
+    <a class="company-item" href="/companies/{{ c.id }}">
+      <span class="company-name">{{ c.name }}</span>
+      <span class="company-meta">{{ c.country }}{% if c.city %} · {{ c.city }}{% endif %}{% if c.primary_domain %} · {{ c.primary_domain }}{% endif %}</span>
+      <span class="badges">
+        {% if c.is_fixture %}<span class="badge badge-fixture">{{ t('company.fixture') }}</span>{% endif %}
+        <span class="badge badge-{{ c.research_state.value|lower }}">{{ t('state.' ~ c.research_state.value) }}</span>
+        {% if c.lead_stage %}<span class="badge">{{ c.lead_stage }}</span>{% endif %}
+      </span>
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<section class="card empty"><p>{{ t('companies.empty') }}</p></section>
+{% endif %}
+{% if page.pages > 1 %}
+<nav class="pager" aria-label="pagination">
+  {% if page.has_prev %}<a href="{{ page_url(page.page - 1) }}" hx-get="{{ page_url(page.page - 1) }}" hx-target="#results" hx-push-url="true">{{ t('pager.prev') }}</a>{% else %}<span></span>{% endif %}
+  <span class="muted">{{ t('pager.page', page=page.page, pages=page.pages) }}</span>
+  {% if page.has_next %}<a href="{{ page_url(page.page + 1) }}" hx-get="{{ page_url(page.page + 1) }}" hx-target="#results" hx-push-url="true">{{ t('pager.next') }}</a>{% else %}<span></span>{% endif %}
+</nav>
+{% endif %}

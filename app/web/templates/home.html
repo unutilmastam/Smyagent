@@ -1,20 +1,18 @@
 {% extends "base.html" %}
-{% block title %}Bosh sahifa — SMY Agent{% endblock %}
+{% block title %}{{ t('nav.home') }} — SMY Agent{% endblock %}
 {% block content %}
-<h1>Salom, {{ user.username }}</h1>
+<h1>{{ t('home.hello') }}, {{ user.username }}</h1>
 {% if global_state != 'ACTIVE' %}
-<p class="alert alert-warn" role="status">Agentlar holati: <strong>{{ global_state }}</strong> — yangi ishlar olinmaydi.</p>
+<p class="alert alert-warn" role="status">{{ t('home.paused', state=global_state) }}</p>
 {% endif %}
-<section class="stats" aria-label="Umumiy ko'rsatkichlar">
-  <div class="stat"><span class="stat-value">{{ stats.companies }}</span><span class="stat-label">Kompaniyalar</span></div>
-  <div class="stat"><span class="stat-value">{{ stats.leads }}</span><span class="stat-label">Lidlar</span></div>
-  <div class="stat"><span class="stat-value">{{ stats.jobs_queued }}</span><span class="stat-label">Navbatda</span></div>
-  <div class="stat"><span class="stat-value">{{ stats.jobs_running }}</span><span class="stat-label">Ishlayapti</span></div>
-  <div class="stat {% if stats.jobs_failed %}stat-bad{% endif %}"><span class="stat-value">{{ stats.jobs_failed }}</span><span class="stat-label">Xato</span></div>
+<section class="stats" aria-label="{{ t('stats.companies') }}">
+  <a class="stat" href="/companies"><span class="stat-value">{{ stats.companies }}</span><span class="stat-label">{{ t('stats.companies') }}</span></a>
+  <div class="stat"><span class="stat-value">{{ stats.leads }}</span><span class="stat-label">{{ t('stats.leads') }}</span></div>
+  <div class="stat"><span class="stat-value">{{ stats.jobs_queued }}</span><span class="stat-label">{{ t('stats.queued') }}</span></div>
+  <div class="stat"><span class="stat-value">{{ stats.jobs_running }}</span><span class="stat-label">{{ t('stats.running') }}</span></div>
+  <div class="stat {% if stats.jobs_failed %}stat-bad{% endif %}"><span class="stat-value">{{ stats.jobs_failed }}</span><span class="stat-label">{{ t('stats.failed') }}</span></div>
 </section>
 {% if stats.companies == 0 %}
-<section class="card empty">
-  <p>Hali kompaniyalar yo'q. Qo'lda kiritish va CSV import M4 bosqichida qo'shiladi.</p>
-</section>
+<section class="card empty"><p>{{ t('home.empty') }}</p></section>
 {% endif %}
 {% endblock %}

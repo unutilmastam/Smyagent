@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% set c = detail.company %}
+{% block title %}{{ c.name }} — SMY Agent{% endblock %}
+{% block content %}
+<p><a href="/companies">{{ t('company.back') }}</a></p>
+<h1>{{ c.name }}</h1>
+<p class="badges">
+  <span class="badge badge-{{ c.research_state.value|lower }}">{{ t('state.' ~ c.research_state.value) }}</span>
+  {% if detail.lead %}<span class="badge">{{ t('company.lead') }}: {{ detail.lead.stage.value }}</span>{% endif %}
+</p>
+<section class="card">
+  <dl class="facts">
+    <dt>{{ t('companies.country') }}</dt><dd>{{ c.country }}</dd>
+    <dt>{{ t('company.city') }}</dt><dd>{{ c.city or t('company.unknown') }}</dd>
+    <dt>{{ t('company.industry') }}</dt><dd>{{ c.industry or t('company.unknown') }}</dd>
+  </dl>
+</section>
+
+<h2>{{ t('company.domains') }}</h2>
+{% if c.domains %}
+<ul class="plain-list">{% for d in c.domains %}<li>{{ d.domain }}{% if d.is_primary %} ★{% endif %}</li>{% endfor %}</ul>
+{% else %}<p class="muted">{{ t('company.none') }}</p>{% endif %}
+
+<h2>{{ t('company.sources') }}</h2>
+<ul class="plain-list">
+  {% for s in c.sources %}
+  <li>
+    {% if s.is_fixture %}<span class="badge badge-fixture">{{ t('company.fixture') }}</span>{% endif %}
+    <strong>{{ s.source_type }}</strong>{% if s.source_url %} · <span class="break">{{ s.source_url }}</span>{% endif %}
+    <span class="muted"> · {{ t('company.retrieved') }} {{ s.retrieved_at.strftime('%Y-%m-%d %H:%M') }} UTC</span>
+  </li>
+  {% else %}<li class="muted">{{ t('company.none') }}</li>{% endfor %}
+</ul>
+
+<h2>{{ t('company.research') }}</h2>
+{% if detail.research_runs %}
+<ul class="plain-list">
+  {% for r in detail.research_runs %}<li>{{ r.created_at.strftime('%Y-%m-%d %H:%M') }} · {{ r.status.value }}{% if r.error_message %} · <span class="muted">{{ r.error_message }}</span>{% endif %}</li>{% endfor %}
+</ul>
+{% else %}<p class="muted">{{ t('company.none') }}</p>{% endif %}
+
+<h2>{{ t('company.history') }}</h2>
+{% if detail.history %}
+<ol class="timeline">
+  {% for e in detail.history %}
+  <li><span class="muted">{{ e.created_at.strftime('%Y-%m-%d %H:%M') }}</span> · {{ e.entity_type }}: {{ e.from_state or '—' }} → <strong>{{ e.to_state }}</strong> · {{ e.actor }}{% if e.reason %} · {{ e.reason }}{% endif %}</li>
+  {% endfor %}
+</ol>
+{% else %}<p class="muted">{{ t('company.none') }}</p>{% endif %}
+{% endblock %}

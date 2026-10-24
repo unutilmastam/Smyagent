@@ -1,31 +1,50 @@
 <!doctype html>
-<html lang="uz">
+<html lang="{{ lang }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0f766e">
   <meta name="robots" content="noindex, nofollow">
+  {# CSP forbids inline styles/eval; htmx must not inject its indicator <style> or eval. #}
+  <meta name="htmx-config" content='{"includeIndicatorStyles": false, "allowEval": false, "allowScriptTags": false}'>
   <title>{% block title %}SMY Agent{% endblock %}</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/static/icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
   <link rel="stylesheet" href="/static/app.css">
+  <script src="{{ htmx_src }}" defer></script>
+  <script src="/static/app.js" defer></script>
 </head>
-<body class="{% block body_class %}{% endblock %}">
+<body class="{% block body_class %}{% endblock %}" data-network-error="{{ t('error.network') }}"
+      {% if csrf_token and user %}hx-headers='{"X-CSRF-Token": "{{ csrf_token }}"}'{% endif %}>
   {% if user %}
   <header class="topbar">
-    <span class="brand">SMY Agent</span>
-    <span class="state state-{{ global_state|default('ACTIVE')|lower }}" title="Global holat">{{ global_state|default('') }}</span>
+    <a class="brand" href="/">SMY Agent</a>
+    <span class="state state-{{ global_state|default('ACTIVE')|lower }}" title="{{ t('global_state') }}">{{ global_state|default('') }}</span>
   </header>
   {% endif %}
-  <main class="container">
+  <main class="container" id="main">
     {% block content %}{% endblock %}
+    <footer class="lang-switch" aria-label="{{ t('language') }}">
+      {% for code in languages %}
+        {% if code == lang %}<strong>{{ language_names[code] }}</strong>
+        {% else %}<a href="/lang/{{ code }}?next={{ request.url.path|urlencode }}">{{ language_names[code] }}</a>{% endif %}
+      {% endfor %}
+    </footer>
   </main>
+  <div id="toast" class="toast" role="alert" aria-live="assertive" hidden></div>
   {% if user %}
-  <nav class="bottom-nav" aria-label="Asosiy menyu">
-    <a href="/" {% if request.url.path == '/' %}aria-current="page"{% endif %}>
-      <span aria-hidden="true">⌂</span><span>Bosh sahifa</span>
+  <nav class="bottom-nav" aria-label="{{ t('nav.main') }}">
+    {% set path = request.url.path %}
+    <a href="/" {% if path == '/' %}aria-current="page"{% endif %}>
+      <span aria-hidden="true">⌂</span><span>{{ t('nav.home') }}</span>
+    </a>
+    <a href="/companies" {% if path.startswith('/companies') %}aria-current="page"{% endif %}>
+      <span aria-hidden="true">▤</span><span>{{ t('nav.companies') }}</span>
     </a>
     <form method="post" action="/logout">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      <button type="submit"><span aria-hidden="true">⎋</span><span>Chiqish</span></button>
+      <button type="submit"><span aria-hidden="true">⎋</span><span>{{ t('nav.logout') }}</span></button>
     </form>
   </nav>
   {% endif %}

@@ -41,5 +41,9 @@ First run `scripts/check_environment.py` in cPanel Terminal and share the output
 | GET | `/api/v1/ready` | readiness incl. database ping (503 if not ready) |
 | GET/POST | `/login`, POST `/logout` | owner login (CSRF-protected) |
 | GET | `/` | dashboard home (login required) |
+| GET | `/companies`, `/companies/{id}` | company list (search/filter/sort/pages) and detail |
+| GET | `/api/v1/companies`, `/api/v1/companies/{id}` | same data as JSON (session auth) |
+| GET | `/lang/{uz,ru,en}` | interface language |
+| GET | `/manifest.webmanifest`, `/sw.js` | PWA |
 
 CLI: `python -m app.cli create-owner --username <name>`, `python -m app.cli check-config`.
