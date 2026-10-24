@@ -310,6 +310,34 @@ Transport: Passenger + a2wsgi cannot stream (no WebSocket/SSE), so the page uses
 - Reactivation requires the owner (authenticated) and is audit-logged. State changes are pushed to the owner bot.
 - Tests: a STOPPED agent claims no jobs; global stop blocks a send already queued; pause/resume preserves queue; non-owner cannot change state.
 
+### 13A.3 "Virtual Office" view (owner request 2026-10-25, ADR-0009)
+
+A second view of the Control Center (`/control/office`, default view on phones) that makes the owner feel like the director of a company with 7 employees.
+
+**Scene:** a 2D top-down / isometric pixel-art office building drawn on `<canvas>` with **original** art (no copyrighted characters, sprites or tilesets; generated in code or drawn for this project). Rooms: **open-space with 7 desks + computers** (one per module), **kitchen with coffee machine**, **restroom**, **director's room** (owner, with the EMERGENCY STOP as a big red button on the desk), **meeting room**, **mail/post desk** (outbound messages leave from here).
+
+**Employees:** each of the 7 modules is a character with a name tag, role title (UZ/RU/EN) and a monitor that shows its current task text, e.g. *"Research & Audit — lazzat.uz saytini tekshiryapman (3/5)"*.
+
+**Every animation is driven by real state from `/api/v1/control/snapshot` — never invented:**
+
+| Real state (DB) | What the owner sees |
+|---|---|
+| job running, fresh heartbeat | at desk typing, monitor shows `current_step` + `progress_pct` bar |
+| idle (queue empty for this module) | walks to the kitchen, drinks coffee |
+| waiting: rate limit / backoff / `BUDGET_DEFERRED` / free-tier quota exhausted | goes to the restroom (label shows the real reason and retry time) |
+| PAUSED | sits in the kitchen/lounge with a "Pauza" sign |
+| STOPPED (agent or global) | leaves the desk, desk light off; global stop → all lights dim, everyone at the exit |
+| error / failed job | at desk, red "!" bubble, monitor shows the error category; tap → job drill-down |
+| outbound email sent | character carries an envelope to the mail desk |
+| `ORDER_CONFIRMED` | Conversation agent walks to the director's room with a folder; owner gets the "✅ Yangi buyurtma" toast |
+| two modules handing work over (e.g. Research → Scoring) | a paper flies desk-to-desk |
+
+Tap a character → side sheet with its live stats (jobs today, success/fail, AI cost today), recent activity and **Activate / Pause / Stop** buttons (same rules and audit log as §13A.2). Day/night lighting follows `DEFAULT_TIMEZONE`.
+
+**Technical constraints:** vanilla JS + Canvas 2D (or a small library vendored into `app/web/static/`; CSP stays `'self'`), no Node build on the server; polling every 3–5 s with client-side tweening between states; ≤ 300 KB of assets; 30 fps cap and pause when the tab is hidden (battery on phone); works at 375 px width (scroll/pinch the building) and on iPad; `prefers-reduced-motion` → static positions; text alternatives for accessibility; the classic graph view (§13A.1) stays as the other tab.
+
+**Tests:** snapshot → scene-state mapping is a pure function with unit tests for every row of the table above (no state ever maps to "working" unless a job is actually running with a fresh heartbeat).
+
 ---
 
 ## 14. WEB API
@@ -469,6 +497,10 @@ Owner bootstrap CLI, login, optional TOTP, CSRF, mobile-first company/lead lists
 **M3b — Agent Control Center skeleton**
 `agent_controls`, `agent_runs` progress fields, `/control` page with live graph + activity feed (polling), global emergency stop and per-agent toggles in dashboard and owner bot. Built before any agent sends anything external, and extended as each module is added.
 *Accept:* toggling state is reflected on the graph within 5 s; stopped agents claim no jobs (tested).
+
+**M3c-office — Virtual Office view (§13A.3)**
+Canvas office scene with 7 employee characters, kitchen, restroom, director's room, mail desk; real-state mapping table; tap-to-control side sheet; mobile/iPad support; reduced-motion fallback. Can be built right after M3b (characters show idle/coffee until agents exist) and gains animations as each module ships.
+*Accept:* every scene state is derived from real snapshot data (unit-tested mapping); STOP from the director's desk works and is audit-logged; smooth on a mid-range phone; no copyrighted assets.
 
 **M4 — Company discovery**
 Search interface, manual entry, CSV import, normalization, dedup, one real provider only when the owner supplies credentials.
