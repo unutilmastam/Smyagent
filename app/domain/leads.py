@@ -15,6 +15,10 @@ class LeadStage(str, Enum):
     APPROVED = "APPROVED"
     CONTACTED = "CONTACTED"
     RESPONDED = "RESPONDED"
+    # Client confirmed the Order Brief (CLAUDE.md §8.2, ADR-0008). The service that
+    # enters this stage must also require a confirmed brief (M8); the domain only
+    # governs which stages may precede and follow it.
+    ORDER_CONFIRMED = "ORDER_CONFIRMED"
     MEETING = "MEETING"
     WON = "WON"
     CLOSED = "CLOSED"
@@ -36,7 +40,10 @@ _FLOW: dict[LeadStage, frozenset[LeadStage]] = {
     S.AWAITING_APPROVAL: frozenset({S.APPROVED, S.PROPOSAL_DRAFTED}),
     S.APPROVED: frozenset({S.CONTACTED, S.PROPOSAL_DRAFTED}),
     S.CONTACTED: frozenset({S.RESPONDED}),
-    S.RESPONDED: frozenset({S.QUALIFIED, S.PROPOSAL_DRAFTED, S.MEETING, S.WON}),
+    S.RESPONDED: frozenset({S.QUALIFIED, S.PROPOSAL_DRAFTED, S.ORDER_CONFIRMED, S.MEETING, S.WON}),
+    # Owner reviews the confirmed order: meet (optional), accept (WON), or ask the
+    # client more questions (back to RESPONDED). Rejecting goes to LOST.
+    S.ORDER_CONFIRMED: frozenset({S.MEETING, S.WON, S.RESPONDED}),
     S.MEETING: frozenset({S.PROPOSAL_DRAFTED, S.WON}),
     S.WON: frozenset({S.CLOSED}),
     S.CLOSED: frozenset(),
@@ -55,6 +62,7 @@ _ACTIVE = frozenset(
         S.APPROVED,
         S.CONTACTED,
         S.RESPONDED,
+        S.ORDER_CONFIRMED,
         S.MEETING,
     }
 )
