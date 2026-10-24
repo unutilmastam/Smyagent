@@ -44,6 +44,7 @@ First run `scripts/check_environment.py` in cPanel Terminal and share the output
 | GET | `/companies`, `/companies/{id}` | company list (search/filter/sort/pages) and detail |
 | GET | `/api/v1/companies`, `/api/v1/companies/{id}` | same data as JSON (session auth) |
 | GET | `/lang/{uz,ru,en}` | interface language |
+| POST | `/api/v1/telegram/webhook` | owner bot webhook (secret header) |
 | GET | `/manifest.webmanifest`, `/sw.js` | PWA |
 
-CLI: `python -m app.cli create-owner --username <name>`, `python -m app.cli check-config`.
+CLI: `python -m app.cli create-owner --username <name>`, `check-config`, `telegram-set-webhook`, `telegram-webhook-info`.

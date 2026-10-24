@@ -25,6 +25,14 @@ milestone named in brackets.
 - ✅ No default admin; owner created once with `python -m app.cli create-owner` (refuses if an owner exists).
 - Optional TOTP for the owner [M3d].
 
+## Telegram owner bot
+- ✅ Webhook accepted only with the correct `X-Telegram-Bot-Api-Secret-Token` (constant-time compare); 403 otherwise, nothing stored. Endpoint returns 404 while the bot is not configured.
+- ✅ Authorization by numeric user ID (`TELEGRAM_ADMIN_IDS`) in private chats only; bots and groups ignored. Unauthorized senders get no reply and are audit-logged.
+- ✅ Each `update_id` processed once (`inbound_events` unique `(channel, external_id)`), so Telegram retries never repeat an action.
+- ✅ Payload size limit (256 KB); unparseable payloads acknowledged and dropped.
+- ✅ Bot token only in env; client errors report the exception type, never the URL that contains the token; log redaction also masks `<digits>:<token>` patterns.
+- ✅ Production refuses a bot token without a ≥32-char webhook secret and admin IDs.
+
 ## Outbound requests
 - SSRF-safe fetcher: scheme allow-list, DNS resolution with private/loopback/link-local/CGNAT/multicast/metadata blocking (IPv4+IPv6), re-validation per redirect, size/time/content-type limits, robots.txt [M5].
 - TLS verification is never disabled.

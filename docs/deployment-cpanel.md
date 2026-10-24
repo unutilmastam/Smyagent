@@ -64,3 +64,23 @@ Never deploy without explicit owner authorization.
 ## 5. Known limitations of the WSGI bridge
 
 No WebSockets, no streaming responses, no reliance on FastAPI `BackgroundTasks`, host request timeout applies. See ADR-0001.
+
+## 6. Owner Telegram bot (M3c) — from the phone
+
+1. Telegram → **@BotFather** → `/newbot` → choose a name (e.g. *SMY Agent Control*) and
+   a username ending in `bot`. Copy the token. Keep this bot **private**; do not share its link.
+2. Find your **numeric** Telegram ID: message **@userinfobot** (or any "user ID" bot) and copy
+   the number. Usernames are never used for authorization.
+3. cPanel → Setup Python App → Environment variables:
+   - `TELEGRAM_ADMIN_BOT_TOKEN` = token from step 1
+   - `TELEGRAM_WEBHOOK_SECRET` = 32+ random characters of `A-Z a-z 0-9 _ -`
+     (e.g. generate in Terminal: `python3 -c "import secrets; print(secrets.token_urlsafe(32))"`)
+   - `TELEGRAM_ADMIN_IDS` = your numeric ID (comma-separated if more than one)
+   Restart the app (`touch tmp/restart.txt`).
+4. Terminal (app virtualenv): `python -m app.cli telegram-set-webhook`, then
+   `python -m app.cli telegram-webhook-info` → `url` must show
+   `https://<your domain>/api/v1/telegram/webhook` and no `last_error_message`.
+5. Send `/status` to the bot. Messages from any other account are ignored and audit-logged.
+
+Requires outbound HTTPS to `api.telegram.org` only for step 4 (replies are returned in the
+webhook response, so normal operation needs no outbound call). Verify with `check_environment.py`.

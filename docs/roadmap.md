@@ -8,7 +8,7 @@ Authoritative milestone definitions and acceptance criteria live in
 | M0 | Inspection, architecture docs, ADRs, hosting check script | ✅ done (hosting verification pending owner run) |
 | M1 | FastAPI foundation, settings, logging, health, WSGI bridge, tests, CI | ✅ done |
 | M2 | SQLAlchemy, Alembic, core models, repositories, MariaDB in CI | ✅ done |
-| M3 | Auth, mobile dashboard, owner Telegram bot | 🟡 M3a, M3b-ui done; M3c, M3d next |
+| M3 | Auth, mobile dashboard, owner Telegram bot | 🟡 M3a, M3b-ui, M3c done; M3d (TOTP) next |
 | M3b | Agent Control Center (live graph, kill switch) | planned |
 | M4 | Company discovery (manual, CSV, one provider) | planned |
 | M5 | Research & SSRF-safe website audit | planned |
@@ -29,8 +29,8 @@ phone normalization (M4).
 
 - ✅ **M3a** `users` (role column: owner/viewer), `sessions`, `login_attempts`; `create-owner` CLI; login/logout, CSRF, throttling, audit log, security headers; mobile-first base layout with bottom nav and a home page with counts.
 - ✅ **M3b-ui** Company list with search/filter/sort/pagination (HTMX), company detail page, UZ/RU/EN interface, installable PWA (app-shell-only service worker), read-only companies API.
-- ⏭ **M3c** Owner Telegram bot: webhook with `secret_token`, numeric-ID authorization, `/status`.
-- **M3d** Optional TOTP for the owner.
+- ✅ **M3c** Owner Telegram bot: webhook with `secret_token`, numeric-ID authorization (private chats only), idempotent updates, `/status`, `/help`; CLI `telegram-set-webhook` / `telegram-webhook-info`.
+- ⏭ **M3d** Optional TOTP for the owner.
 
 Decision: a `roles` table is not needed for two fixed roles; `users.role` is an enum
 column. A table is introduced with full RBAC if it is ever needed.
