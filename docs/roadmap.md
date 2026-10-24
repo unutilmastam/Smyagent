@@ -8,8 +8,9 @@ Authoritative milestone definitions and acceptance criteria live in
 | M0 | Inspection, architecture docs, ADRs, hosting check script | ✅ done (hosting verification pending owner run) |
 | M1 | FastAPI foundation, settings, logging, health, WSGI bridge, tests, CI | ✅ done |
 | M2 | SQLAlchemy, Alembic, core models, repositories, MariaDB in CI | ✅ done |
-| M3 | Auth, mobile dashboard, owner Telegram bot | 🟡 M3a, M3b-ui, M3c done; M3d (TOTP) next |
-| M3b | Agent Control Center (live graph, kill switch) | planned |
+| M3 | Auth, mobile dashboard, owner Telegram bot | 🟡 M3-auth, M3-ui, M3-bot done; M3-totp open (optional) |
+| M3b | Agent Control Center (live graph, kill switch) — CLAUDE.md §13A.1–2 | ⏭ next |
+| M3c-office | Virtual Office view — CLAUDE.md §13A.3, ADR-0009 | planned (after M3b) |
 | M4 | Company discovery (manual, CSV, one provider) | planned |
 | M5 | Research & SSRF-safe website audit | planned |
 | M6 | Opportunity analysis & scoring | planned |
@@ -27,10 +28,23 @@ phone normalization (M4).
 
 ## M3 breakdown
 
-- ✅ **M3a** `users` (role column: owner/viewer), `sessions`, `login_attempts`; `create-owner` CLI; login/logout, CSRF, throttling, audit log, security headers; mobile-first base layout with bottom nav and a home page with counts.
-- ✅ **M3b-ui** Company list with search/filter/sort/pagination (HTMX), company detail page, UZ/RU/EN interface, installable PWA (app-shell-only service worker), read-only companies API.
-- ✅ **M3c** Owner Telegram bot: webhook with `secret_token`, numeric-ID authorization (private chats only), idempotent updates, `/status`, `/help`; CLI `telegram-set-webhook` / `telegram-webhook-info`.
-- ⏭ **M3d** Optional TOTP for the owner.
+Sub-milestone labels inside M3 are `M3-auth`, `M3-ui`, `M3-bot`, `M3-totp`, so they do not
+clash with CLAUDE.md's separate milestones **M3b** (Control Center) and **M3c-office**.
+(Earlier progress entries call them M3a / M3b-ui / M3c.)
+
+- ✅ **M3-auth** `users` (role column: owner/viewer), `sessions`, `login_attempts`; `create-owner` CLI; login/logout, CSRF, throttling, audit log, security headers; mobile-first base layout with bottom nav and a home page with counts.
+- ✅ **M3-ui** Company list with search/filter/sort/pagination (HTMX), company detail page, UZ/RU/EN interface, installable PWA (app-shell-only service worker), read-only companies API.
+- ✅ **M3-bot** Owner Telegram bot: webhook with `secret_token`, numeric-ID authorization (private chats only), idempotent updates, `/status`, `/help`; CLI `telegram-set-webhook` / `telegram-webhook-info`.
+- **M3-totp** Optional TOTP for the owner (recommended before the dashboard is public).
+
+## M3b — Agent Control Center (next)
+
+1. `agent_runs` table (module, job_id, status, `current_step`, `progress_pct`, `heartbeat_at`, tokens/cost), migration.
+2. `AgentControlService`: set state (owner only, audit-logged, reason), global EMERGENCY STOP (cancels queued outbound jobs, marks running jobs CANCELLED at next checkpoint); reactivation by owner only.
+3. Enforcement helpers used by every future module: `ensure_may_claim()`, `checkpoint()`, `ensure_may_send()`, `ensure_may_call_ai()`.
+4. `GET /api/v1/control/snapshot` (small cached JSON) + `/control` page: Cytoscape/Mermaid-free SVG graph of the 7 modules, node colors by state, activity feed, 3–5 s polling; always-visible STOP button.
+5. Owner bot: `/stop_all`, `/agent <name> on|pause|off`; state changes pushed to the owner.
+6. Tests per CLAUDE.md §13A.2 (stopped agent claims no jobs, global stop blocks a queued send, pause/resume keeps queue, non-owner cannot change state).
 
 Decision: a `roles` table is not needed for two fixed roles; `users.role` is an enum
 column. A table is introduced with full RBAC if it is ever needed.

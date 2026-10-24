@@ -175,4 +175,4 @@ New lead stage from ADR-0008: `RESPONDED → ORDER_CONFIRMED → MEETING (option
 Not verified: a real Telegram round trip (this sandbox's proxy blocks api.telegram.org, and no bot token exists yet). The owner does it once via §6 of the deployment guide.
 
 ### Next task
-**M3d** — optional TOTP for the owner; then **M3b (Agent Control Center)**: `/control` page, live graph via polling, global emergency stop and per-agent toggles in dashboard and bot.
+**M3b (Agent Control Center)**: `/control` page, live graph via polling, global emergency stop and per-agent toggles in dashboard and bot.
