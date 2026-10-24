@@ -10,5 +10,6 @@
 | [0006](0006-agent-kill-switch.md) | Global and per-agent kill switch enforced at every external action | Accepted |
 | [0007](0007-cost-optimized-ai.md) | All features at minimal cost: rules first, Haiku default, Sonnet opt-in, Batch, caching, free tier for internal tasks | Accepted |
 | [0008](0008-order-intake-and-price-list.md) | Agent takes orders: no prices to clients, Order Brief, client confirmation, handoff to owner | Accepted |
+| [0009](0009-virtual-office-view.md) | Virtual Office view: office scene driven only by real agent state | Accepted |
 
 Format: Context → Decision → Consequences. New ADRs get the next number; superseded ADRs are marked, never deleted.
