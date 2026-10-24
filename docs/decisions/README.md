@@ -8,5 +8,6 @@
 | [0004](0004-cron-driven-db-job-queue.md) | DB-backed job queue drained by a bounded cron runner | Accepted |
 | [0005](0005-mustafo-persona-ai-disclosure.md) | Client persona "Mustafo" always discloses it is an AI | Accepted |
 | [0006](0006-agent-kill-switch.md) | Global and per-agent kill switch enforced at every external action | Accepted |
+| [0007](0007-cost-optimized-ai.md) | All features at minimal cost: rules first, Haiku default, Sonnet opt-in, Batch, caching, free tier for internal tasks | Accepted |
 
 Format: Context → Decision → Consequences. New ADRs get the next number; superseded ADRs are marked, never deleted.
