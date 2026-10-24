@@ -37,6 +37,8 @@ jobs:
         run: mypy
       - name: Pytest
         run: pytest
+      - name: Hosting check script runs (offline)
+        run: python scripts/check_environment.py --offline
       # Audit what ships to the server (runtime deps, pinned as resolved for this Python).
       # Dev-tool deps are audited separately on the newest Python only: some dev tools
       # (e.g. filelock via pip-audit) no longer publish fixes for 3.10, which would block
