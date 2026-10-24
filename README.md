@@ -27,6 +27,9 @@ uvicorn app.main:create_app --factory --reload
 ruff check . && ruff format --check . && mypy && pytest && pip-audit --skip-editable
 ```
 
+## Database
+Migrations: `alembic upgrade head` (uses `DATABASE_URL`). Details: [`docs/database.md`](docs/database.md).
+
 ## Deployment
 cPanel at hostmaster.uz — see [`docs/deployment-cpanel.md`](docs/deployment-cpanel.md).
 First run `scripts/check_environment.py` in cPanel Terminal and share the output.
@@ -35,4 +38,4 @@ First run `scripts/check_environment.py` in cPanel Terminal and share the output
 | Method | Path | Purpose |
 |---|---|---|
 | GET | `/api/v1/health` | liveness |
-| GET | `/api/v1/ready` | readiness (DB check added in M2) |
+| GET | `/api/v1/ready` | readiness incl. database ping (503 if not ready) |

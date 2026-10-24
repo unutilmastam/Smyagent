@@ -28,7 +28,7 @@ def _clear_settings_cache() -> None:
 
 @pytest.fixture
 def settings() -> Settings:
-    return load_settings(_env_file=None, app_env="test")
+    return load_settings(_env_file=None, app_env="test", database_url="sqlite://")
 
 
 @pytest.fixture

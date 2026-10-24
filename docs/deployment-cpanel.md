@@ -55,6 +55,8 @@ Some facts cannot be read from the shell (Python versions in the Setup Python Ap
 1. Claude Code opens PR → CI green → owner merges on phone.
 2. cPanel → Git Version Control → **Update from Remote**.
 3. Terminal: `bash scripts/deploy.sh` (added in a later milestone: installs deps, backs up DB, runs migrations, touches `tmp/restart.txt`).
+   Until then, from the app virtualenv: `pip install .` → `mysqldump` backup → `alembic upgrade head` → `touch tmp/restart.txt`.
+   Create the MySQL database in cPanel with collation `utf8mb4_unicode_ci`; `DATABASE_URL=mysql+pymysql://user:pass@localhost/dbname?charset=utf8mb4`.
 
 Never deploy without explicit owner authorization.
 

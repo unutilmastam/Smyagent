@@ -80,3 +80,12 @@ def test_docs_disabled_in_production(prod_settings: Settings) -> None:
     c = TestClient(create_app(prod_settings))
     assert c.get("/docs").status_code == 404
     assert c.get("/openapi.json").status_code == 404
+
+
+def test_ready_reports_database_failure(settings: Settings) -> None:
+    from app.infrastructure.database import Database
+
+    broken = Database("sqlite:////nonexistent-dir/x.db")
+    r = TestClient(create_app(settings, database=broken)).get("/api/v1/ready")
+    assert r.status_code == 503
+    assert r.json() == {"status": "not_ready", "checks": {"config": "ok", "database": "fail"}}
