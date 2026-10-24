@@ -1,21 +1,21 @@
 {% extends "base.html" %}
-{% block title %}Kirish — SMY Agent{% endblock %}
+{% block title %}{{ t('login.title') }} — SMY Agent{% endblock %}
 {% block body_class %}page-login{% endblock %}
 {% block content %}
 <section class="card login-card">
   <h1>SMY Agent</h1>
-  <p class="muted">ITcoDe.Uz boshqaruv paneli</p>
-  {% if error %}<p class="alert alert-error" role="alert">{{ error }}</p>{% endif %}
+  <p class="muted">{{ t('login.subtitle') }}</p>
+  {% if error %}<p class="alert alert-error" role="alert">{{ t(error) }}</p>{% endif %}
   <form method="post" action="/login" autocomplete="on">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <input type="hidden" name="next" value="{{ next }}">
-    <label for="username">Login</label>
+    <label for="username">{{ t('login.username') }}</label>
     <input id="username" name="username" required maxlength="64"
            autocomplete="username" autocapitalize="none" spellcheck="false">
-    <label for="password">Parol</label>
+    <label for="password">{{ t('login.password') }}</label>
     <input id="password" name="password" type="password" required maxlength="256"
            autocomplete="current-password">
-    <button type="submit" class="btn-primary">Kirish</button>
+    <button type="submit" class="btn-primary">{{ t('login.submit') }}</button>
   </form>
 </section>
 {% endblock %}
