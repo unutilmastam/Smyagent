@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Tests (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # cPanel CloudLinux usually offers 3.10–3.12; exact version verified in M0.
+        python: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Ruff lint
+        run: ruff check .
+      - name: Ruff format
+        run: ruff format --check .
+      - name: Mypy
+        run: mypy
+      - name: Pytest
+        run: pytest
+      # Audit what ships to the server (runtime deps, pinned as resolved for this Python).
+      # Dev-tool deps are audited separately on the newest Python only: some dev tools
+      # (e.g. filelock via pip-audit) no longer publish fixes for 3.10, which would block
+      # CI without affecting production.
+      - name: Dependency audit (runtime)
+        run: |
+          python -m venv /tmp/rt
+          /tmp/rt/bin/pip install -q .
+          /tmp/rt/bin/pip freeze --exclude smy-agent > /tmp/runtime.txt
+          pip-audit -r /tmp/runtime.txt --no-deps --disable-pip
+      - name: Dependency audit (dev tools)
+        if: matrix.python == '3.12'
+        run: pip-audit --skip-editable
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
