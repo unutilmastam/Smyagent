@@ -235,6 +235,20 @@ Common interface: structured extraction, summarization, opportunity explanation,
 - **Prompt-injection defense:** webpages, emails, client messages are untrusted data, wrapped in delimiters, never treated as instructions; the model cannot trigger sends, approvals, price changes or state transitions — only propose them.
 - **Budget enforcement:** before every optional AI call, check `budgets`; when exhausted, queue the task as `BUDGET_DEFERRED` and notify the owner once.
 
+### 12.1 Cost-optimized AI strategy (owner decision 2026-10-25, ADR-0007)
+
+**Goal: every feature in this document is built — none dropped — at the lowest running cost. Target: ≤ $10/month at ~500 companies/month; hard default budget $10/month.**
+
+1. **Deterministic first.** No LLM call where rules suffice: website audit, scoring, dedup, normalization, opt-out detection (keyword lists first, LLM only if ambiguous), language detection, state transitions, first-contact email built from templates + verified facts.
+2. **Primary provider: Claude.** Default model for everything = **Claude Haiku (latest)** (`AI_MODEL_SMALL`). **Claude Sonnet (latest)** (`AI_MODEL_LARGE`) only for client-facing long text: proposals and Mustafo replies to an engaged lead — and only if `AI_USE_LARGE_FOR_CLIENT_TEXT=true` (default **false** → Haiku everywhere).
+3. **Optional free provider.** A `groq` adapter (free tier) may serve *internal-only* tasks (classification, extraction, research summaries) when `AI_FREE_PROVIDER=groq` is configured. Never send client conversations or personal data to free tiers that may train on inputs (e.g. Gemini free tier is excluded).
+4. **Fallback chain.** `free provider (if configured) → Haiku → Sonnet (only if allowed)`. On free-tier rate limit, fall back to Haiku within budget; never fall back upward silently beyond the configured model.
+5. **Cheap execution modes.** Use the **Batch API (50% off)** for all non-urgent work (nightly research/summary runs from cron); use **prompt caching** for the static system prompt, persona and service catalog; keep inputs short (extracted text, max N KB per page, no raw HTML); set strict `max_tokens` per task.
+6. **No repeat spend.** Cache AI results by content hash; re-research a company only when its site content hash changes or after a configurable interval (default 30 days).
+7. **Search cost:** manual entry + CSV import always free; Google Places used only within its free monthly quota (`DAILY_SEARCH_LIMIT` enforces it); 2GIS only with a written agreement.
+8. **Visibility:** every AI call records provider, model, tokens, estimated USD in `provider_usage`/`cost_records`; Control Center (§13A) shows spend today/month vs budget; the owner bot alerts at 80% of budget.
+9. **Settings added:** `AI_FREE_PROVIDER`, `AI_FREE_API_KEY`, `AI_USE_LARGE_FOR_CLIENT_TEXT=false`, `AI_USE_BATCH=true`, `MONTHLY_AI_BUDGET_USD=10` — implemented when the AI layer is built (M5), and `.env.example` updated then.
+
 ---
 
 ## 13. TELEGRAM INTEGRATION (corrected and expanded)
