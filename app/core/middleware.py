@@ -76,3 +76,46 @@ class RequestIdMiddleware:
                 },
             )
             request_id_var.reset(token)
+
+
+# Docs (Swagger UI) load assets from a CDN; they are disabled in production anyway.
+_CSP_EXEMPT_PREFIXES = ("/docs", "/openapi.json")
+_CSP = (
+    "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; "
+    "connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; "
+    "object-src 'none'"
+)
+
+
+class SecurityHeadersMiddleware:
+    """Baseline security headers on every HTTP response (CLAUDE.md §15.1)."""
+
+    def __init__(self, app: ASGIApp, *, hsts: bool = False) -> None:
+        self.app = app
+        self.hsts = hsts
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        path = str(scope.get("path", ""))
+
+        async def send_wrapper(message: Message) -> None:
+            if message["type"] == "http.response.start":
+                headers = list(message.get("headers", []))
+                present = {name.lower() for name, _ in headers}
+                extra = [
+                    (b"x-content-type-options", b"nosniff"),
+                    (b"x-frame-options", b"DENY"),
+                    (b"referrer-policy", b"same-origin"),
+                    (b"permissions-policy", b"camera=(), microphone=(), geolocation=()"),
+                ]
+                if not path.startswith(_CSP_EXEMPT_PREFIXES):
+                    extra.append((b"content-security-policy", _CSP.encode()))
+                if self.hsts:
+                    extra.append((b"strict-transport-security", b"max-age=31536000"))
+                headers.extend(h for h in extra if h[0] not in present)
+                message["headers"] = headers
+            await send(message)
+
+        await self.app(scope, receive, send_wrapper)

@@ -22,7 +22,7 @@ from app.domain.actors import Actor
 from app.infrastructure.database import Base, Database
 from app.infrastructure.repositories.controls import AgentControlRepository
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def alembic_config(url: str) -> Config:
