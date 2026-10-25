@@ -176,3 +176,31 @@ Not verified: a real Telegram round trip (this sandbox's proxy blocks api.telegr
 
 ### Next task
 **M3b (Agent Control Center)**: `/control` page, live graph via polling, global emergency stop and per-agent toggles in dashboard and bot.
+
+## Session 4 — 2026-10-25 — M3b Agent Control Center
+
+### Completed
+- `agent_runs` table (migration `0004`): module, job, status, `current_step`, `progress_pct`, heartbeat, tokens, cost.
+- `ControlGate` enforcement helpers: `eligible_modules()` (job claim), `checkpoint()`, `ensure_may_send()`, `ensure_may_call_ai()`; fail closed.
+- `AgentControlService.set_state()`: audit-logged; STOP cancels running jobs/runs; global STOP also cancels queued `outbound.*` jobs.
+- Pure `node_status()` mapping (running only with a fresh heartbeat; stalled, paused, stopped, error, idle) + `ControlSnapshotService` (counts, current step/progress, activity feed, AI cost today in `DEFAULT_TIMEZONE`).
+- `/control` page: SVG pipeline graph (CSS-only styling, reduced-motion aware), module cards with Activate/Pause/Stop, activity feed, 4 s polling only while the tab is visible; always-visible ⛔ STOP in the top bar with confirmation.
+- API `GET /api/v1/control/snapshot`, `POST /api/v1/control/{key}`; `DomainError` → 400 (not 500).
+- Owner bot: `/stop_all`, `/resume_all`, `/agent <name> on|pause|off`; dashboard/API changes are pushed to the owner bot (best effort).
+
+### Verification
+| Command | Result |
+|---|---|
+| `pytest` (SQLite, Python 3.11 and 3.13) | 258 passed |
+| `TEST_DATABASE_URL=…10.6… pytest tests/integration` | 111 passed |
+| same on MariaDB 10.11 | 111 passed |
+| `alembic downgrade base && upgrade head && check` (MariaDB 10.6) | no differences |
+| Playwright 375×812: progress written to DB appears as a running node | after 3.3 s (requirement ≤ 5 s) |
+| Playwright: STOP ALL with confirm dismissed / accepted | unchanged / all 7 nodes stopped |
+| Console/CSP errors, horizontal scroll | none |
+| `ruff`, `ruff format --check`, `mypy` | clean |
+
+### Next task
+Two options (owner's choice; default **M4** because it produces real value first):
+- **M4** — company discovery: manual entry form, CSV import, normalization, dedup review.
+- **M3c-office** — Virtual Office canvas view (ADR-0009); characters would only show idle/coffee until agents exist.

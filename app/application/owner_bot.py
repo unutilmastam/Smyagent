@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.application.controls import AgentControlService, describe_change
 from app.domain.actors import Actor
 from app.domain.agents import GLOBAL_CONTROL, AgentModule, ControlState
 from app.domain.jobs import JobStatus
@@ -25,9 +26,18 @@ CHANNEL = "telegram:owner_bot"
 HELP_TEXT = (
     "SMY Agent — boshqaruv boti\n\n"
     "/status — tizim holati\n"
+    "/stop_all — ⛔ hammasini to'xtatish\n"
+    "/resume_all — hammasini faollashtirish\n"
+    "/agent <nom> on|pause|off — bitta agent\n"
     "/help — buyruqlar ro'yxati\n\n"
-    "Tez orada: lid ogohlantirishlari, takliflarni tasdiqlash, /stop_all."
+    "Agent nomlari: " + ", ".join(m.value for m in AgentModule)
 )
+
+AGENT_ACTIONS = {
+    "on": ControlState.ACTIVE,
+    "pause": ControlState.PAUSED,
+    "off": ControlState.STOPPED,
+}
 
 STATE_ICONS = {ControlState.ACTIVE: "🟢", ControlState.PAUSED: "🟡", ControlState.STOPPED: "🔴"}
 
@@ -76,7 +86,22 @@ class OwnerBotService:
             return BotReply(chat_id, HELP_TEXT)
         if command.name == "status":
             return BotReply(chat_id, self._status_text())
+        actor = Actor.user(f"tg-{sender.id}") if sender else Actor.system("owner_bot")
+        if command.name == "stop_all":
+            return BotReply(chat_id, self._set(GLOBAL_CONTROL, ControlState.STOPPED, actor))
+        if command.name == "resume_all":
+            return BotReply(chat_id, self._set(GLOBAL_CONTROL, ControlState.ACTIVE, actor))
+        if command.name == "agent":
+            parts = command.args.split()
+            modules = {m.value for m in AgentModule}
+            if len(parts) != 2 or parts[0] not in modules or parts[1] not in AGENT_ACTIONS:
+                return BotReply(chat_id, "Foydalanish: /agent <nom> on|pause|off\n\n" + HELP_TEXT)
+            return BotReply(chat_id, self._set(parts[0], AGENT_ACTIONS[parts[1]], actor))
         return BotReply(chat_id, f"Noma'lum buyruq: /{command.name}\n\n{HELP_TEXT}")
+
+    def _set(self, key: str, state: ControlState, actor: Actor) -> str:
+        change = AgentControlService(self.session).set_state(key, state, actor, "owner bot")
+        return describe_change(change)
 
     def _status_text(self) -> str:
         count = self.session.scalar

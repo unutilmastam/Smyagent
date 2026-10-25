@@ -99,3 +99,45 @@ select { width: 100%; padding: 10px; font-size: 16px; border: 1px solid var(--bo
 .toast { position: fixed; left: 16px; right: 16px; bottom: calc(var(--nav-h) + 12px); z-index: 20;
   padding: 12px 16px; border-radius: 8px; background: var(--bad); color: #fff; }
 .lang-switch { display: flex; gap: 12px; justify-content: center; margin: 24px 0 8px; font-size: .85rem; }
+
+/* --- M3b: Control Center ------------------------------------------------- */
+.topbar-right { display: flex; align-items: center; gap: 8px; }
+.topbar-right form { margin: 0; }
+.state { text-decoration: none; }
+.btn-danger { border: 0; border-radius: 8px; background: var(--bad); color: #fff; font-weight: 800; cursor: pointer; }
+.btn-stop { padding: 6px 10px; font-size: .75rem; min-height: 32px; }
+.btn-big { width: 100%; padding: 16px; font-size: 1.05rem; margin-bottom: 12px; }
+.alert-ok { background: #dcfce7; color: var(--ok); }
+.agent-graph { width: 100%; max-width: 480px; display: block; margin: 0 auto 8px; }
+.agent-graph .edge { stroke: var(--muted); stroke-width: 2; }
+.agent-graph .edge-head { fill: var(--muted); }
+.agent-graph rect { stroke-width: 2; fill: var(--surface); stroke: var(--border); }
+.agent-graph .node-label { font-size: 14px; font-weight: 700; fill: var(--text); }
+.agent-graph .node-sub { font-size: 11px; fill: var(--muted); }
+.agent-graph .node-badge { font-size: 13px; font-weight: 700; fill: var(--text); }
+.node-running rect { fill: #dcfce7; stroke: var(--ok); }
+.node-idle rect { fill: var(--surface); stroke: #9ca3af; }
+.node-paused rect { fill: #fef3c7; stroke: var(--warn); }
+.node-stopped rect { fill: #fee2e2; stroke: var(--bad); }
+.node-error rect { fill: #ffedd5; stroke: #c2410c; }
+.node-stalled rect { fill: #ffedd5; stroke: #c2410c; stroke-dasharray: 6 4; }
+@media (prefers-reduced-motion: no-preference) {
+  .node-running rect { animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 50% { stroke-width: 4; } }
+}
+.cost-line { text-align: center; font-size: .8rem; }
+.module-cards { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+@media (min-width: 720px) { .module-cards { grid-template-columns: 1fr 1fr; } }
+.module-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.module-stats, .module-step { margin: 6px 0; font-size: .85rem; overflow-wrap: anywhere; }
+.module-card progress { width: 100%; }
+.module-actions { display: flex; gap: 6px; margin-top: 8px; }
+.module-actions form { flex: 1; }
+.btn-small { width: 100%; min-height: 40px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); }
+.btn-small.is-current { background: var(--primary); color: var(--primary-text); border-color: var(--primary); }
+.badge-status-running { background: #dcfce7; color: var(--ok); }
+.badge-status-paused { background: #fef3c7; color: var(--warn); }
+.badge-status-stopped { background: #fee2e2; color: var(--bad); }
+.badge-status-error, .badge-status-stalled { background: #ffedd5; color: #c2410c; }
+.feed { font-size: .85rem; }
+.control-global form { margin: 0; }

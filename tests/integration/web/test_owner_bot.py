@@ -126,3 +126,39 @@ def test_oversized_payload_rejected(bot: TestClient) -> None:
         URL, content=b"x" * (300 * 1024), headers={"X-Telegram-Bot-Api-Secret-Token": SECRET}
     )
     assert r.status_code == 413
+
+
+def test_stop_all_resume_and_single_agent(bot: TestClient, db: Database) -> None:
+    from app.infrastructure.database.models import AgentControl
+
+    def state(key: str) -> str:
+        with db.transaction() as s:
+            return (
+                s.scalars(select(AgentControl.state).where(AgentControl.module == key)).one().value
+            )
+
+    reply = _post(bot, _update(50, "/stop_all")).json()["text"]
+    assert "Barcha agentlar" in reply and state("global") == "STOPPED"
+    assert state("global") == "STOPPED"
+    _post(bot, _update(51, "/resume_all"))
+    assert state("global") == "ACTIVE"
+    reply = _post(bot, _update(52, "/agent research_audit pause")).json()["text"]
+    assert "research_audit" in reply and state("research_audit") == "PAUSED"
+    usage = _post(bot, _update(53, "/agent nobody off")).json()["text"]
+    assert "Foydalanish" in usage
+    with db.transaction() as s:
+        actors = s.scalars(
+            select(AuditLog.actor).where(AuditLog.action == "agent_control.set")
+        ).all()
+    assert actors and all(a == f"user:tg-{ADMIN_ID}" for a in actors)
+
+
+def test_non_admin_cannot_stop(bot: TestClient, db: Database) -> None:
+    from app.infrastructure.database.models import AgentControl
+
+    _post(bot, _update(60, "/stop_all", sender=999))
+    with db.transaction() as s:
+        assert (
+            s.scalars(select(AgentControl.state).where(AgentControl.module == "global")).one().value
+            == "ACTIVE"
+        )

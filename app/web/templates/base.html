@@ -20,7 +20,17 @@
   {% if user %}
   <header class="topbar">
     <a class="brand" href="/">SMY Agent</a>
-    <span class="state state-{{ global_state|default('ACTIVE')|lower }}" title="{{ t('global_state') }}">{{ global_state|default('') }}</span>
+    <span class="topbar-right">
+      <a class="state state-{{ global_state|default('ACTIVE')|lower }}" href="/control" title="{{ t('global_state') }}">{{ global_state|default('') }}</a>
+      {% if user.is_owner and global_state == 'ACTIVE' %}
+      {# Always-visible emergency stop (CLAUDE.md §13A.2). #}
+      <form method="post" action="/control/global" data-confirm="{{ t('control.stop_all.confirm') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="state" value="STOPPED">
+        <button type="submit" class="btn-danger btn-stop" title="{{ t('control.stop_all') }}">⛔ STOP</button>
+      </form>
+      {% endif %}
+    </span>
   </header>
   {% endif %}
   <main class="container" id="main">
@@ -41,6 +51,9 @@
     </a>
     <a href="/companies" {% if path.startswith('/companies') %}aria-current="page"{% endif %}>
       <span aria-hidden="true">▤</span><span>{{ t('nav.companies') }}</span>
+    </a>
+    <a href="/control" {% if path.startswith('/control') %}aria-current="page"{% endif %}>
+      <span aria-hidden="true">◉</span><span>{{ t('nav.control') }}</span>
     </a>
     <form method="post" action="/logout">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
