@@ -181,3 +181,17 @@ input[type="file"] { padding: 8px; }
 .stat-attention .stat-value { color: var(--warn); }
 .plain-fieldset { border: 0; padding: 0; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .module-settings { margin: 4px 0; font-size: .85rem; }
+/* conversations (M8) */
+.chat { list-style: none; padding: 0; margin: 0 0 16px; display: flex; flex-direction: column; gap: 8px; }
+.bubble { max-width: 88%; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); }
+.bubble-in { align-self: flex-start; }
+.bubble-out { align-self: flex-end; background: #ecfdf5; }
+.bubble-draft, .bubble-blocked { border-style: dashed; background: #fffbeb; }
+.bubble-rejected { opacity: .55; }
+.bubble-meta { display: block; font-size: .75rem; margin-top: 4px; }
+.order-card { margin-bottom: 12px; }
+.badge-brief-confirmed, .badge-cstate-order_confirmed { background: #dcfce7; color: var(--ok); }
+.badge-brief-collecting, .badge-brief-awaiting_confirmation, .badge-cstate-brief, .badge-cstate-awaiting_confirmation { background: #fef3c7; color: var(--warn); }
+.badge-cstate-opted_out, .badge-brief-cancelled { background: #fee2e2; color: var(--bad); }
+.badge-cstate-handoff { background: #dbeafe; color: #1d4ed8; }
+.order-alert { display: block; font-weight: 700; text-decoration: none; }

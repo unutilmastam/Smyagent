@@ -27,6 +27,7 @@ from app.web.auth import (
     require_user,
     safe_next_path,
 )
+from app.web.conversations import open_order_count
 from app.web.i18n import LANG_COOKIE, normalize_language
 from app.web.layout import layout_context
 from app.web.templating import render
@@ -166,6 +167,7 @@ def home(
     with database.transaction() as session:
         companies = session.scalar(select(func.count()).select_from(Company)) or 0
         leads = session.scalar(select(func.count()).select_from(Lead)) or 0
+        new_orders = open_order_count(session)
         awaiting = (
             session.scalar(
                 select(func.count())
@@ -182,6 +184,7 @@ def home(
         "companies": companies,
         "leads": leads,
         "awaiting": awaiting,
+        "new_orders": new_orders,
         "jobs_queued": job_counts.get(JobStatus.QUEUED, 0),
         "jobs_running": job_counts.get(JobStatus.RUNNING, 0),
         "jobs_failed": job_counts.get(JobStatus.FAILED, 0),

@@ -6,6 +6,7 @@ from collections.abc import Callable
 from typing import Any
 
 from app.jobs.context import TaskContext
+from app.jobs.tasks.conversation import SEND_JOB, run_send_reply
 from app.jobs.tasks.discovery import DISCOVERY_SEARCH, run_discovery_search
 from app.jobs.tasks.proposals import (
     GATE_REVIEW,
@@ -24,4 +25,5 @@ HANDLERS: dict[str, Handler] = {
     SCORING_EVALUATE: run_scoring,
     PROPOSAL_DRAFT: run_proposal_draft,
     GATE_REVIEW: run_quality_gate,
+    SEND_JOB: run_send_reply,
 }

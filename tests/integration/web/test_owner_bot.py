@@ -241,3 +241,29 @@ def test_reject_command_with_reason(bot: TestClient, db: Database) -> None:
 
     with db.transaction() as s:
         assert s.scalars(select(ApprovalRequest)).one().reason == "juda kichik biznes"
+
+
+# -- conversations & orders (M8) ---------------------------------------------------
+
+
+def test_reply_and_order_buttons(bot: TestClient, db: Database) -> None:
+    from app.infrastructure.database.models import ConversationMessage, Lead, OrderBrief
+    from tests.integration.conversation_helpers import confirmed_order, say
+
+    say(db, "Salom", chat=8_800_001)
+    with db.transaction() as s:
+        draft_id = s.scalars(
+            select(ConversationMessage.id).where(ConversationMessage.direction == "out")
+        ).one()
+    body = _post(bot, _callback(300, f"ms:{draft_id}")).json()
+    assert "navbatiga" in body["text"]
+    assert "Bajarilmadi" in _post(bot, _callback(301, f"ms:{draft_id}")).json()["text"]
+
+    confirmed_order(db, chat=8_800_002)
+    with db.transaction() as s:
+        brief_id = s.scalars(select(OrderBrief.id)).one()
+    assert "WON" in _post(bot, _callback(302, f"oa:{brief_id}")).json()["text"]
+    with db.transaction() as s:
+        stages = {lead.stage.value for lead in s.scalars(select(Lead))}
+        assert "WON" in stages
+    assert "Bajarilmadi" in _post(bot, _callback(303, f"or:{brief_id}")).json()["text"]

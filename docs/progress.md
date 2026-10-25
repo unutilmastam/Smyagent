@@ -364,3 +364,29 @@ Owner ran `scripts/check_environment.py` (0 internal errors). Findings and decis
 - All external APIs reachable; no Node/Docker/Redis (as assumed).
 - `smy.itcode.uz/api` is used by `smarthome-api` → owner chose a new subdomain **`agent.itcode.uz`** for SMY Agent.
 - **Open:** LVE limits, cron minimum interval, MySQL server version, nested startup path still to read manually in cPanel.
+
+## Session 5 (cont.) — M8 Mustafo client bot + order intake
+
+### Completed
+- Client bot webhook `/api/v1/telegram/client-webhook` (secret header, private text messages only, idempotent updates); CLI `telegram-set-client-webhook`.
+- Rules (`app/domain/conversation.py`, ADR-0013): language UZ/UZ-Cyrl/RU/EN, intents (opt-out first, human request, "are you a bot?", price, interest, confirm/deny, spam), 7-question Order Brief, replies in all four languages, AI disclosure in the first message only.
+- `ConversationService`: opt-out → suppression + blocked queue + lead `DO_NOT_CONTACT`; truthful bot answer + handoff with owner contact; price questions answered without figures; brief summary never echoes money/deadline figures; explicit confirmation → `ORDER_CONFIRMED` → one "✅ Yangi buyurtma" Telegram message with Qabul qilaman / Savol beraman / Rad etaman buttons.
+- Reply modes in agent settings: approve every reply (default) or automatic safe replies; Quality Gate `client_reply` mode; `outbound.telegram_reply` send job with suppression + kill-switch check right before sending.
+- Dashboard: 💬 Suhbatlar list/detail (chat bubbles, drafts with send/discard, owner reply → handoff, resume Mustafo, order card with decisions), Markdown project spec export, home "Yangi buyurtma" alert.
+- Tables `conversations`, `conversation_messages`, `order_briefs`, `suppression_records` (migration `0011`).
+
+### Verification
+| Command | Result |
+|---|---|
+| `pytest` (SQLite, Python 3.11 and 3.13) | 608 passed |
+| `TEST_DATABASE_URL=…10.6… pytest tests/integration` | 237 passed |
+| same on MariaDB 10.11 | 237 passed |
+| same on **MySQL 8.0** (production engine) | 237 passed |
+| `alembic downgrade base && upgrade head && check` (MariaDB 10.6 and MySQL 8.0) | no differences |
+| Playwright 375×812: conversations list + full order chat | no horizontal scroll, no console errors |
+| `ruff`, `ruff format --check`, `mypy` | clean |
+
+Not verified: live Telegram delivery (sandbox has no Bot API access); all paths are tested with fake bots.
+
+### Next task
+**M9** — outbound to public business contacts: automatic email (caps, warm-up, opt-out link, SPF/DKIM/DMARC docs, bounce auto-pause) and assisted one-tap Telegram for approved offers.

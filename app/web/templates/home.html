@@ -5,6 +5,7 @@
 {% if global_state != 'ACTIVE' %}
 <p class="alert alert-warn" role="status">{{ t('home.paused', state=global_state) }}</p>
 {% endif %}
+{% if stats.new_orders %}<a class="alert alert-ok order-alert" href="/conversations?state=ORDER_CONFIRMED">✅ {{ t('home.new_orders', n=stats.new_orders) }}</a>{% endif %}
 <section class="stats" aria-label="{{ t('stats.companies') }}">
   <a class="stat" href="/companies"><span class="stat-value">{{ stats.companies }}</span><span class="stat-label">{{ t('stats.companies') }}</span></a>
   <a class="stat" href="/leads"><span class="stat-value">{{ stats.leads }}</span><span class="stat-label">{{ t('stats.leads') }}</span></a>

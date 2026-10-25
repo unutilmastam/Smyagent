@@ -8,6 +8,7 @@ settings and no value here can switch them off (CLAUDE.md §4, §5, §13A).
 from __future__ import annotations
 
 import re
+from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -129,6 +130,22 @@ class QualityGateSettings(_Settings):
         return words
 
 
+class ReplyMode(str, Enum):
+    APPROVE_ALL = "approve_all"  # default: every reply waits for the owner (CLAUDE.md §8.1)
+    AUTO_SAFE = "auto_safe"  # gate-clean template replies go out at once; others wait
+
+
+class ConversationSettings(_Settings):
+    reply_mode: ReplyMode = ReplyMode.APPROVE_ALL
+    # Shown to the client on a human handoff (CLAUDE.md §5.1 rule 4).
+    owner_contact: str = Field("Telegram: @ITcoDe_Uz", min_length=3, max_length=120)
+
+    @field_validator("owner_contact")
+    @classmethod
+    def _contact(cls, value: str) -> str:
+        return value.strip()
+
+
 class InstructionsOnly(_Settings):
     """Agents whose behaviour settings arrive with their milestone (M8, M9)."""
 
@@ -140,7 +157,7 @@ SETTINGS_MODELS: dict[AgentModule, type[_Settings]] = {
     AgentModule.OPPORTUNITY_SCORING: ScoringExtraSettings,
     AgentModule.PROPOSAL_REQUIREMENTS: ProposalSettings,
     AgentModule.QUALITY_GATE: QualityGateSettings,
-    AgentModule.CONVERSATION: InstructionsOnly,
+    AgentModule.CONVERSATION: ConversationSettings,
 }
 
 

@@ -95,6 +95,22 @@ No WebSockets, no streaming responses, no reliance on FastAPI `BackgroundTasks`,
 Requires outbound HTTPS to `api.telegram.org` only for step 4 (replies are returned in the
 webhook response, so normal operation needs no outbound call). Verify with `check_environment.py`.
 
+## 6b. Mustafo client bot (M8) — from the phone
+
+1. **@BotFather** → `/newbot` → public name *Mustafo — ITcoDe.Uz*, username e.g.
+   `ITcoDeMustafoBot`. In BotFather set the description: *"AI yordamchi — ITcoDe.Uz"*.
+2. cPanel → Environment variables: `TELEGRAM_CLIENT_BOT_TOKEN` = the new token
+   (the same `TELEGRAM_WEBHOOK_SECRET` is used). To let replies go out at all:
+   `OUTBOUND_SENDING_ENABLED=true`. Restart the app.
+3. Terminal: `python -m app.cli telegram-set-client-webhook` → webhook
+   `https://<your domain>/api/v1/telegram/client-webhook`.
+4. Dashboard → ⚙ Agent sozlamalari → Mustafo: keep **"I approve every reply"** (default)
+   or switch to automatic safe replies. Put the bot link (`t.me/<username>`) on itcode.uz,
+   Instagram and business cards — the bot only answers people who write first.
+5. Owner-approved replies are sent by the cron runner (§7), so with approval mode a reply
+   reaches the client within one cron interval. Automatic replies go out immediately in
+   the webhook response.
+
 ## 7. Background agents (cron) — required for automatic discovery
 
 The agents work only when the job runner is invoked regularly. cPanel → **Cron Jobs** →

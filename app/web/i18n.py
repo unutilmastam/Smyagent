@@ -826,9 +826,9 @@ _T: dict[str, dict[str, str]] = {
         "en": "Extra blocked and review words.",
     },
     "agentset.desc.conversation": {
-        "uz": "Mustafo suhbati — sozlamalar M8 bilan; hozir ko'rsatma.",
-        "ru": "Диалоги Мустафо — настройки с M8; сейчас инструкции.",
-        "en": "Mustafo conversations — settings arrive with M8; instructions now.",
+        "uz": "Mustafo javoblari: avtomatik yoki sizning tasdig'ingiz bilan, aloqa ma'lumoti.",
+        "ru": "Ответы Мустафо: автоматически или с вашим одобрением, контакт для связи.",
+        "en": "Mustafo replies: automatic or with your approval, handoff contact.",
     },
     "agentset.results_per_search": {
         "uz": "Har qidiruvda ko'pi bilan nechta kompaniya (5–200)",
@@ -990,6 +990,188 @@ _T: dict[str, dict[str, str]] = {
         "en": "Contains one of your review words",
     },
     "nav.settings": {"uz": "Sozlamalar", "ru": "Настройки", "en": "Settings"},
+    # conversations & orders (M8)
+    "nav.conversations": {"uz": "Suhbatlar", "ru": "Диалоги", "en": "Chats"},
+    "conv.title": {
+        "uz": "Mijozlar bilan suhbatlar",
+        "ru": "Диалоги с клиентами",
+        "en": "Client conversations",
+    },
+    "conv.intro": {
+        "uz": "Mijozlar Mustafo botiga o'zlari yozadi. Mustafo AI ekanini aytadi, buyurtmani "
+        "so'rab oladi va sizga topshiradi.",
+        "ru": "Клиенты сами пишут боту Мустафо. Он сообщает, что он AI, собирает заказ и "
+        "передаёт его вам.",
+        "en": "Clients write to the Mustafo bot themselves. It says it is an AI, collects the "
+        "order and hands it to you.",
+    },
+    "conv.empty": {
+        "uz": "Hali suhbat yo'q. Bot havolasini saytingiz, Instagram va vizitkaga qo'ying.",
+        "ru": "Диалогов пока нет. Разместите ссылку на бота на сайте, в Instagram и на визитке.",
+        "en": "No conversations yet. Put the bot link on your site, Instagram and business card.",
+    },
+    "conv.drafts": {
+        "uz": "{n} javob tasdiq kutmoqda",
+        "ru": "{n} ответ ждёт одобрения",
+        "en": "{n} reply awaiting approval",
+    },
+    "conv.messages": {"uz": "Xabarlar", "ru": "Сообщения", "en": "Messages"},
+    "conv.disclosed": {"uz": "AI ekanligi aytilgan", "ru": "AI раскрыт", "en": "AI disclosed"},
+    "conv.opted_out": {
+        "uz": "Mijoz rad etdi — unga boshqa hech narsa yuborilmaydi.",
+        "ru": "Клиент отказался — ему больше ничего не отправляется.",
+        "en": "The client opted out — nothing will be sent to them again.",
+    },
+    "conv.send": {"uz": "Yuborish", "ru": "Отправить", "en": "Send"},
+    "conv.discard": {"uz": "Bekor qilish", "ru": "Отменить", "en": "Discard"},
+    "conv.owner_reply": {"uz": "O'zingiz yozing", "ru": "Написать самому", "en": "Write yourself"},
+    "conv.owner_reply_hint": {
+        "uz": "Siz yozganda Mustafo jim turadi (suhbat sizga o'tadi). Narxni faqat siz yozasiz.",
+        "ru": "Когда пишете вы, Мустафо молчит (диалог переходит к вам). Цену называете только вы.",
+        "en": "When you write, Mustafo stays silent (you take over). Only you state prices.",
+    },
+    "conv.resume": {
+        "uz": "Mustafo davom etsin",
+        "ru": "Мустафо продолжает",
+        "en": "Let Mustafo continue",
+    },
+    "conv.done.send": {
+        "uz": "Yuborish navbatiga qo'yildi.",
+        "ru": "Поставлено в очередь на отправку.",
+        "en": "Queued for sending.",
+    },
+    "conv.done.discard": {"uz": "Bekor qilindi.", "ru": "Отменено.", "en": "Discarded."},
+    "conv.done.reply": {
+        "uz": "Xabaringiz yuborish navbatida.",
+        "ru": "Ваше сообщение в очереди.",
+        "en": "Your message is queued.",
+    },
+    "conv.done.resume": {
+        "uz": "Mustafo yana javob beradi.",
+        "ru": "Мустафо снова отвечает.",
+        "en": "Mustafo replies again.",
+    },
+    "conv.done.accepted": {
+        "uz": "Buyurtma qabul qilindi (WON).",
+        "ru": "Заказ принят (WON).",
+        "en": "Order accepted (WON).",
+    },
+    "conv.done.question": {
+        "uz": "Suhbat sizga o'tdi.",
+        "ru": "Диалог передан вам.",
+        "en": "You took over the chat.",
+    },
+    "conv.done.rejected": {
+        "uz": "Buyurtma rad etildi (LOST).",
+        "ru": "Заказ отклонён (LOST).",
+        "en": "Order declined (LOST).",
+    },
+    "cstate.OPEN": {"uz": "Ochiq", "ru": "Открыт", "en": "Open"},
+    "cstate.BRIEF": {"uz": "Buyurtma so'ralmoqda", "ru": "Сбор заказа", "en": "Collecting order"},
+    "cstate.AWAITING_CONFIRMATION": {
+        "uz": "Mijoz tasdig'i kutilmoqda",
+        "ru": "Ждём подтверждения",
+        "en": "Awaiting client confirmation",
+    },
+    "cstate.ORDER_CONFIRMED": {
+        "uz": "✅ Buyurtma tasdiqlandi",
+        "ru": "✅ Заказ подтверждён",
+        "en": "✅ Order confirmed",
+    },
+    "cstate.HANDOFF": {"uz": "Siz gaplashyapsiz", "ru": "Ведёте вы", "en": "You are handling"},
+    "cstate.OPTED_OUT": {"uz": "Rad etgan", "ru": "Отказался", "en": "Opted out"},
+    "bstatus.COLLECTING": {"uz": "to'ldirilmoqda", "ru": "заполняется", "en": "collecting"},
+    "bstatus.AWAITING_CONFIRMATION": {
+        "uz": "tasdiq kutilmoqda",
+        "ru": "ждёт подтверждения",
+        "en": "awaiting confirmation",
+    },
+    "bstatus.CONFIRMED": {
+        "uz": "mijoz tasdiqladi",
+        "ru": "клиент подтвердил",
+        "en": "client confirmed",
+    },
+    "bstatus.CANCELLED": {"uz": "bekor", "ru": "отменён", "en": "cancelled"},
+    "mstatus.RECEIVED": {"uz": "mijozdan", "ru": "от клиента", "en": "from client"},
+    "mstatus.DRAFT": {"uz": "tasdiq kutmoqda", "ru": "ждёт одобрения", "en": "awaiting approval"},
+    "mstatus.APPROVED": {"uz": "navbatda", "ru": "в очереди", "en": "queued"},
+    "mstatus.SENT": {"uz": "yuborildi", "ru": "отправлено", "en": "sent"},
+    "mstatus.REJECTED": {"uz": "bekor qilindi", "ru": "отменено", "en": "discarded"},
+    "mstatus.BLOCKED": {"uz": "to'xtatildi", "ru": "заблокировано", "en": "blocked"},
+    "intent.opt_out": {"uz": "rad etish", "ru": "отказ", "en": "opt-out"},
+    "intent.human_request": {"uz": "odam so'radi", "ru": "просит человека", "en": "wants a human"},
+    "intent.bot_question": {"uz": "botmisan?", "ru": "ты бот?", "en": "are you a bot?"},
+    "intent.price_request": {"uz": "narx so'radi", "ru": "спросил цену", "en": "asked price"},
+    "intent.interest": {"uz": "qiziqish", "ru": "интерес", "en": "interest"},
+    "intent.confirm": {"uz": "tasdiq", "ru": "подтверждение", "en": "confirm"},
+    "intent.deny": {"uz": "yo'q", "ru": "нет", "en": "no"},
+    "intent.greeting": {"uz": "salom", "ru": "приветствие", "en": "greeting"},
+    "intent.spam": {"uz": "spam", "ru": "спам", "en": "spam"},
+    "intent.other": {"uz": "boshqa", "ru": "другое", "en": "other"},
+    "order.title": {"uz": "Buyurtma", "ru": "Заказ", "en": "Order"},
+    "order.service": {"uz": "Nima kerak", "ru": "Что нужно", "en": "What"},
+    "order.goal": {"uz": "Maqsad", "ru": "Цель", "en": "Goal"},
+    "order.features": {"uz": "Imkoniyatlar", "ru": "Функции", "en": "Features"},
+    "order.examples": {"uz": "Namunalar", "ru": "Примеры", "en": "Examples"},
+    "order.content": {"uz": "Materiallar", "ru": "Материалы", "en": "Materials"},
+    "order.deadline": {"uz": "Istalgan muddat", "ru": "Желаемый срок", "en": "Preferred timing"},
+    "order.contact": {"uz": "Aloqa", "ru": "Контакт", "en": "Contact"},
+    "order.notes": {"uz": "Tuzatishlar", "ru": "Исправления", "en": "Corrections"},
+    "order.budget": {
+        "uz": "Budjet (mijoz so'zi, faqat siz uchun)",
+        "ru": "Бюджет (слова клиента, только для вас)",
+        "en": "Budget (client's words, owner only)",
+    },
+    "order.confirmed_at": {
+        "uz": "Mijoz tasdiqladi",
+        "ru": "Клиент подтвердил",
+        "en": "Client confirmed",
+    },
+    "order.decision": {"uz": "Qaroringiz", "ru": "Ваше решение", "en": "Your decision"},
+    "order.decision.accepted": {"uz": "qabul qilindi", "ru": "принят", "en": "accepted"},
+    "order.decision.question": {"uz": "savol berildi", "ru": "есть вопросы", "en": "questions"},
+    "order.decision.rejected": {"uz": "rad etildi", "ru": "отклонён", "en": "declined"},
+    "order.spec": {
+        "uz": "Loyiha spetsifikatsiyasi (Markdown)",
+        "ru": "ТЗ проекта (Markdown)",
+        "en": "Project spec (Markdown)",
+    },
+    "order.accept": {"uz": "✅ Qabul qilaman", "ru": "✅ Принимаю", "en": "✅ Accept"},
+    "order.question": {"uz": "❓ Savol beraman", "ru": "❓ Есть вопросы", "en": "❓ Ask questions"},
+    "order.reject": {"uz": "❌ Rad etaman", "ru": "❌ Отклоняю", "en": "❌ Decline"},
+    "home.new_orders": {
+        "uz": "Yangi buyurtma: {n}",
+        "ru": "Новых заказов: {n}",
+        "en": "New orders: {n}",
+    },
+    "agentset.reply_mode": {
+        "uz": "Mustafo qanday javob bersin",
+        "ru": "Как отвечает Мустафо",
+        "en": "How Mustafo replies",
+    },
+    "agentset.reply_mode.approve_all": {
+        "uz": "Har bir javobni men tasdiqlayman (standart)",
+        "ru": "Каждый ответ одобряю я (по умолчанию)",
+        "en": "I approve every reply (default)",
+    },
+    "agentset.reply_mode.auto_safe": {
+        "uz": "Xavfsiz javoblar darhol ketsin (narx/va'da bo'lsa — menga keladi)",
+        "ru": "Безопасные ответы сразу (с ценой/обещанием — ко мне)",
+        "en": "Safe replies go at once (anything with price/promise comes to me)",
+    },
+    "agentset.reply_mode_hint": {
+        "uz": "Avtomatik rejimda ham OUTBOUND_SENDING_ENABLED=true va STOP o'chiq bo'lishi "
+        "kerak. Rad etish, AI ekanligi va narxsizlik har doim saqlanadi.",
+        "ru": "Даже в авто-режиме нужен OUTBOUND_SENDING_ENABLED=true и выключенный STOP. Отказ, "
+        "AI-раскрытие и «без цен» действуют всегда.",
+        "en": "Auto mode still needs OUTBOUND_SENDING_ENABLED=true and STOP off. Opt-out, AI "
+        "disclosure and no prices always apply.",
+    },
+    "agentset.owner_contact": {
+        "uz": "Mijoz \"odam\" so'rasa ko'rsatiladigan aloqa",
+        "ru": "Контакт для клиента, если он просит человека",
+        "en": "Contact shown when a client asks for a human",
+    },
 }
 
 
