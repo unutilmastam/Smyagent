@@ -334,3 +334,25 @@ Not verified: auditing real public sites — this sandbox's proxy blocks direct 
 
 ### Next task
 **M8** — Mustafo client bot (client-initiated): disclosure, language detection, message classification, opt-out → suppression, owner-approved replies, **Order Brief interview → client confirmation → `ORDER_CONFIRMED` → "✅ Yangi buyurtma" to the owner**, Markdown project spec.
+
+## Session 5 (cont.) — M7c Owner-editable agent settings
+
+### Completed
+- `/settings` hub (all 7 agents, locked rules) and `/settings/agents/{module}` per-agent form; ⚙ link on every Control Center card and on the home page.
+- Editable: discovery results per search; research companies per run; hot-lead threshold; offered services, services per offer, minimum need strength, every offer text per language (UZ/RU/EN) incl. each service's pitch line; extra blocked / review words for the Quality Gate; free-text instructions for every agent (stored now, used once an AI key exists).
+- Safety: bounds validated; only `{company}`/`{owner}` placeholders (plain replacement); a sample offer with all services is checked by the Quality Gate on save — priced/guaranteed text is refused; disclosure, opt-out and signature cannot be edited; owner words only add rules.
+- Versions: every save versioned + audit-logged; restore and reset create new versions. Tables `agent_settings`, `agent_setting_versions` (migration `0010`), ADR-0012.
+- Agents read the settings at run time (discovery, research scheduler, scoring alert, proposal drafting, Quality Gate).
+
+### Verification
+| Command | Result |
+|---|---|
+| `pytest` (SQLite, Python 3.11 and 3.13) | 535 passed |
+| `TEST_DATABASE_URL=…10.6… pytest tests/integration` | 216 passed |
+| same on MariaDB 10.11 | 216 passed |
+| `alembic downgrade base && upgrade head && check` (MariaDB 10.6) | no differences |
+| Playwright 375×812: `/settings`, proposal settings | no horizontal scroll, no console errors |
+| `ruff`, `ruff format --check`, `mypy` | clean |
+
+### Next task
+**M8** — Mustafo client bot + order intake (`ORDER_CONFIRMED`); its persona/FAQ settings join `/settings/agents/conversation`.

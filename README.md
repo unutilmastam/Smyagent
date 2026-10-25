@@ -47,6 +47,8 @@ First run `scripts/check_environment.py` in cPanel Terminal and share the output
 | GET | `/proposals`, `/proposals/{id}` | offers with Quality Gate verdict, evidence, questions, history |
 | POST | `/proposals/{id}/approve`, `/reject`, `/edit` | owner decisions (CSRF); edit = new version, re-checked |
 | GET | `/proposals/{id}/export.md` | offer + evidence as Markdown |
+| GET | `/settings`, `/settings/agents/{module}` | agent settings hub and per-agent form, versions |
+| POST | `/settings/agents/{module}`, `/reset`, `/restore/{version}` | save / reset / restore (owner, CSRF, audit-logged) |
 | GET/POST | `/companies/new`, `/companies/import` | manual entry, CSV import with dry run (owner) |
 | GET/POST | `/discovery` | automatic discovery: cities, categories, search now (owner) |
 

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% set key = module.value %}
+{% block title %}{{ t('agent.' ~ key) }} — {{ t('agentset.title') }}{% endblock %}
+{% block content %}
+<p><a href="/settings">← {{ t('agentset.title') }}</a></p>
+<h1>⚙ {{ t('agent.' ~ key) }}</h1>
+<p class="muted">{{ t('agentset.desc.' ~ key) }} · {% if version %}v{{ version }}{% else %}{{ t('agentset.defaults') }}{% endif %}</p>
+{% if saved %}<p class="alert alert-ok" role="status">{{ t('agentset.saved', v=saved) }}</p>{% endif %}
+{% if errors %}<div class="alert alert-error" role="alert"><p>{{ t('agentset.not_saved') }}</p><ul class="plain-list">{% for e in errors %}<li class="break">{{ e }}</li>{% endfor %}</ul></div>{% endif %}
+{% set ro = not user.is_owner %}
+{% if ro %}<p class="alert alert-warn">{{ t('control.readonly') }}</p>{% endif %}
+
+<form method="post" action="/settings/agents/{{ key }}" class="card form-stack">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <fieldset {% if ro %}disabled{% endif %} class="plain-fieldset">
+  {% if key == 'discovery' %}
+    <label for="results_per_search">{{ t('agentset.results_per_search') }}</label>
+    <input id="results_per_search" name="results_per_search" type="number" min="5" max="200" value="{{ s.results_per_search }}" inputmode="numeric">
+    <p class="hint muted">{{ t('agentset.discovery_hint') }} <a href="/discovery">{{ t('auto.title') }}</a></p>
+  {% elif key == 'research_audit' %}
+    <label for="companies_per_run">{{ t('agentset.companies_per_run') }}</label>
+    <input id="companies_per_run" name="companies_per_run" type="number" min="1" max="100" value="{{ s.companies_per_run }}" inputmode="numeric">
+  {% elif key == 'opportunity_scoring' %}
+    <label for="hot_lead_threshold">{{ t('agentset.hot_lead_threshold') }}</label>
+    <input id="hot_lead_threshold" name="hot_lead_threshold" type="number" min="0" max="100" value="{{ s.hot_lead_threshold }}" inputmode="numeric">
+    <p class="hint muted"><a href="/settings/scoring">{{ t('settings.scoring') }}</a></p>
+  {% elif key == 'proposal_requirements' %}
+    <fieldset class="checks">
+      <legend>{{ t('agentset.enabled_services') }}</legend>
+      {% for svc in services %}
+      <label class="check"><input type="checkbox" name="services" value="{{ svc.value }}" {% if svc in s.enabled_services %}checked{% endif %}> {{ t('svc.' ~ svc.value) }}</label>
+      {% endfor %}
+    </fieldset>
+    <label for="max_services">{{ t('agentset.max_services') }}</label>
+    <input id="max_services" name="max_services" type="number" min="1" max="5" value="{{ s.max_services }}" inputmode="numeric">
+    <label for="min_strength">{{ t('agentset.min_strength') }}</label>
+    <input id="min_strength" name="min_strength" type="number" min="0.1" max="0.9" step="0.05" value="{{ s.min_strength }}" inputmode="decimal">
+    <p class="hint muted">{{ t('agentset.texts_hint') }}</p>
+    {% for lang in languages %}
+    <details class="card action-card">
+      <summary>✏️ {{ t('agentset.texts') }} — {{ lang.value|upper }}</summary>
+      {% for part in frame_parts %}
+      {% set fid = 'text_' ~ lang.value ~ '_' ~ part %}
+      <label for="{{ fid }}">{{ t('agentset.part.' ~ part) }}</label>
+      <textarea id="{{ fid }}" name="{{ fid }}" rows="{{ 1 if part in ('title', 'greeting', 'services') else 3 }}" maxlength="600" placeholder="{{ default_text(lang, part) }}">{{ s.texts.get(lang, {}).get(part, '') }}</textarea>
+      {% endfor %}
+      {% for svc in services %}
+      {% set fid = 'stext_' ~ lang.value ~ '_' ~ svc.value %}
+      <label for="{{ fid }}">{{ t('svc.' ~ svc.value) }}</label>
+      <textarea id="{{ fid }}" name="{{ fid }}" rows="2" maxlength="600" placeholder="{{ default_service_text(lang, svc) }}">{{ s.service_texts.get(lang, {}).get(svc, '') }}</textarea>
+      {% endfor %}
+    </details>
+    {% endfor %}
+  {% elif key == 'quality_gate' %}
+    <label for="extra_blocked">{{ t('agentset.extra_blocked') }}</label>
+    <textarea id="extra_blocked" name="extra_blocked" rows="4">{{ s.extra_blocked|join('\n') }}</textarea>
+    <label for="extra_review">{{ t('agentset.extra_review') }}</label>
+    <textarea id="extra_review" name="extra_review" rows="4">{{ s.extra_review|join('\n') }}</textarea>
+    <p class="hint muted">{{ t('agentset.words_hint') }}</p>
+  {% else %}
+    <p class="muted">{{ t('agentset.later') }}</p>
+  {% endif %}
+    <label for="instructions">{{ t('agentset.instructions') }}</label>
+    <textarea id="instructions" name="instructions" rows="4" maxlength="1000" placeholder="{{ t('agentset.instructions_placeholder') }}">{{ s.instructions }}</textarea>
+    <p class="hint muted">{{ t('agentset.instructions_hint') }}</p>
+    {% if not ro %}<button type="submit" class="btn-primary">{{ t('settings.save') }}</button>{% endif %}
+  </fieldset>
+</form>
+
+{% if not ro %}
+<form method="post" action="/settings/agents/{{ key }}/reset" class="inline-form" data-confirm="{{ t('agentset.reset_confirm') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <button type="submit" class="btn-secondary btn-big">↺ {{ t('agentset.reset') }}</button>
+</form>
+{% endif %}
+
+<h2>🔒 {{ t('agentset.locked') }}</h2>
+<ul class="plain-list">{% for r in hard_rules %}<li>{{ t(r) }}</li>{% endfor %}</ul>
+
+<h2>{{ t('agentset.history') }}</h2>
+{% if history %}
+<ul class="timeline">
+  {% for h in history %}
+  <li><span class="muted">{{ h.created_at.strftime('%Y-%m-%d %H:%M') }}</span> · v{{ h.version }} · {{ h.changed_by }}{% if h.note %} · {{ h.note }}{% endif %}
+    {% if not ro and h.version != version %}
+    <form method="post" action="/settings/agents/{{ key }}/restore/{{ h.id }}" class="inline-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit" class="btn-small">{{ t('agentset.restore') }}</button>
+    </form>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% else %}<p class="muted">{{ t('agentset.no_history') }}</p>{% endif %}
+{% endblock %}

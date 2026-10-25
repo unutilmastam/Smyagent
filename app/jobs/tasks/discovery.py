@@ -15,6 +15,7 @@ from app.domain.agents import AgentModule
 from app.domain.discovery import Category, is_due
 from app.infrastructure.database.models import DiscoveryTarget
 from app.infrastructure.database.types import utcnow
+from app.infrastructure.repositories.agent_settings import AgentSettingsRepository
 from app.infrastructure.repositories.companies import NewCompany
 from app.infrastructure.repositories.jobs import JobRepository
 from app.infrastructure.search_providers.base import ProviderError, SearchQuery
@@ -22,7 +23,6 @@ from app.jobs.context import RetryableTaskError, TaskContext
 
 DISCOVERY_SEARCH = "discovery.search"
 ACTOR = Actor.agent(AgentModule.DISCOVERY.value)
-RESULTS_PER_QUERY = 50
 
 
 def enqueue_due_targets(
@@ -64,6 +64,7 @@ def run_discovery_search(ctx: TaskContext, payload: dict[str, Any]) -> str:
         if target is None:
             return "target deleted"
         country, city = target.country, target.city
+        limit = AgentSettingsRepository(session).get(AgentModule.DISCOVERY).results_per_search
 
     provider = ctx.search_provider_factory(ctx.settings)
     if provider is None:
@@ -75,7 +76,7 @@ def run_discovery_search(ctx: TaskContext, payload: dict[str, Any]) -> str:
                 country=country,
                 query=category.value,
                 city=city,
-                limit=RESULTS_PER_QUERY,
+                limit=limit,
                 category=category.value,
             )
         )

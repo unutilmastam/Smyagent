@@ -17,6 +17,8 @@ from app.domain.scoring import Service
 OWNER_NAME = "Bahrullo Nasrulloev"
 MAX_SERVICES = 3
 MIN_STRENGTH = 0.3
+# Offer parts the owner may rewrite per language (placeholders: {company}, {owner}).
+FRAME_PARTS = ("title", "greeting", "intro", "services", "next")
 
 
 class ProposalStatus(str, Enum):
@@ -46,6 +48,17 @@ class OfferInput:
     language: Language
     observations: list[Observation]
     services: list[tuple[Service, float]]  # from opportunities, any order
+
+
+@dataclass(frozen=True)
+class OfferConfig:
+    """Owner settings for offers (app.domain.agent_settings.ProposalSettings)."""
+
+    enabled_services: frozenset[Service] = frozenset(Service)
+    max_services: int = MAX_SERVICES
+    min_strength: float = MIN_STRENGTH
+    texts: dict[Language, dict[str, str]] = field(default_factory=dict)
+    service_texts: dict[Language, dict[Service, str]] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -254,29 +267,52 @@ def template_language(language: Language) -> Language:
     return _TEMPLATE_LANGUAGE.get(language, language)
 
 
-def pick_services(services: list[tuple[Service, float]]) -> list[Service]:
+def pick_services(
+    services: list[tuple[Service, float]], config: OfferConfig | None = None
+) -> list[Service]:
+    config = config or OfferConfig()
     ranked = sorted(services, key=lambda item: (-item[1], item[0].value))
-    return [service for service, strength in ranked if strength >= MIN_STRENGTH][:MAX_SERVICES]
+    eligible = [
+        service
+        for service, strength in ranked
+        if strength >= config.min_strength and service in config.enabled_services
+    ]
+    return eligible[: config.max_services]
 
 
-def build_offer(data: OfferInput) -> OfferDraft:
+def default_text(lang: Language, part: str) -> str:
+    return _FRAME[template_language(lang)][part]
+
+
+def default_service_text(lang: Language, service: Service) -> str:
+    return _SERVICES[service][template_language(lang)]
+
+
+def _fill(template: str, company: str) -> str:
+    # Plain replacement, never str.format: owner-edited templates stay inert text.
+    return template.replace("{company}", company).replace("{owner}", OWNER_NAME)
+
+
+def build_offer(data: OfferInput, config: OfferConfig | None = None) -> OfferDraft:
+    config = config or OfferConfig()
     lang = template_language(data.language)
-    frame = _FRAME[lang]
+    frame = {**_FRAME[lang], **config.texts.get(lang, {})}
+    pitches = config.service_texts.get(lang, {})
     persona = PERSONA[lang]
     company = data.company_name.strip()
     observations = [o for o in data.observations if o.key in _OBSERVATIONS]
     # Facts first, then inferences; each key once.
     ordered = list(dict.fromkeys(o.key for o in sorted(observations, key=lambda o: not o.is_fact)))
-    services = pick_services(data.services)
+    services = pick_services(data.services, config)
 
-    lines = [persona.disclosure, "", frame["greeting"].format(company=company), ""]
-    lines.append(frame["intro"].format(company=company))
+    lines = [persona.disclosure, "", _fill(frame["greeting"], company), ""]
+    lines.append(_fill(frame["intro"], company))
     lines += [f"• {_OBSERVATIONS[key][lang]}" for key in ordered]
-    lines += ["", frame["services"]]
-    lines += [f"• {_SERVICES[service][lang]}" for service in services]
+    lines += ["", _fill(frame["services"], company)]
+    lines += [f"• {_fill(pitches.get(s) or _SERVICES[s][lang], company)}" for s in services]
     lines += [
         "",
-        frame["next"].format(owner=OWNER_NAME),
+        _fill(frame["next"], company),
         "",
         persona.opt_out,
         "",
@@ -288,7 +324,7 @@ def build_offer(data: OfferInput) -> OfferDraft:
         assumptions.append("assume.inferences_marked")
     questions = [f"question.{service.value}" for service in services] + ["question.goal"]
     return OfferDraft(
-        title=frame["title"].format(company=company),
+        title=_fill(frame["title"], company),
         body="\n".join(lines),
         language=lang,
         services=services,

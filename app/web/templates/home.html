@@ -13,6 +13,7 @@
   <div class="stat"><span class="stat-value">{{ stats.jobs_running }}</span><span class="stat-label">{{ t('stats.running') }}</span></div>
   <div class="stat {% if stats.jobs_failed %}stat-bad{% endif %}"><span class="stat-value">{{ stats.jobs_failed }}</span><span class="stat-label">{{ t('stats.failed') }}</span></div>
 </section>
+<p class="page-actions"><a class="btn-link" href="/settings">⚙ {{ t('agentset.title') }}</a> <a class="btn-link" href="/proposals">📝 {{ t('proposals.title') }}</a></p>
 {% if stats.companies == 0 %}
 <section class="card empty"><p>{{ t('home.empty') }}</p></section>
 {% endif %}

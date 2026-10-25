@@ -9,6 +9,7 @@ claims about other clients go to the owner for review.
 from __future__ import annotations
 
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -99,8 +100,24 @@ def cyrillic_ratio(text: str) -> float:
     return sum(1 for ch in letters if _CYRILLIC.match(ch)) / len(letters)
 
 
-def review(text: str, *, language: Language, evidence_count: int) -> GateResult:
-    """Check one client-facing text. Deterministic and reproducible."""
+def _word_patterns(words: Sequence[str]) -> list[re.Pattern[str]]:
+    # Whole-word, case-insensitive; an owner word never becomes a regex.
+    return [re.compile(rf"(?<!\w){re.escape(w)}(?!\w)", re.I) for w in words if w.strip()]
+
+
+def review(
+    text: str,
+    *,
+    language: Language,
+    evidence_count: int,
+    extra_blocked: Sequence[str] = (),
+    extra_review: Sequence[str] = (),
+) -> GateResult:
+    """Check one client-facing text. Deterministic and reproducible.
+
+    `extra_blocked` / `extra_review` are the owner's own words (agent settings); they
+    add to the built-in rules and can never relax them.
+    """
     issues: list[Issue] = []
     body = text.strip()
     if not body:
@@ -110,6 +127,8 @@ def review(text: str, *, language: Language, evidence_count: int) -> GateResult:
         ("price", _PRICE_PATTERNS, Severity.BLOCK),
         ("commitment", _COMMITMENT_PATTERNS, Severity.BLOCK),
         ("unsupported_claim", _CLAIM_PATTERNS, Severity.REVIEW),
+        ("owner_blocked_word", _word_patterns(extra_blocked), Severity.BLOCK),
+        ("owner_review_word", _word_patterns(extra_review), Severity.REVIEW),
     ):
         hits = _matches(patterns, body)
         if hits:

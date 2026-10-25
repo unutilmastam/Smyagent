@@ -18,7 +18,6 @@ from app.domain.leads import LeadStage
 from app.domain.scoring import (
     DEFAULT_QUALIFY_THRESHOLD,
     DEFAULT_WEIGHTS,
-    HOT_LEAD_THRESHOLD,
     Component,
     FindingInput,
     ScoreInput,
@@ -38,6 +37,7 @@ from app.infrastructure.database.models import (
     WebsiteAudit,
 )
 from app.infrastructure.database.types import utcnow
+from app.infrastructure.repositories.agent_settings import AgentSettingsRepository
 from app.infrastructure.repositories.jobs import JobRepository
 from app.jobs.context import TaskContext
 
@@ -138,6 +138,8 @@ def run_scoring(ctx: TaskContext, payload: dict[str, Any]) -> str:
         if company.research_state is not ResearchState.RESEARCHED:
             return f"{company.name}: skipped ({company.research_state.value})"
         weights, threshold = load_settings(session)
+        hot = AgentSettingsRepository(session).get(AgentModule.OPPORTUNITY_SCORING)
+        hot_threshold = hot.hot_lead_threshold
         data, findings = _inputs(session, company)
         result = score(data, weights)
         by_key: dict[str, list[str]] = {}
@@ -193,7 +195,7 @@ def run_scoring(ctx: TaskContext, payload: dict[str, Any]) -> str:
         name, total = company.name, result.total
         best_service = result.opportunities[0].service.value if result.opportunities else None
 
-    if qualified_now and total >= HOT_LEAD_THRESHOLD:
+    if qualified_now and total >= hot_threshold:
         ctx.notifier.notify(f"🔥 Yangi issiq lid: {name} — ball {total}, ehtiyoj: {best_service}")
     status = "QUALIFIED" if qualified_now else "CANDIDATE"
     return f"{name}: ball {total}, {len(result.opportunities)} ta imkoniyat, {status}"

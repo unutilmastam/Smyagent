@@ -767,6 +767,229 @@ _T: dict[str, dict[str, str]] = {
     "stage.APPROVED": {"uz": "Tasdiqlangan", "ru": "Одобрен", "en": "Approved"},
     "stage.DISQUALIFIED": {"uz": "Chiqarilgan", "ru": "Исключён", "en": "Disqualified"},
     "company.proposal": {"uz": "Taklif", "ru": "Предложение", "en": "Proposal"},
+    # agent settings (M7c)
+    "agentset.title": {
+        "uz": "Agent sozlamalari",
+        "ru": "Настройки агентов",
+        "en": "Agent settings",
+    },
+    "agentset.intro": {
+        "uz": "Har bir agent nima va qanday qilishini shu yerda o'zgartirasiz. Har o'zgarish "
+        "versiyalanadi — xohlasangiz oldingisiga qaytarasiz.",
+        "ru": "Здесь вы меняете, что и как делает каждый агент. Каждое изменение сохраняется "
+        "версией — можно вернуть прежнюю.",
+        "en": "Change what each agent does and how. Every change is versioned — you can restore "
+        "an earlier one.",
+    },
+    "agentset.configure": {"uz": "Sozlash", "ru": "Настроить", "en": "Configure"},
+    "agentset.defaults": {"uz": "standart", "ru": "по умолчанию", "en": "defaults"},
+    "agentset.more": {"uz": "Boshqa sozlamalar", "ru": "Другие настройки", "en": "More settings"},
+    "agentset.locked": {
+        "uz": "O'zgartirib bo'lmaydigan qoidalar",
+        "ru": "Неизменяемые правила",
+        "en": "Rules that cannot be changed",
+    },
+    "agentset.saved": {"uz": "Saqlandi (v{v}).", "ru": "Сохранено (v{v}).", "en": "Saved (v{v})."},
+    "agentset.not_saved": {
+        "uz": "Saqlanmadi — quyidagilarni tuzating:",
+        "ru": "Не сохранено — исправьте:",
+        "en": "Not saved — please fix:",
+    },
+    "agentset.desc.orchestrator": {
+        "uz": "Ish tartibi va navbat — faqat ko'rsatma (AI uchun).",
+        "ru": "Порядок работы и очередь — только инструкции (для AI).",
+        "en": "Workflow and queue — instructions only (for AI).",
+    },
+    "agentset.desc.discovery": {
+        "uz": "Qaysi shahar va sohada qidirish, har qidiruvda nechta kompaniya.",
+        "ru": "Где и в каких сферах искать, сколько компаний за поиск.",
+        "en": "Where and in which industries to search, companies per search.",
+    },
+    "agentset.desc.research_audit": {
+        "uz": "Bir ishga tushishda nechta kompaniyani tekshirish.",
+        "ru": "Сколько компаний проверять за один запуск.",
+        "en": "How many companies to check per run.",
+    },
+    "agentset.desc.opportunity_scoring": {
+        "uz": 'Ball vaznlari, "tayyor lid" va "issiq lid" chegaralari.',
+        "ru": "Веса баллов, пороги «готового» и «горячего» лида.",
+        "en": "Score weights, qualified and hot lead thresholds.",
+    },
+    "agentset.desc.proposal_requirements": {
+        "uz": "Qaysi xizmatlarni taklif qilish, nechta, va taklif matnlari.",
+        "ru": "Какие услуги предлагать, сколько и тексты предложений.",
+        "en": "Which services to offer, how many, and the offer texts.",
+    },
+    "agentset.desc.quality_gate": {
+        "uz": "Qo'shimcha taqiqlangan va tekshiriladigan so'zlar.",
+        "ru": "Дополнительные запрещённые и проверяемые слова.",
+        "en": "Extra blocked and review words.",
+    },
+    "agentset.desc.conversation": {
+        "uz": "Mustafo suhbati — sozlamalar M8 bilan; hozir ko'rsatma.",
+        "ru": "Диалоги Мустафо — настройки с M8; сейчас инструкции.",
+        "en": "Mustafo conversations — settings arrive with M8; instructions now.",
+    },
+    "agentset.results_per_search": {
+        "uz": "Har qidiruvda ko'pi bilan nechta kompaniya (5–200)",
+        "ru": "Максимум компаний за один поиск (5–200)",
+        "en": "Max companies per search (5–200)",
+    },
+    "agentset.discovery_hint": {
+        "uz": "Shahar, soha va qidirish oralig'i:",
+        "ru": "Города, сферы и интервал поиска:",
+        "en": "Cities, industries and interval:",
+    },
+    "agentset.companies_per_run": {
+        "uz": "Bir ishga tushishda nechta kompaniya tekshirilsin (1–100)",
+        "ru": "Сколько компаний проверять за запуск (1–100)",
+        "en": "Companies to check per run (1–100)",
+    },
+    "agentset.hot_lead_threshold": {
+        "uz": '"Issiq lid" chegarasi — Telegramga xabar (0–100)',
+        "ru": "Порог «горячего» лида — уведомление в Telegram (0–100)",
+        "en": "Hot lead threshold — Telegram alert (0–100)",
+    },
+    "agentset.enabled_services": {
+        "uz": "Qaysi xizmatlarni taklif qilsin",
+        "ru": "Какие услуги предлагать",
+        "en": "Services to offer",
+    },
+    "agentset.max_services": {
+        "uz": "Bitta taklifda nechta xizmat (1–5)",
+        "ru": "Сколько услуг в одном предложении (1–5)",
+        "en": "Services per offer (1–5)",
+    },
+    "agentset.min_strength": {
+        "uz": "Ehtiyoj kuchi kamida (0.1–0.9) — past bo'lsa ko'proq taklif",
+        "ru": "Минимальная сила потребности (0.1–0.9) — ниже = больше предложений",
+        "en": "Minimum need strength (0.1–0.9) — lower = more offers",
+    },
+    "agentset.texts": {"uz": "Taklif matnlari", "ru": "Тексты предложения", "en": "Offer texts"},
+    "agentset.texts_hint": {
+        "uz": "Bo'sh qoldirilsa standart matn ishlatiladi. {company} — kompaniya nomi, {owner} — "
+        "sizning ismingiz. Saqlashda Quality Gate tekshiradi: narx, kafolat, muddat bo'lsa "
+        "saqlanmaydi. AI salomlashuvi, rad etish yo'li va imzo doim qo'shiladi.",
+        "ru": "Пусто = стандартный текст. {company} — название компании, {owner} — ваше имя. При "
+        "сохранении Quality Gate проверяет текст: с ценой, гарантией или сроком не сохранится. "
+        "AI-раскрытие, отказ и подпись добавляются всегда.",
+        "en": "Empty = built-in text. {company} = company name, {owner} = your name. The Quality "
+        "Gate checks on save: prices, guarantees or deadlines are refused. AI disclosure, "
+        "opt-out and signature are always added.",
+    },
+    "agentset.part.title": {"uz": "Sarlavha", "ru": "Заголовок", "en": "Title"},
+    "agentset.part.greeting": {"uz": "Murojaat", "ru": "Обращение", "en": "Greeting"},
+    "agentset.part.intro": {
+        "uz": "Kirish (kuzatuvlardan oldin)",
+        "ru": "Вступление (перед наблюдениями)",
+        "en": "Intro (before observations)",
+    },
+    "agentset.part.services": {
+        "uz": "Xizmatlar sarlavhasi",
+        "ru": "Заголовок услуг",
+        "en": "Services heading",
+    },
+    "agentset.part.next": {
+        "uz": "Keyingi qadam (yakun)",
+        "ru": "Следующий шаг (концовка)",
+        "en": "Next step (closing)",
+    },
+    "agentset.extra_blocked": {
+        "uz": "Taqiqlangan so'zlar (har qatorda bittadan) — bo'lsa taklif rad etiladi",
+        "ru": "Запрещённые слова (по одному в строке) — предложение отклоняется",
+        "en": "Blocked words (one per line) — the offer is rejected",
+    },
+    "agentset.extra_review": {
+        "uz": "Tekshiriladigan so'zlar — bo'lsa \"ko'rib chiqing\" belgisi",
+        "ru": "Слова для проверки — пометка «проверьте»",
+        "en": 'Review words — marked "needs review"',
+    },
+    "agentset.words_hint": {
+        "uz": "Bular standart qoidalarga qo'shiladi; standart qoidalarni o'chirib bo'lmaydi.",
+        "ru": "Добавляются к встроенным правилам; встроенные отключить нельзя.",
+        "en": "Added to the built-in rules; built-in rules cannot be removed.",
+    },
+    "agentset.later": {
+        "uz": "Bu agentning ish sozlamalari o'z bosqichida qo'shiladi.",
+        "ru": "Настройки этого агента появятся в его этапе.",
+        "en": "This agent's settings arrive with its milestone.",
+    },
+    "agentset.instructions": {
+        "uz": "Agentga ko'rsatma (oddiy so'z bilan)",
+        "ru": "Инструкция агенту (своими словами)",
+        "en": "Instructions for the agent (plain words)",
+    },
+    "agentset.instructions_placeholder": {
+        "uz": "Masalan: restoranlarga avval Telegram bot taklif qil.",
+        "ru": "Например: ресторанам сначала предлагай Telegram-бота.",
+        "en": "E.g.: offer restaurants a Telegram bot first.",
+    },
+    "agentset.instructions_hint": {
+        "uz": "AI kaliti qo'shilgach agentlar shu ko'rsatmaga amal qiladi. Qulflangan qoidalarga "
+        "zid ko'rsatma bajarilmaydi.",
+        "ru": "После добавления AI-ключа агенты будут следовать инструкции. Противоречащее "
+        "закреплённым правилам не выполняется.",
+        "en": "Agents follow this once an AI key is configured. Anything against the locked "
+        "rules is ignored.",
+    },
+    "agentset.reset": {
+        "uz": "Standartga qaytarish",
+        "ru": "Сбросить по умолчанию",
+        "en": "Reset to defaults",
+    },
+    "agentset.reset_confirm": {
+        "uz": "Barcha sozlamalar standartga qaytsinmi?",
+        "ru": "Сбросить все настройки агента?",
+        "en": "Reset this agent to defaults?",
+    },
+    "agentset.history": {"uz": "Versiyalar", "ru": "Версии", "en": "Versions"},
+    "agentset.restore": {"uz": "Shunga qaytarish", "ru": "Вернуть", "en": "Restore"},
+    "agentset.no_history": {
+        "uz": "Hali o'zgartirilmagan.",
+        "ru": "Ещё не менялось.",
+        "en": "Not changed yet.",
+    },
+    "rule.ai_disclosure": {
+        "uz": "Mustafo har doim AI ekanini aytadi.",
+        "ru": "Мустафо всегда сообщает, что он AI.",
+        "en": "Mustafo always says it is an AI.",
+    },
+    "rule.no_prices": {
+        "uz": "Mijozga narx, muddat, kafolat aytilmaydi — narxni o'zingiz yuborasiz.",
+        "ru": "Клиенту не называются цены, сроки, гарантии — цену отправляете вы.",
+        "en": "No prices, deadlines or guarantees to clients — you send the price.",
+    },
+    "rule.opt_out": {
+        "uz": '"Kerak emas" degan kompaniyaga boshqa yozilmaydi.',
+        "ru": "Тем, кто ответил «не пишите», больше не пишем.",
+        "en": "Anyone who opts out is never contacted again.",
+    },
+    "rule.kill_switch": {
+        "uz": "STOP tugmasi har doim ishlaydi.",
+        "ru": "Кнопка STOP работает всегда.",
+        "en": "The STOP button always works.",
+    },
+    "rule.lawful_sources": {
+        "uz": "Faqat ochiq, qonuniy manbalar; spam va userbot yo'q.",
+        "ru": "Только открытые законные источники; без спама и юзерботов.",
+        "en": "Only open, lawful sources; no spam or userbots.",
+    },
+    "rule.owner_approval": {
+        "uz": "Shartnoma, narx va to'lovni faqat siz kelishasiz.",
+        "ru": "Договор, цену и оплату согласуете только вы.",
+        "en": "Only you agree contracts, prices and payment.",
+    },
+    "gate.issue.owner_blocked_word": {
+        "uz": "Sizning taqiqlangan so'zingiz bor",
+        "ru": "Есть ваше запрещённое слово",
+        "en": "Contains one of your blocked words",
+    },
+    "gate.issue.owner_review_word": {
+        "uz": "Sizning tekshiriladigan so'zingiz bor",
+        "ru": "Есть ваше слово для проверки",
+        "en": "Contains one of your review words",
+    },
+    "nav.settings": {"uz": "Sozlamalar", "ru": "Настройки", "en": "Settings"},
 }
 
 

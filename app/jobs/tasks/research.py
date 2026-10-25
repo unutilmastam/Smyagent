@@ -32,6 +32,7 @@ from app.infrastructure.database.models.research import ResearchRunStatus
 from app.infrastructure.database.types import utcnow
 from app.infrastructure.http_fetcher.fetcher import FetchError, FetchResult, RobotsDisallowedError
 from app.infrastructure.http_fetcher.policy import BlockedURLError
+from app.infrastructure.repositories.agent_settings import AgentSettingsRepository
 from app.infrastructure.repositories.jobs import JobRepository
 from app.jobs.context import TaskContext
 
@@ -42,8 +43,10 @@ SCHEDULER = Actor.system("cron")
 _RETRY_OVER_HTTP = frozenset({"connect", "tls", "timeout"})
 
 
-def enqueue_new_companies(session: Session, *, limit: int = 20) -> int:
+def enqueue_new_companies(session: Session, *, limit: int | None = None) -> int:
     """Queue research for NEW companies (oldest first) and mark them RESEARCH_PENDING."""
+    if limit is None:
+        limit = AgentSettingsRepository(session).get(AgentModule.RESEARCH_AUDIT).companies_per_run
     jobs = JobRepository(session)
     workflow = WorkflowService(session)
     queued = 0
