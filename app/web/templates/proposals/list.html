@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ t('proposals.title') }} — SMY Agent{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>{{ t('proposals.title') }}</h1>
+  <div class="page-actions"><a class="btn-link" href="/leads">★ {{ t('leads.title') }}</a></div>
+</div>
+<nav class="tabs" aria-label="{{ t('proposals.status') }}">
+  <a href="/proposals" {% if not status %}aria-current="page"{% endif %}>{{ t('companies.all') }}</a>
+  {% for s in statuses %}<a href="/proposals?status={{ s.value }}" {% if status == s %}aria-current="page"{% endif %}>{{ t('pstatus.' ~ s.value) }} ({{ counts.get(s.value, 0) }})</a>{% endfor %}
+</nav>
+{% if rows %}
+<ul class="company-list">
+  {% for p, company, v in rows %}
+  <li><a class="company-item" href="/proposals/{{ p.id }}">
+    <span class="company-name">{{ company.name }}</span>
+    <span class="company-meta">{% if v %}{% for s in v.services %}{{ t('svc.' ~ s) }}{% if not loop.last %}, {% endif %}{% endfor %} · v{{ v.number }}{% endif %} · {{ p.updated_at.strftime('%Y-%m-%d %H:%M') }}</span>
+    <span class="badges">
+      <span class="badge badge-pstatus-{{ p.status.value|lower }}">{{ t('pstatus.' ~ p.status.value) }}</span>
+      {% if v and v.gate_verdict %}<span class="badge badge-gate-{{ v.gate_verdict.value }}">{{ t('gate.' ~ v.gate_verdict.value) }}</span>{% endif %}
+    </span>
+  </a></li>
+  {% endfor %}
+</ul>
+{% else %}<section class="card empty"><p>{{ t('proposals.empty') }}</p></section>{% endif %}
+{% endblock %}

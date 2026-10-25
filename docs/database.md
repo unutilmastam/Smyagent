@@ -38,6 +38,9 @@ on MariaDB 10.6 + 10.11 in CI.
 | `lead_scores` | Score snapshot: total, version, weights used, missing components | index (company, computed_at), total |
 | `score_components` | One row per component: value (NULL = missing, never imputed), weight, explanation | index score |
 | `scoring_settings` | Owner-adjustable weights + qualification threshold (row `default`) | PK `key` |
+| `proposals` | One offer per lead: status (DRAFT / NEEDS_EDIT / AWAITING_APPROVAL / APPROVED / REJECTED), client language, current version | **unique** lead; index (status, updated_at) |
+| `proposal_versions` | Immutable text per version, services, evidence finding ids, assumptions/questions (i18n keys), Quality Gate verdict + issues | **unique** (proposal, number) |
+| `approval_requests` | Explicit owner decisions: entity, version, PENDING/APPROVED/REJECTED/CANCELLED, who/when/why | index (entity_type, entity_id), (status, created_at) |
 | `agent_controls` | Kill switch: `global` + 7 modules (ADR-0006) | PK `module`; seeded ACTIVE by migration 0001 |
 
 Duplicate detection (CLAUDE.md §8.1): by normalized domain (unique constraint) and

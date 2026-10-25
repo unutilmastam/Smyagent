@@ -14,6 +14,8 @@ from app.core.config import Settings
 from app.domain.actors import Actor
 from app.domain.agents import ControlState
 from app.domain.jobs import JobStatus
+from app.domain.leads import LeadStage
+from app.domain.proposals import ProposalStatus
 from app.infrastructure.database import Database
 from app.infrastructure.database.models import (
     AgentRun,
@@ -23,6 +25,7 @@ from app.infrastructure.database.models import (
     DiscoveryTarget,
     Job,
     Lead,
+    Proposal,
 )
 from app.infrastructure.database.types import utcnow
 from app.infrastructure.http_fetcher.fetcher import FetchError
@@ -150,8 +153,17 @@ def test_runner_discovers_companies_end_to_end(db: Database, settings: Settings)
         states = sorted(state.value for state in s.scalars(select(Company.research_state)))
         assert states == ["ANALYZED", "ANALYZED"]
         assert s.scalar(select(func.count()).select_from(Lead)) == 2
+    # Fourth run: the qualified lead gets an offer draft, checked by the Quality Gate
+    # in the same run (the gate job is queued by the draft job).
     fourth = _runner(db, settings, provider).run(max_jobs=5, max_seconds=60)
-    assert fourth.scheduled == 0 and fourth.succeeded == 0
+    assert fourth.scheduled == 1 and fourth.succeeded == 2
+    with db.transaction() as s:
+        proposal = s.scalars(select(Proposal)).one()
+        assert proposal.status is ProposalStatus.AWAITING_APPROVAL
+        lead = s.get(Lead, proposal.lead_id)
+        assert lead is not None and lead.stage is LeadStage.AWAITING_APPROVAL
+    fifth = _runner(db, settings, provider).run(max_jobs=5, max_seconds=60)
+    assert fifth.scheduled == 0 and fifth.succeeded == 0
 
 
 def test_overlapping_runs_are_prevented(db: Database, settings: Settings) -> None:

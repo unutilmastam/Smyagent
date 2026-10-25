@@ -10,6 +10,7 @@ Enforcement points (all go through `ControlGate`):
 from __future__ import annotations
 
 import logging
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -68,12 +69,21 @@ class ControlGate:
         self.checkpoint(module)
 
 
+@dataclass(frozen=True)
+class Button:
+    """Inline button under an owner notification: callback `data` or a `url`."""
+
+    text: str
+    data: str | None = None
+    url: str | None = None
+
+
 class OwnerNotifier(Protocol):
-    def notify(self, text: str) -> None: ...
+    def notify(self, text: str, buttons: Sequence[Button] = ()) -> None: ...
 
 
 class NullNotifier:
-    def notify(self, text: str) -> None:
+    def notify(self, text: str, buttons: Sequence[Button] = ()) -> None:
         logger.info("owner_notification_skipped", extra={"reason": "bot not configured"})
 
 

@@ -44,10 +44,13 @@ First run `scripts/check_environment.py` in cPanel Terminal and share the output
 | GET | `/companies`, `/companies/{id}` | company list (search/filter/sort/pages) and detail (audit, opportunities, score) |
 | GET | `/leads` | leads sorted by score, stage filter, main need |
 | GET/POST | `/settings/scoring` | score weights + qualification threshold (owner) |
+| GET | `/proposals`, `/proposals/{id}` | offers with Quality Gate verdict, evidence, questions, history |
+| POST | `/proposals/{id}/approve`, `/reject`, `/edit` | owner decisions (CSRF); edit = new version, re-checked |
+| GET | `/proposals/{id}/export.md` | offer + evidence as Markdown |
 | GET/POST | `/companies/new`, `/companies/import` | manual entry, CSV import with dry run (owner) |
 | GET/POST | `/discovery` | automatic discovery: cities, categories, search now (owner) |
 
-Agents run automatically: Discovery (OpenStreetMap) → Research & Audit (website audit + findings) → Opportunity & Scoring (needs, score, lead).
+Agents run automatically: Discovery (OpenStreetMap) → Research & Audit (website audit + findings) → Opportunity & Scoring (needs, score, lead) → Proposal (price-free offer) → Quality Gate → owner approval in the dashboard or Telegram.
 Background agents: `python -m app.jobs.runner --max-jobs 5 --max-seconds 240` from cron (see `docs/deployment-cpanel.md` §7).
 | GET | `/api/v1/companies`, `/api/v1/companies/{id}` | same data as JSON (session auth) |
 | GET | `/lang/{uz,ru,en}` | interface language |

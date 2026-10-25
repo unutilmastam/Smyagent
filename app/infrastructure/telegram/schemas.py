@@ -29,7 +29,17 @@ class TgMessage(_Model):
     date: int | None = None
 
 
+class TgCallbackQuery(_Model):
+    """Inline button press (`callback_data` ≤ 64 bytes per Bot API)."""
+
+    id: str
+    from_: TgUser = Field(alias="from")
+    message: TgMessage | None = None
+    data: str | None = Field(default=None, max_length=64)
+
+
 class TgUpdate(_Model):
     update_id: int
     message: TgMessage | None = None
     edited_message: TgMessage | None = None
+    callback_query: TgCallbackQuery | None = None

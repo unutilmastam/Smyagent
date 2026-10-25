@@ -78,7 +78,13 @@ def lead_list(
             "rows": [(lead, company, total, best.get(company.id)) for lead, company, total in rows],
             "stage": stage,
             "counts": {s.value: n for s, n in counts.items()},
-            "stages": [LeadStage.CANDIDATE, LeadStage.QUALIFIED],
+            "stages": [
+                LeadStage.CANDIDATE,
+                LeadStage.QUALIFIED,
+                LeadStage.AWAITING_APPROVAL,
+                LeadStage.APPROVED,
+                LeadStage.DISQUALIFIED,
+            ],
         }
     )
     return render(request, "leads.html", context)

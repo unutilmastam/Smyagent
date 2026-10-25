@@ -153,7 +153,7 @@ def test_detail_shows_evidence_and_history(
     assert "csv" in html
     assert "NEW → <strong>RESEARCH_PENDING</strong>" in html.replace("—", "")
     assert "agent:opportunity_scoring" in html
-    assert "Lid: QUALIFIED" in html
+    assert "Lid: Tayyor" in html
 
 
 def test_fixture_source_is_labeled(authed: TestClient, companies: dict[str, uuid.UUID]) -> None:

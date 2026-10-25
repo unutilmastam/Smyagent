@@ -20,6 +20,7 @@ from app.infrastructure.database.models import (
     Lead,
     LeadScore,
     Opportunity,
+    Proposal,
     ResearchFinding,
     ResearchRun,
     WebsiteAudit,
@@ -95,6 +96,7 @@ class CompanyDetail:
     latest_audit: WebsiteAudit | None = None
     opportunities: list[Opportunity] = field(default_factory=list)
     latest_score: LeadScore | None = None
+    proposal: Proposal | None = None
     findings: list[ResearchFinding] = field(default_factory=list)
     history: list[WorkflowEvent] = field(default_factory=list)
 
@@ -248,4 +250,7 @@ class CompanyQueryService:
             findings=findings,
             opportunities=opportunities,
             latest_score=latest_score,
+            proposal=self.session.scalars(
+                select(Proposal).where(Proposal.company_id == company_id)
+            ).first(),
         )

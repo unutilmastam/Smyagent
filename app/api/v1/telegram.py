@@ -55,9 +55,14 @@ async def owner_webhook(
         reply = OwnerBotService(session, admin_ids=settings.telegram_admin_ids).handle(update)
     if reply is None:
         return Response(status_code=200)
-    payload: dict[str, Any] = {
-        "method": "sendMessage",
-        "chat_id": reply.chat_id,
-        "text": reply.text,
-    }
+    payload: dict[str, Any]
+    if reply.callback_query_id is not None:
+        payload = {
+            "method": "answerCallbackQuery",
+            "callback_query_id": reply.callback_query_id,
+            "text": reply.text[:200],
+            "show_alert": True,
+        }
+    else:
+        payload = {"method": "sendMessage", "chat_id": reply.chat_id, "text": reply.text}
     return JSONResponse(payload)

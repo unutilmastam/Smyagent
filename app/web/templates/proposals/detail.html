@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% set p = proposal %}
+{% set v = version %}
+{% block title %}{{ v.title }} — SMY Agent{% endblock %}
+{% block content %}
+<p><a href="/proposals">← {{ t('proposals.title') }}</a></p>
+<h1>{{ v.title }}</h1>
+<p class="badges">
+  <span class="badge badge-pstatus-{{ p.status.value|lower }}">{{ t('pstatus.' ~ p.status.value) }}</span>
+  <span class="badge">v{{ v.number }} · {{ p.language.value }}</span>
+  {% if v.gate_verdict %}<span class="badge badge-gate-{{ v.gate_verdict.value }}">{{ t('gate.' ~ v.gate_verdict.value) }}</span>{% endif %}
+</p>
+{% if company %}<p><a href="/companies/{{ company.id }}">{{ company.name }}</a> · {{ company.country }}{% if company.city %} · {{ company.city }}{% endif %}</p>{% endif %}
+{% if done %}<p class="alert alert-ok" role="status">{{ t('proposals.done.' ~ done) }}</p>{% endif %}
+{% if error %}<p class="alert alert-error" role="alert">{{ t('proposals.error') }}: {{ error }}</p>{% endif %}
+<p class="alert alert-warn">{{ t('proposals.no_price_note') }}</p>
+
+<h2>{{ t('gate.title') }}</h2>
+{% if v.gate_issues %}
+<ul class="checks-list">
+  {% for i in v.gate_issues %}<li class="check-{{ 'bad' if i.severity == 'block' else 'warn' }}"><span aria-hidden="true">{{ '✗' if i.severity == 'block' else '!' }}</span> {{ t('gate.issue.' ~ i.code) }}{% if i.detail %} <span class="muted break">— {{ i.detail }}</span>{% endif %}</li>{% endfor %}
+</ul>
+{% elif v.gate_verdict %}<p class="muted">{{ t('gate.clean') }}</p>
+{% else %}<p class="muted">{{ t('gate.pending') }}</p>{% endif %}
+
+<h2>{{ t('proposals.text') }}</h2>
+<section class="card"><pre class="offer">{{ v.body }}</pre></section>
+
+{% if user.is_owner %}
+{% if p.status.value == 'AWAITING_APPROVAL' %}
+<form method="post" action="/proposals/{{ p.id }}/approve" class="inline-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <button type="submit" class="btn-primary">✅ {{ t('proposals.approve') }}</button>
+</form>
+{% endif %}
+{% if p.status.value not in ('APPROVED', 'REJECTED') %}
+<details class="card action-card">
+  <summary>❌ {{ t('proposals.reject') }}</summary>
+  <form method="post" action="/proposals/{{ p.id }}/reject" class="form-stack">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label for="reason">{{ t('proposals.reason') }}</label>
+    <input id="reason" name="reason" maxlength="300">
+    <p class="hint muted">{{ t('proposals.reject_hint') }}</p>
+    <button type="submit" class="btn-danger btn-big">{{ t('proposals.reject') }}</button>
+  </form>
+</details>
+{% endif %}
+{% if p.status.value != 'REJECTED' %}
+<details class="card action-card" {% if p.status.value == 'NEEDS_EDIT' %}open{% endif %}>
+  <summary>✏️ {{ t('proposals.edit') }}</summary>
+  <form method="post" action="/proposals/{{ p.id }}/edit" class="form-stack">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <label for="title">{{ t('proposals.field_title') }}</label>
+    <input id="title" name="title" value="{{ v.title }}" maxlength="{{ max_title }}" required>
+    <label for="body">{{ t('proposals.text') }}</label>
+    <textarea id="body" name="body" rows="16" maxlength="{{ max_body }}" required>{{ v.body }}</textarea>
+    <p class="hint muted">{{ t('proposals.edit_hint') }}</p>
+    <button type="submit" class="btn-primary">{{ t('settings.save') }}</button>
+  </form>
+</details>
+{% endif %}
+{% endif %}
+
+<h2>{{ t('proposals.evidence') }}</h2>
+{% if findings %}
+<ul class="plain-list">
+  {% for f in findings %}
+  <li><span class="badge badge-{{ f.kind.value }}">{{ t('audit.' ~ f.kind.value) }}{% if f.confidence < 1 %} · {{ (f.confidence * 100)|round|int }}%{% endif %}</span>
+    {% set k = 'finding.' ~ f.key %}{% set tx = t(k) %}{{ f.statement if tx == k else tx }}
+    <span class="muted"> · {{ f.retrieved_at.strftime('%Y-%m-%d') }}{% if f.source_url %} · <span class="break">{{ f.source_url }}</span>{% endif %}</span></li>
+  {% endfor %}
+</ul>
+{% else %}<p class="muted">{{ t('proposals.no_evidence') }}</p>{% endif %}
+
+<h2>{{ t('proposals.assumptions') }}</h2>
+<ul class="plain-list">{% for k in v.assumptions %}<li>{{ t(k) }}</li>{% endfor %}</ul>
+<h2>{{ t('proposals.questions') }}</h2>
+<ul class="plain-list">{% for k in v.open_questions %}<li>{{ t(k) }}</li>{% endfor %}</ul>
+
+<p><a class="btn-link" href="/proposals/{{ p.id }}/export.md">⬇ {{ t('proposals.export') }}</a></p>
+
+<h2>{{ t('proposals.history') }}</h2>
+<ul class="timeline">
+  {% for a in approvals %}<li><span class="muted">{{ a.created_at.strftime('%Y-%m-%d %H:%M') }}</span> · v{{ a.version }} · <strong>{{ t('approval.' ~ a.status.value) }}</strong>{% if a.decided_by %} · {{ a.decided_by }}{% endif %}{% if a.reason %} · {{ a.reason }}{% endif %}</li>{% endfor %}
+  {% for ver in p.versions %}<li><span class="muted">{{ ver.created_at.strftime('%Y-%m-%d %H:%M') }}</span> · v{{ ver.number }} · {{ ver.created_by }}{% if ver.gate_verdict %} · {{ t('gate.' ~ ver.gate_verdict.value) }}{% endif %}</li>{% endfor %}
+</ul>
+{% endblock %}

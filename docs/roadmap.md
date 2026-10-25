@@ -14,7 +14,7 @@ Authoritative milestone definitions and acceptance criteria live in
 | M4 | Company discovery (manual, CSV, one provider) | ✅ automatic via OpenStreetMap (ADR-0010) + manual + CSV |
 | M5 | Research & SSRF-safe website audit | ✅ fetcher + deterministic audit + automatic research (AI summary → M5b, needs AI key) |
 | M6 | Opportunity analysis & scoring | ✅ rules-based opportunities, explainable score, automatic leads (LLM explanations → M5b/AI layer) |
-| M7 | Proposals & requirements | planned |
+| M7 | Proposals & requirements | ✅ price-free offers, Quality Gate, owner approval (dashboard + Telegram), Markdown export; M7b: internal pricing rules + PDF export |
 | M8 | Mustafo client bot (client-initiated) | planned |
 | M9 | Outbound: automatic email, assisted Telegram | planned |
 | M10 | Background automation hardening | 🟡 runner core done with M4b (lock, stale requeue, bounded runs, retries); hardening later |
