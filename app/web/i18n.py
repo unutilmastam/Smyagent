@@ -112,6 +112,94 @@ _T: dict[str, dict[str, str]] = {
         "ru": "Ошибка соединения. Попробуйте ещё раз.",
         "en": "Connection error. Please try again.",
     },
+    # discovery (M4)
+    "companies.add": {"uz": "+ Qo'shish", "ru": "+ Добавить", "en": "+ Add"},
+    "companies.import": {"uz": "CSV import", "ru": "Импорт CSV", "en": "CSV import"},
+    "new.title": {"uz": "Yangi kompaniya", "ru": "Новая компания", "en": "New company"},
+    "new.name": {"uz": "Nomi *", "ru": "Название *", "en": "Name *"},
+    "new.country": {"uz": "Davlat *", "ru": "Страна *", "en": "Country *"},
+    "new.domain": {"uz": "Sayt / domen", "ru": "Сайт / домен", "en": "Website / domain"},
+    "new.phone": {"uz": "Telefon", "ru": "Телефон", "en": "Phone"},
+    "new.email": {
+        "uz": "Email (ochiq, ish manzili)",
+        "ru": "Email (публичный, рабочий)",
+        "en": "Email (public business address)",
+    },
+    "new.telegram": {
+        "uz": "Telegram (kompaniya akkaunti)",
+        "ru": "Telegram (аккаунт компании)",
+        "en": "Telegram (business account)",
+    },
+    "new.source_url": {"uz": "Manba havolasi", "ru": "Ссылка на источник", "en": "Source link"},
+    "new.notes": {"uz": "Izoh", "ru": "Заметки", "en": "Notes"},
+    "new.multi_hint": {
+        "uz": "Bir nechta qiymatni | bilan ajrating.",
+        "ru": "Несколько значений разделяйте символом |.",
+        "en": "Separate several values with |.",
+    },
+    "new.business_only": {
+        "uz": "Faqat kompaniyaning ochiq ish kontaktlari. Shaxsiy ma'lumot kiritmang.",
+        "ru": "Только публичные рабочие контакты компании. Не вводите личные данные.",
+        "en": "Public business contacts only. Do not enter private personal data.",
+    },
+    "new.allow_duplicate": {
+        "uz": "Bu nom va shahar bo'yicha boshqa kompaniya — baribir qo'shish",
+        "ru": "Это другая компания с тем же названием и городом — всё равно добавить",
+        "en": "This is a different company with the same name and city — add anyway",
+    },
+    "new.submit": {"uz": "Saqlash", "ru": "Сохранить", "en": "Save"},
+    "new.duplicate": {
+        "uz": "Bunday kompaniya allaqachon bor ({reason}).",
+        "ru": "Такая компания уже есть ({reason}).",
+        "en": "This company already exists ({reason}).",
+    },
+    "new.open_existing": {
+        "uz": "Mavjudini ochish",
+        "ru": "Открыть существующую",
+        "en": "Open existing",
+    },
+    "new.invalid": {"uz": "Xato: {reason}", "ru": "Ошибка: {reason}", "en": "Error: {reason}"},
+    "import.title": {"uz": "CSV import", "ru": "Импорт CSV", "en": "CSV import"},
+    "import.help": {
+        "uz": (
+            "Ustunlar: name, country (majburiy), city, industry, domain, phone, "
+            "email, telegram, source_url, notes. O'zbekcha/ruscha sarlavhalar ham "
+            "qabul qilinadi. UTF-8 yoki Windows-1251, 1 MB / 2000 qatorgacha."
+        ),
+        "ru": (
+            "Колонки: name, country (обязательно), city, industry, domain, phone, "
+            "email, telegram, source_url, notes. Заголовки на русском/узбекском "
+            "тоже принимаются. UTF-8 или Windows-1251, до 1 МБ / 2000 строк."
+        ),
+        "en": (
+            "Columns: name, country (required), city, industry, domain, phone, "
+            "email, telegram, source_url, notes. Uzbek/Russian headers are accepted "
+            "too. UTF-8 or Windows-1251, up to 1 MB / 2000 rows."
+        ),
+    },
+    "import.file": {"uz": "Fayl", "ru": "Файл", "en": "File"},
+    "import.dry_run": {
+        "uz": "Faqat tekshirish (saqlamasdan)",
+        "ru": "Только проверить (без сохранения)",
+        "en": "Check only (do not save)",
+    },
+    "import.submit": {"uz": "Yuklash", "ru": "Загрузить", "en": "Upload"},
+    "import.summary": {
+        "uz": "{created} ta yangi · {duplicates} ta dublikat · {invalid} ta xato",
+        "ru": "{created} новых · {duplicates} дубликатов · {invalid} ошибок",
+        "en": "{created} new · {duplicates} duplicates · {invalid} errors",
+    },
+    "import.dry_note": {
+        "uz": "Bu tekshiruv natijasi — hech narsa saqlanmadi.",
+        "ru": "Это результат проверки — ничего не сохранено.",
+        "en": "This is a preview — nothing was saved.",
+    },
+    "import.row": {"uz": "Qator", "ru": "Строка", "en": "Row"},
+    "status.created": {"uz": "yangi", "ru": "новая", "en": "new"},
+    "status.duplicate": {"uz": "dublikat", "ru": "дубликат", "en": "duplicate"},
+    "status.invalid": {"uz": "xato", "ru": "ошибка", "en": "error"},
+    "company.contacts": {"uz": "Kontaktlar", "ru": "Контакты", "en": "Contacts"},
+    "company.notes": {"uz": "Izoh", "ru": "Заметки", "en": "Notes"},
     # control center
     "nav.control": {"uz": "Boshqaruv", "ru": "Управление", "en": "Control"},
     "control.title": {

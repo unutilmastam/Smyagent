@@ -30,12 +30,13 @@ on MariaDB 10.6 + 10.11 in CI.
 | `audit_logs` | Logins, approvals, settings/control changes; `details` redacted | index created_at, (entity_type, entity_id) |
 | `jobs` | DB-backed queue (ADR-0004) | **unique** `idempotency_key`; index (status, run_after) |
 | `job_locks` | Named locks with expiry (cron overlap prevention) | PK `name` |
+| `contacts` | Public business phones (E.164), emails (role flag), Telegram | unique (company, kind, value); index (kind, value) for cross-company dedup |
 | `agent_controls` | Kill switch: `global` + 7 modules (ADR-0006) | PK `module`; seeded ACTIVE by migration 0001 |
 
 Duplicate detection (CLAUDE.md §8.1): by normalized domain (unique constraint) and
 by normalized name + city (lookup, not a constraint — same name in one city may be
-legitimate, so the second one is reported as a duplicate for review). Phone
-normalization (E.164) arrives with contacts in M4.
+legitimate, so the second one is reported as a duplicate for review). Since M4 a shared phone,
+email or Telegram contact is also a hard duplicate.
 
 ## Concurrency (portable, no `SKIP LOCKED`)
 
