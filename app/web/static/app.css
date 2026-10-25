@@ -141,3 +141,18 @@ select { width: 100%; padding: 10px; font-size: 16px; border: 1px solid var(--bo
 .badge-status-error, .badge-status-stalled { background: #ffedd5; color: #c2410c; }
 .feed { font-size: .85rem; }
 .control-global form { margin: 0; }
+
+/* --- M4: forms and import ------------------------------------------------ */
+.page-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.page-actions { display: flex; gap: 8px; }
+.btn-link { padding: 8px 12px; border: 1px solid var(--primary); border-radius: 8px; text-decoration: none; font-weight: 700; font-size: .9rem; min-height: 40px; display: inline-flex; align-items: center; }
+.form-stack label:first-of-type { margin-top: 4px; }
+textarea { width: 100%; padding: 12px; font: inherit; font-size: 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); }
+input[type="file"] { padding: 8px; }
+.check { display: flex; gap: 8px; align-items: flex-start; font-weight: 500; }
+.check input { width: auto; margin-top: 3px; }
+.hint { font-size: .8rem; margin: 4px 0 0; }
+.badge-import-created { background: #dcfce7; color: var(--ok); }
+.badge-import-duplicate { background: #fef3c7; color: var(--warn); }
+.badge-import-invalid { background: #fee2e2; color: var(--bad); }
+.import-rows li { margin: 6px 0; }

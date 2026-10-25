@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}{{ t('new.title') }} — SMY Agent{% endblock %}
+{% block content %}
+<p><a href="/companies">{{ t('company.back') }}</a></p>
+<h1>{{ t('new.title') }}</h1>
+{% if result and result.status.value == 'duplicate' %}
+<p class="alert alert-warn" role="alert">{{ t('new.duplicate', reason=result.reason) }}
+  <a href="/companies/{{ result.duplicate_of }}">{{ t('new.open_existing') }}</a></p>
+{% elif result and result.status.value == 'invalid' %}
+<p class="alert alert-error" role="alert">{{ t('new.invalid', reason=result.reason) }}</p>
+{% endif %}
+<form method="post" action="/companies/new" class="card form-stack">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <p class="muted">{{ t('new.business_only') }}</p>
+  <label for="name">{{ t('new.name') }}</label>
+  <input id="name" name="name" required maxlength="255" value="{{ form.name }}">
+  <label for="country">{{ t('new.country') }}</label>
+  <select id="country" name="country">
+    {% for code in ['UZ', 'KZ', 'KG', 'TJ'] %}<option value="{{ code }}" {% if form.country == code %}selected{% endif %}>{{ code }}</option>{% endfor %}
+  </select>
+  <label for="city">{{ t('company.city') }}</label>
+  <input id="city" name="city" maxlength="191" value="{{ form.city }}">
+  <label for="industry">{{ t('company.industry') }}</label>
+  <input id="industry" name="industry" maxlength="191" value="{{ form.industry }}">
+  <label for="domain">{{ t('new.domain') }}</label>
+  <input id="domain" name="domain" maxlength="500" inputmode="url" autocapitalize="none" value="{{ form.domain }}">
+  <label for="phone">{{ t('new.phone') }}</label>
+  <input id="phone" name="phone" maxlength="200" inputmode="tel" value="{{ form.phone }}">
+  <label for="email">{{ t('new.email') }}</label>
+  <input id="email" name="email" maxlength="300" inputmode="email" autocapitalize="none" value="{{ form.email }}">
+  <label for="telegram">{{ t('new.telegram') }}</label>
+  <input id="telegram" name="telegram" maxlength="200" autocapitalize="none" value="{{ form.telegram }}">
+  <p class="muted hint">{{ t('new.multi_hint') }}</p>
+  <label for="source_url">{{ t('new.source_url') }}</label>
+  <input id="source_url" name="source_url" maxlength="2000" inputmode="url" value="{{ form.source_url }}">
+  <label for="notes">{{ t('new.notes') }}</label>
+  <textarea id="notes" name="notes" maxlength="2000" rows="3">{{ form.notes }}</textarea>
+  {% if result and result.status.value == 'duplicate' and result.reason == 'name+city' %}
+  <label class="check"><input type="checkbox" name="allow_duplicate" value="1"> {{ t('new.allow_duplicate') }}</label>
+  {% endif %}
+  <button type="submit" class="btn-primary">{{ t('new.submit') }}</button>
+</form>
+{% endblock %}

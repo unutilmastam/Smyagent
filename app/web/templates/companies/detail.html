@@ -21,6 +21,12 @@
 <ul class="plain-list">{% for d in c.domains %}<li>{{ d.domain }}{% if d.is_primary %} ★{% endif %}</li>{% endfor %}</ul>
 {% else %}<p class="muted">{{ t('company.none') }}</p>{% endif %}
 
+<h2>{{ t('company.contacts') }}</h2>
+{% if detail.contacts %}
+<ul class="plain-list">{% for ct in detail.contacts %}<li>{{ ct.kind.value }}: <strong>{{ ct.value }}</strong></li>{% endfor %}</ul>
+{% else %}<p class="muted">{{ t('company.none') }}</p>{% endif %}
+{% if c.notes %}<h2>{{ t('company.notes') }}</h2><p class="break">{{ c.notes }}</p>{% endif %}
+
 <h2>{{ t('company.sources') }}</h2>
 <ul class="plain-list">
   {% for s in c.sources %}

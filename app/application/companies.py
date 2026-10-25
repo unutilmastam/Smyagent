@@ -16,6 +16,7 @@ from app.infrastructure.database.models import (
     Company,
     CompanyDomain,
     CompanySource,
+    Contact,
     Lead,
     ResearchRun,
     WorkflowEvent,
@@ -86,6 +87,7 @@ class CompanyDetail:
     company: Company
     lead: Lead | None
     research_runs: list[ResearchRun] = field(default_factory=list)
+    contacts: list[Contact] = field(default_factory=list)
     history: list[WorkflowEvent] = field(default_factory=list)
 
 
@@ -191,4 +193,11 @@ class CompanyQueryService:
                 .limit(50)
             )
         )
-        return CompanyDetail(company=company, lead=lead, research_runs=runs, history=history)
+        contacts = list(
+            self.session.scalars(
+                select(Contact).where(Contact.company_id == company_id).order_by(Contact.kind)
+            )
+        )
+        return CompanyDetail(
+            company=company, lead=lead, research_runs=runs, history=history, contacts=contacts
+        )

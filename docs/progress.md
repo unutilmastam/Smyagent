@@ -204,3 +204,29 @@ Not verified: a real Telegram round trip (this sandbox's proxy blocks api.telegr
 Two options (owner's choice; default **M4** because it produces real value first):
 - **M4** — company discovery: manual entry form, CSV import, normalization, dedup review.
 - **M3c-office** — Virtual Office canvas view (ADR-0009); characters would only show idle/coffee until agents exist.
+
+## Session 4 (cont.) — M4 Company discovery
+
+### Completed
+- `contacts` table (migration `0005`): public business phone (E.164), email (role-address flag), Telegram; unique per company, indexed for cross-company duplicate detection.
+- Contact normalization (pure, tested): UZ/KZ/KG/TJ national formats incl. trunk prefixes, explicit international numbers, emails, `@telegram` / `t.me/...`.
+- `DiscoveryService.ingest()` — single intake path for manual entry, CSV and search providers: validation, duplicate detection (domain, phone, email, Telegram = hard; name + city = soft, owner can override), workflow event `NEW`, never auto-merges.
+- CSV import: UTF-8/BOM or Windows-1251, `,` `;` tab auto-detected, UZ/RU/EN headers, `|` for multiple values, 1 MB / 2000 rows; dry run executes the real intake in a rolled-back savepoint (so duplicates inside the same file show up in the preview); per-row report; sources `csv` with `file#row`; audit log.
+- `SearchProvider` interface + `FixtureSearchProvider` (results always stored `is_fixture=True`).
+- Pages `/companies/new` and `/companies/import` (owner only, CSRF), contacts and notes on the detail page.
+
+### Verification
+| Command | Result |
+|---|---|
+| `pytest` (SQLite, Python 3.11 and 3.13) | 307 passed |
+| `TEST_DATABASE_URL=…10.6… pytest tests/integration` | 136 passed |
+| same on MariaDB 10.11 | 136 passed |
+| `alembic downgrade base && upgrade head && check` (MariaDB 10.6) | no differences |
+| Playwright 375×812: manual entry → detail shows `+998915554433`; Russian-header CSV → "2 ta yangi · 0 ta dublikat · 1 ta xato" | works; no console errors; no horizontal scroll |
+| `ruff`, `ruff format --check`, `mypy` | clean |
+
+### Open
+- A real search provider (Google Places within free quota per ADR-0007, 2GIS with an agreement) needs the owner's API key/agreement.
+
+### Next task
+**M5** — SSRF-safe fetcher + deterministic website audit (+ LLM summary later, Haiku per ADR-0007), or **M3c-office** if the owner prefers.

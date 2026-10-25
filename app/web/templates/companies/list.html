@@ -1,7 +1,15 @@
 {% extends "base.html" %}
 {% block title %}{{ t('companies.title') }} — SMY Agent{% endblock %}
 {% block content %}
-<h1>{{ t('companies.title') }}</h1>
+<div class="page-head">
+  <h1>{{ t('companies.title') }}</h1>
+  {% if user and user.is_owner %}
+  <div class="page-actions">
+    <a class="btn-link" href="/companies/new">{{ t('companies.add') }}</a>
+    <a class="btn-link" href="/companies/import">{{ t('companies.import') }}</a>
+  </div>
+  {% endif %}
+</div>
 <form class="filters" method="get" action="/companies" role="search"
       hx-get="/companies" hx-target="#results" hx-push-url="true"
       hx-trigger="input changed delay:350ms from:#q, change from:select, submit"
