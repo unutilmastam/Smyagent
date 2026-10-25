@@ -1,5 +1,6 @@
 """ORM models. Import this package so every table is registered on `Base.metadata`."""
 
+from app.infrastructure.database.models.agent_settings import AgentSetting, AgentSettingVersion
 from app.infrastructure.database.models.audit import AuditLog, WorkflowEvent
 from app.infrastructure.database.models.audits import ResearchFinding, WebsiteAudit
 from app.infrastructure.database.models.auth import LoginAttempt, User, UserSession
@@ -28,6 +29,8 @@ __all__ = [
     "AgentControl",
     "AgentRun",
     "AgentRunStatus",
+    "AgentSetting",
+    "AgentSettingVersion",
     "ApprovalRequest",
     "AuditLog",
     "Company",

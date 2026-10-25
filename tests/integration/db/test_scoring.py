@@ -130,3 +130,20 @@ def test_enqueue_is_idempotent_per_research_version(db: Database, settings: Sett
 def test_deleted_company_is_ignored(db: Database, settings: Settings) -> None:
     ctx = _ctx(db, settings, RecordingNotifier())
     assert run_scoring(ctx, {"company_id": str(uuid.uuid4())}) == "company deleted"
+
+
+def test_owner_hot_lead_threshold(db: Database, settings: Settings) -> None:
+    from app.domain.actors import Actor
+    from app.domain.agent_settings import ScoringExtraSettings
+    from app.infrastructure.repositories.agent_settings import AgentSettingsRepository
+
+    with db.transaction() as s:
+        AgentSettingsRepository(s).save(
+            AgentModule.OPPORTUNITY_SCORING,
+            ScoringExtraSettings(hot_lead_threshold=99),
+            Actor.user("owner"),
+        )
+    cid = _researched(db, settings, phones=("+998901234567",), emails=("info@lazzat.uz",))
+    notifier = RecordingNotifier()
+    assert "QUALIFIED" in run_scoring(_ctx(db, settings, notifier), {"company_id": str(cid)})
+    assert notifier.messages == []  # 86 < owner's hot threshold 99

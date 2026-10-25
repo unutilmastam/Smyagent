@@ -264,3 +264,21 @@ def test_stale_running_job_is_requeued(
         )
     summary = _runner(db, settings, FakeOsm()).run(max_jobs=1, max_seconds=60)
     assert summary.requeued_stale == 1
+
+
+def test_owner_settings_reach_discovery_and_research(db: Database, settings: Settings) -> None:
+    from app.domain.agent_settings import DiscoverySettings, ResearchSettings
+    from app.domain.agents import AgentModule
+    from app.infrastructure.repositories.agent_settings import AgentSettingsRepository
+    from app.jobs.tasks.research import enqueue_new_companies
+
+    with db.transaction() as s:
+        repo = AgentSettingsRepository(s)
+        repo.save(AgentModule.DISCOVERY, DiscoverySettings(results_per_search=7), OWNER)
+        repo.save(AgentModule.RESEARCH_AUDIT, ResearchSettings(companies_per_run=1), OWNER)
+    _target(db)
+    provider = FakeOsm()
+    _runner(db, settings, provider).run(max_jobs=1, max_seconds=60)
+    assert provider.queries and provider.queries[0].limit == 7
+    with db.transaction() as s:
+        assert enqueue_new_companies(s) == 1  # two NEW companies, owner limit is 1

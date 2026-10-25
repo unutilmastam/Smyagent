@@ -43,6 +43,7 @@ from app.infrastructure.database.models import (
     ResearchRun,
 )
 from app.infrastructure.database.types import utcnow
+from app.infrastructure.repositories.agent_settings import AgentSettingsRepository
 from app.infrastructure.repositories.workflow import AuditLogRepository
 
 PROPOSAL_ACTOR = Actor.agent(AgentModule.PROPOSAL_REQUIREMENTS.value)
@@ -71,6 +72,7 @@ class ProposalService:
     def __init__(self, session: Session) -> None:
         self.session = session
         self.workflow = WorkflowService(session)
+        self.settings = AgentSettingsRepository(session)
 
     # -- drafting ------------------------------------------------------------
 
@@ -92,13 +94,15 @@ class ProposalService:
         services = [(Service(o.service), o.strength) for o in opportunities]
         if not services or not findings:
             return None
+        config = self.settings.get(AgentModule.PROPOSAL_REQUIREMENTS).offer_config()
         draft = build_offer(
             OfferInput(
                 company_name=company.name,
                 language=language_for_country(company.country),
                 observations=[Observation(f.key, f.kind is Kind.FACT) for f in findings],
                 services=services,
-            )
+            ),
+            config,
         )
         if not draft.services:
             return None
@@ -157,8 +161,13 @@ class ProposalService:
         return self._apply_gate(proposal, version)
 
     def _apply_gate(self, proposal: Proposal, version: ProposalVersion) -> GateOutcome:
+        gate = self.settings.get(AgentModule.QUALITY_GATE)
         result = review(
-            version.body, language=proposal.language, evidence_count=len(version.finding_ids)
+            version.body,
+            language=proposal.language,
+            evidence_count=len(version.finding_ids),
+            extra_blocked=gate.extra_blocked,
+            extra_review=gate.extra_review,
         )
         version.gate_verdict = result.verdict
         version.gate_issues = [

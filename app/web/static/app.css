@@ -179,3 +179,5 @@ input[type="file"] { padding: 8px; }
 .badge-gate-needs_review, .badge-pstatus-awaiting_approval { background: #fef3c7; color: var(--warn); }
 .badge-gate-rejected, .badge-pstatus-needs_edit, .badge-pstatus-rejected { background: #fee2e2; color: var(--bad); }
 .stat-attention .stat-value { color: var(--warn); }
+.plain-fieldset { border: 0; padding: 0; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.module-settings { margin: 4px 0; font-size: .85rem; }

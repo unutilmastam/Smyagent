@@ -33,6 +33,7 @@
       <strong>{{ t('agent.' ~ key) }}</strong>
       <span class="badge badge-status-{{ m.status.value }}">{{ t('status.' ~ m.status.value) }}</span>
     </div>
+    <p class="module-settings"><a href="/settings/agents/{{ key }}">⚙ {{ t('agentset.configure') }}</a></p>
     <p class="muted module-stats">{{ m.queued }} {{ t('control.queued') }} · {{ m.running }} {{ t('control.running') }} · {{ m.failed_1h }} {{ t('control.failed') }}</p>
     {% if m.current %}
     <p class="module-step">{{ m.current.step or '…' }}</p>
