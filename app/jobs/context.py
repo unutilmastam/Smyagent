@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import uuid
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from sqlalchemy import update
 
-from app.application.controls import ControlGate
+from app.application.controls import ControlGate, NullNotifier, OwnerNotifier
 from app.core.config import Settings
 from app.domain.agents import AgentModule
 from app.infrastructure.database import Database
@@ -31,6 +31,7 @@ class TaskContext:
     run_id: uuid.UUID
     search_provider_factory: Callable[[Settings], SearchProvider | None]
     fetcher_factory: Callable[[], SafeFetcher] = SafeFetcher
+    notifier: OwnerNotifier = field(default_factory=NullNotifier)
 
     def progress(self, step: str, pct: int) -> None:
         """Visible on the Control Center immediately (own short transaction)."""

@@ -378,6 +378,97 @@ _T: dict[str, dict[str, str]] = {
         "ru": "Сайт запрещает автоматическую проверку в robots.txt.",
         "en": "The site's robots.txt disallows automated reading.",
     },
+    # opportunity & scoring (M6)
+    "nav.leads": {"uz": "Lidlar", "ru": "Лиды", "en": "Leads"},
+    "leads.title": {"uz": "Lidlar", "ru": "Лиды", "en": "Leads"},
+    "leads.empty": {
+        "uz": "Hali lid yo'q — agentlar kompaniyalarni tekshirib baholagach "
+        "shu yerda paydo bo'ladi.",
+        "ru": "Лидов пока нет — они появятся после проверки и оценки компаний агентами.",
+        "en": "No leads yet — they appear once agents have researched and scored companies.",
+    },
+    "leads.stage": {"uz": "Bosqich", "ru": "Этап", "en": "Stage"},
+    "leads.score": {"uz": "Ball", "ru": "Балл", "en": "Score"},
+    "leads.need": {"uz": "Ehtiyoj", "ru": "Потребность", "en": "Need"},
+    "opp.title": {"uz": "Imkoniyatlar", "ru": "Возможности", "en": "Opportunities"},
+    "opp.none": {
+        "uz": "Hozircha imkoniyat topilmadi.",
+        "ru": "Пока возможностей не найдено.",
+        "en": "No opportunity found yet.",
+    },
+    "opp.because": {"uz": "sababi", "ru": "причина", "en": "because"},
+    "score.title": {
+        "uz": "Baho: {total}/100",
+        "ru": "Оценка: {total}/100",
+        "en": "Score: {total}/100",
+    },
+    "score.missing": {"uz": "Ma'lumot yo'q", "ru": "Нет данных", "en": "No data"},
+    "score.weight": {"uz": "vazn", "ru": "вес", "en": "weight"},
+    "score.version": {"uz": "hisoblangan", "ru": "рассчитано", "en": "computed"},
+    "settings.scoring": {
+        "uz": "Baholash sozlamalari",
+        "ru": "Настройки оценки",
+        "en": "Scoring settings",
+    },
+    "settings.threshold": {
+        "uz": "Lid tayyor (QUALIFIED) chegarasi",
+        "ru": "Порог квалификации лида",
+        "en": "Qualification threshold",
+    },
+    "settings.saved": {
+        "uz": "Saqlandi. Yangi baholar keyingi tekshiruvlarda qo'llanadi.",
+        "ru": "Сохранено. Новые веса применятся при следующих оценках.",
+        "en": "Saved. New weights apply to future evaluations.",
+    },
+    "settings.save": {"uz": "Saqlash", "ru": "Сохранить", "en": "Save"},
+    "comp.service_fit": {
+        "uz": "Xizmatga moslik",
+        "ru": "Соответствие услугам",
+        "en": "Service fit",
+    },
+    "comp.evidence_quality": {
+        "uz": "Dalil sifati",
+        "ru": "Качество данных",
+        "en": "Evidence quality",
+    },
+    "comp.geography": {"uz": "Hudud", "ru": "География", "en": "Geography"},
+    "comp.contactability": {
+        "uz": "Bog'lanish imkoni",
+        "ru": "Контактность",
+        "en": "Contactability",
+    },
+    "comp.activity": {
+        "uz": "Faollik belgilari",
+        "ru": "Признаки активности",
+        "en": "Activity signals",
+    },
+    "svc.business_website": {
+        "uz": "Biznes sayt",
+        "ru": "Сайт для бизнеса",
+        "en": "Business website",
+    },
+    "svc.landing_page": {"uz": "Landing sahifa", "ru": "Лендинг", "en": "Landing page"},
+    "svc.ecommerce": {"uz": "Internet do'kon", "ru": "Интернет-магазин", "en": "Online store"},
+    "svc.telegram_bot": {"uz": "Telegram bot", "ru": "Telegram-бот", "en": "Telegram bot"},
+    "svc.automation": {
+        "uz": "Biznes avtomatlashtirish",
+        "ru": "Автоматизация бизнеса",
+        "en": "Business automation",
+    },
+    "svc.crm": {"uz": "CRM", "ru": "CRM", "en": "CRM"},
+    "svc.ai_assistant": {"uz": "AI yordamchi", "ru": "AI-ассистент", "en": "AI assistant"},
+    "svc.website_modernization": {
+        "uz": "Saytni yangilash",
+        "ru": "Обновление сайта",
+        "en": "Website modernization",
+    },
+    "svc.maintenance": {
+        "uz": "Saytga texnik xizmat",
+        "ru": "Техподдержка сайта",
+        "en": "Website maintenance",
+    },
+    "stage.CANDIDATE": {"uz": "Nomzod", "ru": "Кандидат", "en": "Candidate"},
+    "stage.QUALIFIED": {"uz": "Tayyor", "ru": "Квалифицирован", "en": "Qualified"},
     # control center
     "nav.control": {"uz": "Boshqaruv", "ru": "Управление", "en": "Control"},
     "control.title": {

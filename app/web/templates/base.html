@@ -52,6 +52,9 @@
     <a href="/companies" {% if path.startswith('/companies') %}aria-current="page"{% endif %}>
       <span aria-hidden="true">▤</span><span>{{ t('nav.companies') }}</span>
     </a>
+    <a href="/leads" {% if path.startswith('/leads') %}aria-current="page"{% endif %}>
+      <span aria-hidden="true">★</span><span>{{ t('nav.leads') }}</span>
+    </a>
     <a href="/control" {% if path.startswith('/control') %}aria-current="page"{% endif %}>
       <span aria-hidden="true">◉</span><span>{{ t('nav.control') }}</span>
     </a>

@@ -22,6 +22,7 @@ from app.infrastructure.database.models import (
     CompanySource,
     DiscoveryTarget,
     Job,
+    Lead,
 )
 from app.infrastructure.database.types import utcnow
 from app.infrastructure.http_fetcher.fetcher import FetchError
@@ -142,8 +143,15 @@ def test_runner_discovers_companies_end_to_end(db: Database, settings: Settings)
     # (one has no website, the other's site is unreachable offline); no duplicates.
     again = _runner(db, settings, provider).run(max_jobs=5, max_seconds=60)
     assert again.scheduled == 2 and again.succeeded == 2 and _count(db, Company) == 2
+    # Third run: both researched companies are scored and get leads.
     third = _runner(db, settings, provider).run(max_jobs=5, max_seconds=60)
-    assert third.scheduled == 0 and third.succeeded == 0
+    assert third.scheduled == 2 and third.succeeded == 2
+    with db.transaction() as s:
+        states = sorted(state.value for state in s.scalars(select(Company.research_state)))
+        assert states == ["ANALYZED", "ANALYZED"]
+        assert s.scalar(select(func.count()).select_from(Lead)) == 2
+    fourth = _runner(db, settings, provider).run(max_jobs=5, max_seconds=60)
+    assert fourth.scheduled == 0 and fourth.succeeded == 0
 
 
 def test_overlapping_runs_are_prevented(db: Database, settings: Settings) -> None:

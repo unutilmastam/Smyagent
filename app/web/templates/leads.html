@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ t('leads.title') }} — SMY Agent{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>{{ t('leads.title') }}</h1>
+  {% if user.is_owner %}<div class="page-actions"><a class="btn-link" href="/settings/scoring">⚙ {{ t('settings.scoring') }}</a></div>{% endif %}
+</div>
+<nav class="tabs" aria-label="{{ t('leads.stage') }}">
+  <a href="/leads" {% if not stage %}aria-current="page"{% endif %}>{{ t('companies.all') }}</a>
+  {% for s in stages %}<a href="/leads?stage={{ s.value }}" {% if stage == s %}aria-current="page"{% endif %}>{{ t('stage.' ~ s.value) }} ({{ counts.get(s.value, 0) }})</a>{% endfor %}
+</nav>
+{% if rows %}
+<ul class="company-list">
+  {% for lead, company, total, need in rows %}
+  <li><a class="company-item" href="/companies/{{ company.id }}">
+    <span class="company-name">{{ company.name }}</span>
+    <span class="company-meta">{{ company.country }}{% if company.city %} · {{ company.city }}{% endif %}{% if need %} · {{ t('leads.need') }}: {{ t('svc.' ~ need) }}{% endif %}</span>
+    <span class="badges">
+      <span class="badge {% if total and total >= 75 %}badge-status-running{% endif %}">{{ t('leads.score') }}: {{ total if total is not none else '—' }}</span>
+      <span class="badge">{% set k = 'stage.' ~ lead.stage.value %}{% set tx = t(k) %}{{ lead.stage.value if tx == k else tx }}</span>
+    </span>
+  </a></li>
+  {% endfor %}
+</ul>
+{% else %}<section class="card empty"><p>{{ t('leads.empty') }}</p></section>{% endif %}
+{% endblock %}
