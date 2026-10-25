@@ -51,7 +51,7 @@ Some facts cannot be read from the shell (Python versions in the Setup Python Ap
 ## 3. Deployment layout
 
 ```
-~/smyagent/                 # cPanel Git Version Control clone (not in public_html)
+~/smyagent/                 # Setup Python App root; code fetched into it with git (guide §3)
 ~/smyagent/.env             # all settings + secrets, mode 600, ignored by Git (setup_env.py)
 ~/smyagent/passenger_wsgi.py              # startup file (shim → deployment/cpanel/…)
 ~/smyagent_data/            # deploy.log, runner.log, backups/ — outside the web root

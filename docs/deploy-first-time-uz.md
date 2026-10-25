@@ -6,6 +6,12 @@ va **Enter** ni bosing. Taxminiy vaqt: 30–40 daqiqa.
 
 > 🔐 **Parol va tokenlarni hech kimga yubormang** — chatga ham, GitHub'ga ham.
 > Ularni faqat Terminal so'raganda o'zingiz kiritasiz.
+>
+> 🚫 **smy.itcode.uz**, **smarthome-api** ilovasi va `smy-api` virtualenviga tegilmaydi —
+> barcha buyruqlar faqat `~/smyagent` papkasida ishlaydi.
+>
+> Tartib: MySQL baza → Python App 3.12 → git clone → env (`.env`) → migratsiya (deploy) →
+> create-owner → webhooklar → cron. Email (`agent@itcode.uz`, SPF/DKIM/DMARC) deploydan keyin.
 
 Belgilar: 👆 = cPanel'da bosiladigan joy, 📋 = Terminalga nusxalanadigan buyruq,
 ✅ = to'g'ri natija.
@@ -36,20 +42,10 @@ Belgilar: 👆 = cPanel'da bosiladigan joy, 📋 = Terminalga nusxalanadigan buy
 
 ---
 
-## 2. Kodni serverga olish (3 daqiqa)
+## 2. Python ilovani yaratish (5 daqiqa)
 
-> Bu qadam **Python ilovadan oldin** bajariladi: papka bo'sh bo'lishi kerak.
-
-1. 👆 cPanel → **Git™ Version Control** → **Create**.
-2. *Clone a Repository* — yoqilgan.
-   - **Clone URL**: `https://github.com/unutilmastam/Smyagent.git`
-   - **Repository Path**: `smyagent`
-   - **Repository Name**: `smyagent`
-3. **Create** → bir oz kuting. ✅ Ro'yxatda `smyagent` paydo bo'ladi.
-
----
-
-## 3. Python ilovani yaratish (5 daqiqa)
+> ⚠️ Ro'yxatdagi **smarthome-api** (`smy.itcode.uz/api`) ilovasiga **tegmang** — uni
+> tahrirlamang, to'xtatmang, qayta ishga tushirmang. Faqat yangi ilova yaratamiz.
 
 1. 👆 cPanel → **Setup Python App** → **Create Application**.
 2. To'ldiring:
@@ -59,26 +55,40 @@ Belgilar: 👆 = cPanel'da bosiladigan joy, 📋 = Terminalga nusxalanadigan buy
    - **Application startup file**: `passenger_wsgi.py`
    - **Application Entry point**: `application`
    - **Passenger log file**: bo'sh qoldiring
-3. **Environment variables** bo'limiga **hech narsa qo'shmang** — barcha sozlamalar
-   keyingi qadamda `.env` fayliga yoziladi (u veb-sayt, Terminal va cron uchun bitta).
+3. **Environment variables** bo'limiga **hech narsa qo'shmang** — sozlamalar 4-qadamda
+   `.env` fayliga yoziladi. Sababi: bu ekrandagi o'zgaruvchilarni faqat sayt ko'radi,
+   Terminal buyruqlari (migratsiya, webhook) va cron esa ko'rmaydi; `.env` ni uchalasi
+   ham o'qiydi.
 4. **Create** ni bosing.
 5. Sahifa tepasida shunday buyruq chiqadi (o'zingizniki):
    `source /home/<login>/virtualenv/smyagent/3.12/bin/activate && cd /home/<login>/smyagent`
    👉 **Shu buyruqni nusxalab oling** — keyingi qadamlarda kerak bo'ladi.
 
-> Agar cPanel `smyagent` ichidagi `passenger_wsgi.py` faylini o'zgartirib yuborsa —
-> qo'rqmang, `deploy.sh` uni o'zi asl holiga qaytaradi.
-
 ---
 
-## 4. Sozlamalarni kiritish (5 daqiqa)
+## 3. Kodni serverga olish — git clone (2 daqiqa)
+
+cPanel 2-qadamda `smyagent` papkasini yaratdi, shuning uchun kodni Terminal orqali
+**shu papkaga** olamiz (cPanel'ning o'z `passenger_wsgi.py` fayli bizniki bilan almashadi).
 
 1. 👆 cPanel → **Terminal**.
-2. 📋 3-qadamdagi buyruqni joylang (virtualenvga kirish), masalan:
+2. 📋 Joylang (bir qator):
+   ```bash
+   cd ~/smyagent && git init -q && (git remote add origin https://github.com/unutilmastam/Smyagent.git 2>/dev/null || git remote set-url origin https://github.com/unutilmastam/Smyagent.git) && git fetch -q origin main && git checkout -q -f -B main origin/main && git log -1 --format='✅ %h %s'
+   ```
+   ✅ Oxirida `✅ <kod> ...` qatori chiqadi.
+3. 📋 Virtualenvga kiring (2-qadamdagi buyruq, masalan):
    ```bash
    source ~/virtualenv/smyagent/3.12/bin/activate && cd ~/smyagent
    ```
-3. 📋 Sozlash ustasini ishga tushiring:
+
+---
+
+## 4. Env o'zgaruvchilar — `.env` (5 daqiqa)
+
+1. Terminal ochiq va virtualenvda bo'lsin (3-qadam, 3-band). Yangi Terminal ochsangiz,
+   o'sha `source ... && cd ~/smyagent` buyrug'ini qayta joylang.
+2. 📋 Sozlash ustasini ishga tushiring:
    ```bash
    python scripts/setup_env.py
    ```
@@ -105,7 +115,7 @@ Belgilar: 👆 = cPanel'da bosiladigan joy, 📋 = Terminalga nusxalanadigan buy
 
 ---
 
-## 5. Deploy (5–10 daqiqa)
+## 5. Migratsiya va ishga tushirish — deploy (5–10 daqiqa)
 
 📋
 ```bash
@@ -162,6 +172,7 @@ Sinab ko'ring:
 ## 8. Cron — agentlar o'zi ishlashi uchun (3 daqiqa)
 
 👆 cPanel → **Cron Jobs** → *Add New Cron Job*.
+Ro'yxatdagi **mavjud cron'larga tegmang** (boshqa saytlaringizniki) — faqat ikkita yangi qo'shamiz.
 
 **1) Agentlar** — *Common Settings*: **Once Per Five Minutes** (`*/5 * * * *`).
 Agar 5 daqiqaga ruxsat bo'lmasa — 10 yoki 15 daqiqa. **Command**:
