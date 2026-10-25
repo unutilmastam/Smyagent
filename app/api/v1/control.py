@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from app.api.deps import get_database
 from app.application.control_snapshot import ControlSnapshotService
 from app.application.controls import AgentControlService, describe_change
+from app.application.office import OfficeSnapshotService
 from app.core.config import Settings, get_settings
 from app.domain.actors import Actor
 from app.domain.agents import ControlState
@@ -30,6 +31,19 @@ def snapshot(
             timezone=settings.default_timezone, ai_budget_today=settings.daily_ai_budget_usd
         )
     return snap.to_json()
+
+
+@router.get("/office")
+def office(
+    _: CurrentUser = Depends(require_user),  # noqa: B008
+    database: Database = Depends(get_database),  # noqa: B008
+    settings: Settings = Depends(get_settings),  # noqa: B008
+) -> dict[str, Any]:
+    """Virtual Office state (CLAUDE.md §13A.3): every animation comes from these facts."""
+    with database.transaction() as session:
+        return OfficeSnapshotService(session).build(
+            timezone=settings.default_timezone, ai_budget_today=settings.daily_ai_budget_usd
+        )
 
 
 class StateChange(BaseModel):

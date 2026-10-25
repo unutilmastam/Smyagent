@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}{{ t('office.title') }} — SMY Agent{% endblock %}
+{% block body_class %}page-office{% endblock %}
+{% block content %}
+<nav class="tabs" aria-label="{{ t('control.title') }}">
+  <a href="/control/office" aria-current="page">{{ t('office.tab.office') }}</a>
+  <a href="/control">{{ t('office.tab.graph') }}</a>
+  <a href="/jobs">🧾 {{ t('jobs.title') }}</a>
+</nav>
+{% if changed %}<p class="alert alert-ok" role="status">{{ t('control.changed') }}</p>{% endif %}
+
+<section class="office" id="office"
+         data-api="/api/v1/control/office"
+         data-timezone="{{ timezone }}"
+         data-owner="{{ '1' if user.is_owner else '0' }}">
+  <div class="office-status" id="office-status" role="status" aria-live="polite">{{ t('office.loading') }}</div>
+  <div class="office-scroller" id="office-scroller">
+    <canvas id="office-canvas" width="1280" height="800" role="img" aria-label="{{ t('office.canvas_label') }}"></canvas>
+  </div>
+  <p class="muted office-hint">{{ t('office.hint') }}</p>
+
+  <h2>{{ t('office.staff') }}</h2>
+  {# Text alternative of the scene; also the tap targets on small screens. #}
+  <ul class="office-list" id="office-list">
+    {% for key in modules %}
+    <li><button type="button" class="office-agent" data-agent="{{ key }}">
+      <span class="office-dot" data-dot="{{ key }}" aria-hidden="true"></span>
+      <span class="office-agent-main">
+        <span class="office-agent-name">{{ t('agent.' ~ key) }}</span>
+        <span class="office-agent-text muted" data-text="{{ key }}">…</span>
+      </span>
+      <span class="badge" data-pill="{{ key }}">…</span>
+    </button></li>
+    {% endfor %}
+  </ul>
+  <p class="muted">{{ t('office.real_note') }}</p>
+</section>
+
+<div class="office-sheet" id="office-sheet" role="dialog" aria-modal="false" aria-labelledby="sheet-name" hidden>
+  <div class="office-sheet-head">
+    <span class="office-dot" id="sheet-dot" aria-hidden="true"></span>
+    <h3 id="sheet-name"></h3>
+    <span class="badge" id="sheet-pill"></span>
+    <button type="button" class="btn-small office-close" id="sheet-close">{{ t('office.close') }}</button>
+  </div>
+  <p class="muted" id="sheet-role"></p>
+  <p id="sheet-detail" class="break"></p>
+  <div class="office-kv">
+    <div class="stat"><span class="stat-value" id="sheet-done">0</span><span class="stat-label">{{ t('office.done') }}</span></div>
+    <div class="stat"><span class="stat-value" id="sheet-failed">0</span><span class="stat-label">{{ t('office.failed') }}</span></div>
+    <div class="stat"><span class="stat-value" id="sheet-queued">0</span><span class="stat-label">{{ t('office.queued') }}</span></div>
+  </div>
+  <p class="muted">{{ t('office.cost') }}: $<span id="sheet-cost">0</span></p>
+  <p class="page-actions">
+    <a class="btn-link" id="sheet-job" href="/jobs" hidden>🧾 {{ t('office.view_job') }}</a>
+    <a class="btn-link" id="sheet-settings" href="/settings">⚙ {{ t('office.settings') }}</a>
+  </p>
+  {% if user.is_owner %}
+  <div class="module-actions" id="sheet-actions">
+    {% for target, label in [('ACTIVE', 'control.activate'), ('PAUSED', 'control.pause'), ('STOPPED', 'control.stop')] %}
+    <form method="post" action="/control/orchestrator" data-sheet-form>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="hidden" name="state" value="{{ target }}">
+      <input type="hidden" name="next" value="/control/office">
+      <button type="submit" class="btn-small" data-state="{{ target }}">{{ t(label) }}</button>
+    </form>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+{% if user.is_owner %}
+{# The big red button on the director's desk submits these (audit-logged like everywhere). #}
+<form method="post" action="/control/global" id="office-stop-form" hidden>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <input type="hidden" name="state" value="STOPPED">
+  <input type="hidden" name="next" value="/control/office">
+</form>
+<form method="post" action="/control/global" id="office-resume-form" hidden>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <input type="hidden" name="state" value="ACTIVE">
+  <input type="hidden" name="next" value="/control/office">
+</form>
+{% endif %}
+<div class="office-toast" id="office-toast" role="alert" hidden></div>
+<script type="application/json" id="office-text">{{ office_text|tojson }}</script>
+<script src="/static/office.js" defer></script>
+{% endblock %}

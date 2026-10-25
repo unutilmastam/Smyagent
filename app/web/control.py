@@ -18,8 +18,9 @@ from app.domain.errors import DomainError
 from app.infrastructure.database import Database
 from app.infrastructure.repositories.controls import ALL_CONTROL_KEYS
 from app.web.auth import CurrentUser, ForbiddenError, require_csrf, require_user
+from app.web.i18n import translator
 from app.web.layout import layout_context
-from app.web.templating import is_htmx_partial, render
+from app.web.templating import is_htmx_partial, render, request_language
 
 router = APIRouter(include_in_schema=False)
 
@@ -74,12 +75,77 @@ def control_page(
     return render(request, "control/index.html", context)
 
 
+OFFICE_KEYS = (
+    "office.mode.work",
+    "office.mode.idle",
+    "office.mode.queued",
+    "office.mode.wait",
+    "office.mode.pause",
+    "office.mode.stop",
+    "office.mode.error",
+    "office.mode.stalled",
+    "office.wait.rate_limit",
+    "office.wait.backoff",
+    "office.wait.budget",
+    "office.wait.deferred",
+    "office.room.open",
+    "office.room.dir",
+    "office.room.kitchen",
+    "office.room.wc",
+    "office.room.meet",
+    "office.room.mail",
+    "office.funnel",
+    "office.retry_at",
+    "office.director",
+    "office.stopped_banner",
+    "office.new_order",
+    "office.offline",
+    "office.cron_late",
+    "office.done",
+    "office.failed",
+    "office.queued",
+    "office.cost",
+    "control.stop_all.confirm",
+    "office.resume.confirm",
+)
+# Where a state-change form may send the owner back to (no open redirects).
+RETURN_PATHS = {"/control", "/control/office"}
+
+
+@router.get("/control/office", response_class=HTMLResponse)
+def office_page(
+    request: Request,
+    user: CurrentUser = Depends(require_user),  # noqa: B008
+    database: Database = Depends(get_database),  # noqa: B008
+    settings: Settings = Depends(get_settings),  # noqa: B008
+) -> Response:
+    """Virtual Office (CLAUDE.md §13A.3): canvas scene driven by /api/v1/control/office."""
+    t = translator(request_language(request))
+    modules = [AgentModule.ORCHESTRATOR.value] + [m.value for m in PIPELINE]
+    with database.transaction() as session:
+        context = layout_context(session, user)
+    context.update(
+        {
+            "modules": modules,
+            "office_text": {
+                **{key: t(key) for key in OFFICE_KEYS},
+                **{f"agent.{m}": t(f"agent.{m}") for m in modules},
+                **{f"office.role.{m}": t(f"office.role.{m}") for m in modules},
+            },
+            "timezone": settings.default_timezone,
+            "changed": request.query_params.get("changed") == "1",
+        }
+    )
+    return render(request, "control/office.html", context)
+
+
 @router.post("/control/{key}")
 def change_state(
     request: Request,
     key: str,
     state: Annotated[str, Form(max_length=16)],
     reason: Annotated[str, Form(max_length=200)] = "",
+    next_path: Annotated[str, Form(alias="next", max_length=40)] = "/control",
     user: CurrentUser = Depends(require_csrf),  # noqa: B008
     database: Database = Depends(get_database),  # noqa: B008
 ) -> Response:
@@ -96,4 +162,5 @@ def change_state(
             key, target, Actor.user(str(user.id)), reason or f"dashboard ({user.username})"
         )
     request.app.state.notifier.notify("Dashboard: " + describe_change(change))
-    return RedirectResponse("/control?changed=1", status_code=303)
+    back = next_path if next_path in RETURN_PATHS else "/control"
+    return RedirectResponse(f"{back}?changed=1", status_code=303)

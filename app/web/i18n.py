@@ -1492,6 +1492,260 @@ _T: dict[str, dict[str, str]] = {
         "ru": "runner завершился с ошибкой",
         "en": "the runner crashed",
     },
+    "office.title": {
+        "uz": "Virtual ofis",
+        "ru": "Виртуальный офис",
+        "en": "Virtual office",
+    },
+    "office.tab.office": {
+        "uz": "🏢 Ofis",
+        "ru": "🏢 Офис",
+        "en": "🏢 Office",
+    },
+    "office.tab.graph": {
+        "uz": "◉ Grafik",
+        "ru": "◉ Граф",
+        "en": "◉ Graph",
+    },
+    "office.open": {
+        "uz": "🏢 Virtual ofis — agentlarni ko'rish",
+        "ru": "🏢 Виртуальный офис — агенты",
+        "en": "🏢 Virtual office — see the agents",
+    },
+    "office.hint": {
+        "uz": "Xodimni bosing — uning ishi va boshqaruv tugmalari ochiladi. Barmoq bilan suring "
+        "— butun bino ko'rinadi.",
+        "ru": "Нажмите на сотрудника — откроются его работа и кнопки. Листайте пальцем, чтобы "
+        "увидеть всё здание.",
+        "en": "Tap an employee to see their work and controls. Swipe to see the whole building.",
+    },
+    "office.canvas_label": {
+        "uz": "Virtual ofis: 7 agent stollarda, oshxona, hojatxona, direktor xonasi, majlis "
+        "xonasi va pochta",
+        "ru": "Виртуальный офис: 7 агентов, кухня, туалет, кабинет директора, переговорная и почта",
+        "en": "Virtual office: 7 agents at desks, kitchen, restroom, director's room, meeting "
+        "room and mail desk",
+    },
+    "office.staff": {
+        "uz": "Xodimlar",
+        "ru": "Сотрудники",
+        "en": "Employees",
+    },
+    "office.today": {
+        "uz": "Bugun",
+        "ru": "Сегодня",
+        "en": "Today",
+    },
+    "office.loading": {
+        "uz": "Yuklanmoqda…",
+        "ru": "Загрузка…",
+        "en": "Loading…",
+    },
+    "office.offline": {
+        "uz": "Aloqa yo'q — oxirgi holat ko'rsatilmoqda",
+        "ru": "Нет связи — показано последнее состояние",
+        "en": "Offline — showing the last state",
+    },
+    "office.real_note": {
+        "uz": "Har bir harakat bazadagi haqiqiy ish holatidan olinadi.",
+        "ru": "Каждое движение — из реального состояния в базе.",
+        "en": "Every movement comes from the real state in the database.",
+    },
+    "office.close": {
+        "uz": "Yopish",
+        "ru": "Закрыть",
+        "en": "Close",
+    },
+    "office.done": {
+        "uz": "bajarildi",
+        "ru": "выполнено",
+        "en": "done",
+    },
+    "office.failed": {
+        "uz": "xato",
+        "ru": "ошибок",
+        "en": "failed",
+    },
+    "office.queued": {
+        "uz": "navbatda",
+        "ru": "в очереди",
+        "en": "queued",
+    },
+    "office.cost": {
+        "uz": "AI xarajati",
+        "ru": "Расходы AI",
+        "en": "AI cost",
+    },
+    "office.view_job": {
+        "uz": "Vazifani ko'rish",
+        "ru": "Открыть задачу",
+        "en": "Open the job",
+    },
+    "office.settings": {
+        "uz": "Sozlamalar",
+        "ru": "Настройки",
+        "en": "Settings",
+    },
+    "office.retry_at": {
+        "uz": "qayta: {t}",
+        "ru": "повтор: {t}",
+        "en": "retry: {t}",
+    },
+    "office.director": {
+        "uz": "Siz (direktor)",
+        "ru": "Вы (директор)",
+        "en": "You (director)",
+    },
+    "office.resume.confirm": {
+        "uz": "Barcha agentlarni yana ishga tushirasizmi?",
+        "ru": "Снова запустить всех агентов?",
+        "en": "Start all agents again?",
+    },
+    "office.stopped_banner": {
+        "uz": "FAVQULODDA TO'XTATILGAN",
+        "ru": "ЭКСТРЕННО ОСТАНОВЛЕНО",
+        "en": "EMERGENCY STOPPED",
+    },
+    "office.new_order": {
+        "uz": "✅ Yangi buyurtma — {t}",
+        "ru": "✅ Новый заказ — {t}",
+        "en": "✅ New order — {t}",
+    },
+    "office.cron_late": {
+        "uz": "Cron ishlamayapti — agentlar yangi ish olmaydi",
+        "ru": "Cron не работает — агенты не берут работу",
+        "en": "Cron is not running — agents take no new work",
+    },
+    "office.room.open": {
+        "uz": "ISH ZALI",
+        "ru": "ОПЕНСПЕЙС",
+        "en": "OPEN SPACE",
+    },
+    "office.room.dir": {
+        "uz": "DIREKTOR XONASI",
+        "ru": "КАБИНЕТ ДИРЕКТОРА",
+        "en": "DIRECTOR",
+    },
+    "office.room.kitchen": {
+        "uz": "OSHXONA",
+        "ru": "КУХНЯ",
+        "en": "KITCHEN",
+    },
+    "office.room.wc": {
+        "uz": "HOJATXONA",
+        "ru": "ТУАЛЕТ",
+        "en": "RESTROOM",
+    },
+    "office.room.meet": {
+        "uz": "MAJLIS XONASI",
+        "ru": "ПЕРЕГОВОРНАЯ",
+        "en": "MEETING ROOM",
+    },
+    "office.room.mail": {
+        "uz": "POCHTA",
+        "ru": "ПОЧТА",
+        "en": "MAIL",
+    },
+    "office.funnel": {
+        "uz": "Bugun: {a} topildi → {b} tahlil → {c} taklif → {d} email → {e} buyurtma",
+        "ru": "Сегодня: {a} найдено → {b} анализ → {c} предлож. → {d} email → {e} заказ",
+        "en": "Today: {a} found → {b} analysed → {c} offers → {d} emails → {e} orders",
+    },
+    "office.mode.work": {
+        "uz": "ishlayapti",
+        "ru": "работает",
+        "en": "working",
+    },
+    "office.mode.idle": {
+        "uz": "bo'sh — kofe",
+        "ru": "свободен — кофе",
+        "en": "idle — coffee",
+    },
+    "office.mode.queued": {
+        "uz": "navbat — keyingi cron",
+        "ru": "очередь — следующий cron",
+        "en": "queued — next cron",
+    },
+    "office.mode.wait": {
+        "uz": "kutyapti",
+        "ru": "ждёт",
+        "en": "waiting",
+    },
+    "office.mode.pause": {
+        "uz": "pauza",
+        "ru": "пауза",
+        "en": "paused",
+    },
+    "office.mode.stop": {
+        "uz": "to'xtatilgan",
+        "ru": "остановлен",
+        "en": "stopped",
+    },
+    "office.mode.error": {
+        "uz": "xato",
+        "ru": "ошибка",
+        "en": "error",
+    },
+    "office.mode.stalled": {
+        "uz": "javob bermayapti",
+        "ru": "не отвечает",
+        "en": "not responding",
+    },
+    "office.wait.rate_limit": {
+        "uz": "so'rov limiti",
+        "ru": "лимит запросов",
+        "en": "rate limit",
+    },
+    "office.wait.backoff": {
+        "uz": "vaqtinchalik xato, qayta uriniladi",
+        "ru": "временная ошибка, повтор",
+        "en": "temporary error, will retry",
+    },
+    "office.wait.budget": {
+        "uz": "AI byudjeti tugadi",
+        "ru": "бюджет AI исчерпан",
+        "en": "AI budget used up",
+    },
+    "office.wait.deferred": {
+        "uz": "kunlik limit / oraliq",
+        "ru": "дневной лимит / интервал",
+        "en": "daily cap / spacing",
+    },
+    "office.role.orchestrator": {
+        "uz": "Boshqaruvchi — ishlarni navbatga qo'yadi",
+        "ru": "Распределяет работу",
+        "en": "Schedules the work",
+    },
+    "office.role.discovery": {
+        "uz": "Qidiruvchi — yangi kompaniyalarni topadi",
+        "ru": "Находит новые компании",
+        "en": "Finds new companies",
+    },
+    "office.role.research_audit": {
+        "uz": "Tahlilchi — saytlarni tekshiradi",
+        "ru": "Проверяет сайты",
+        "en": "Checks websites",
+    },
+    "office.role.opportunity_scoring": {
+        "uz": "Baholovchi — imkoniyatga ball qo'yadi",
+        "ru": "Оценивает возможности",
+        "en": "Scores opportunities",
+    },
+    "office.role.proposal_requirements": {
+        "uz": "Taklifchi — narxsiz taklif yozadi",
+        "ru": "Пишет предложения без цен",
+        "en": "Writes offers without prices",
+    },
+    "office.role.quality_gate": {
+        "uz": "Nazoratchi — matnlarni tekshiradi",
+        "ru": "Проверяет тексты",
+        "en": "Checks the texts",
+    },
+    "office.role.conversation": {
+        "uz": "Mustafo — mijozlar bilan gaplashadi (AI)",
+        "ru": "Мустафо — общается с клиентами (AI)",
+        "en": "Mustafo — talks to clients (AI)",
+    },
 }
 
 
