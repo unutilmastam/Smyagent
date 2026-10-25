@@ -8,6 +8,7 @@ from typing import Any
 from app.jobs.context import TaskContext
 from app.jobs.tasks.conversation import SEND_JOB, run_send_reply
 from app.jobs.tasks.discovery import DISCOVERY_SEARCH, run_discovery_search
+from app.jobs.tasks.outreach import EMAIL_JOB, INBOX_JOB, run_inbox, run_send_email
 from app.jobs.tasks.proposals import (
     GATE_REVIEW,
     PROPOSAL_DRAFT,
@@ -26,4 +27,6 @@ HANDLERS: dict[str, Handler] = {
     PROPOSAL_DRAFT: run_proposal_draft,
     GATE_REVIEW: run_quality_gate,
     SEND_JOB: run_send_reply,
+    EMAIL_JOB: run_send_email,
+    INBOX_JOB: run_inbox,
 }

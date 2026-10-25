@@ -67,6 +67,13 @@
     <p class="hint muted">{{ t('agentset.reply_mode_hint') }}</p>
     <label for="owner_contact">{{ t('agentset.owner_contact') }}</label>
     <input id="owner_contact" name="owner_contact" value="{{ s.owner_contact }}" maxlength="120">
+    <h2>📤 {{ t('out.title') }}</h2>
+    <label class="check"><input type="checkbox" name="email_auto_approve" {% if s.email_auto_approve %}checked{% endif %}> {{ t('agentset.email_auto_approve') }}</label>
+    <p class="hint muted">{{ t('agentset.email_auto_hint') }}</p>
+    {% for name, lo, hi in [('email_daily_cap', 1, 100), ('email_warmup_start', 1, 100), ('email_warmup_step', 0, 50), ('email_min_gap_minutes', 1, 60), ('follow_up_days', 5, 30), ('telegram_daily_cap', 1, 50)] %}
+    <label for="{{ name }}">{{ t('agentset.' ~ name) }} ({{ lo }}–{{ hi }})</label>
+    <input id="{{ name }}" name="{{ name }}" type="number" min="{{ lo }}" max="{{ hi }}" value="{{ s[name] }}" inputmode="numeric">
+    {% endfor %}
   {% else %}
     <p class="muted">{{ t('agentset.later') }}</p>
   {% endif %}

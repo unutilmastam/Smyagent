@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}{{ t('unsub.title') }} — ITcoDe.Uz{% endblock %}
+{% block body_class %}page-login{% endblock %}
+{% block content %}
+<section class="card login-card">
+  <h1>{{ t('unsub.title') }}</h1>
+  {% if not valid %}
+  <p class="alert alert-error" role="alert">{{ t('unsub.invalid') }}</p>
+  {% elif done %}
+  <p class="alert alert-ok" role="status">{{ t('unsub.done') }}</p>
+  {% else %}
+  <p>{{ t('unsub.ask') }}</p>
+  <form method="post" action="/u/{{ token }}">
+    <button type="submit" class="btn-primary">{{ t('unsub.button') }}</button>
+  </form>
+  {% endif %}
+  <p class="muted hint">ITcoDe.Uz — itcode.uz</p>
+</section>
+{% endblock %}

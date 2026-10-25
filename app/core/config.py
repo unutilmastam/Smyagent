@@ -58,6 +58,21 @@ class Settings(BaseSettings):
     telegram_admin_ids: Annotated[list[int], NoDecode] = Field(default_factory=list)
 
     outbound_sending_enabled: bool = False
+
+    # Outbound email (M9): a mailbox on the itcode.uz domain (SPF/DKIM/DMARC set up).
+    smtp_host: str = ""
+    smtp_port: int = Field(default=465, ge=1, le=65535)
+    smtp_username: str = ""
+    smtp_password: SecretStr = SecretStr("")
+    smtp_use_ssl: bool = True  # False = STARTTLS (port 587)
+    # Display name + address, e.g. "Mustafo — ITcoDe.Uz <agent@itcode.uz>"
+    smtp_from: str = ""
+    # Same mailbox over IMAP: replies, "STOP", bounces, complaints.
+    imap_host: str = ""
+    imap_port: int = Field(default=993, ge=1, le=65535)
+    imap_username: str = ""
+    imap_password: SecretStr = SecretStr("")
+
     log_level: str = "INFO"
     # 0 means "no AI spending allowed" (optional AI calls are deferred), not "unlimited".
     daily_ai_budget_usd: Decimal = Field(default=Decimal("0"), ge=0)
@@ -126,6 +141,10 @@ class Settings(BaseSettings):
             and not self.search_api_key.get_secret_value()
         ):
             raise ValueError("SEARCH_API_KEY is required when SEARCH_PROVIDER is set")
+        if self.smtp_host and "@" not in self.smtp_from:
+            raise ValueError(
+                "SMTP_FROM (e.g. 'Mustafo <agent@itcode.uz>') is required with SMTP_HOST"
+            )
         if self.telegram_admin_bot_token.get_secret_value():
             if len(self.telegram_webhook_secret.get_secret_value()) < MIN_SECRET_LENGTH:
                 raise ValueError(
@@ -145,6 +164,10 @@ class Settings(BaseSettings):
             and self.telegram_webhook_secret.get_secret_value()
             and self.telegram_admin_ids
         )
+
+    @property
+    def email_enabled(self) -> bool:
+        return bool(self.smtp_host and self.smtp_from and "@" in self.smtp_from)
 
     @property
     def client_bot_enabled(self) -> bool:

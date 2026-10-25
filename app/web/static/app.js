@@ -28,6 +28,17 @@
     }
   }, true);
 
+  // Assisted Telegram (CLAUDE.md §13.2a): copy the prepared text, then open the chat.
+  document.addEventListener("click", function (evt) {
+    var link = evt.target.closest ? evt.target.closest("[data-copy]") : null;
+    if (!link) return;
+    var source = document.getElementById(link.dataset.copy);
+    if (!source || !navigator.clipboard) return;
+    navigator.clipboard.writeText(source.textContent).then(function () {
+      showToast(link.dataset.copied || "Copied");
+    }).catch(function () {});
+  });
+
   // Control Center polling (CLAUDE.md §13A.1): every 4 s, only while the tab is visible.
   // Done here because htmx trigger filters need eval, which the CSP forbids.
   var POLL_MS = 4000;

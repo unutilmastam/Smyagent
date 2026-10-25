@@ -990,6 +990,151 @@ _T: dict[str, dict[str, str]] = {
         "en": "Contains one of your review words",
     },
     "nav.settings": {"uz": "Sozlamalar", "ru": "Настройки", "en": "Settings"},
+    # outreach (M9)
+    "out.title": {"uz": "Yuborish", "ru": "Рассылка", "en": "Outreach"},
+    "out.saved": {"uz": "Bajarildi.", "ru": "Готово.", "en": "Done."},
+    "out.sending_off": {
+        "uz": "Yuborish o'chiq (OUTBOUND_SENDING_ENABLED=false): xatlar navbatda turadi, hech "
+        "narsa jo'natilmaydi.",
+        "ru": "Отправка выключена (OUTBOUND_SENDING_ENABLED=false): письма ждут в очереди, "
+        "ничего не уходит.",
+        "en": "Sending is off (OUTBOUND_SENDING_ENABLED=false): emails wait in the queue, "
+        "nothing goes out.",
+    },
+    "out.email_off": {
+        "uz": "Email sozlanmagan (SMTP_HOST, SMTP_FROM) — takliflar Telegram yoki telefon "
+        "vazifasi bo'ladi.",
+        "ru": "Email не настроен (SMTP_HOST, SMTP_FROM) — предложения станут задачами "
+        "Telegram/телефон.",
+        "en": "Email is not configured (SMTP_HOST, SMTP_FROM) — offers become Telegram/phone "
+        "tasks.",
+    },
+    "out.paused": {"uz": "Email to'xtatilgan", "ru": "Email приостановлен", "en": "Email paused"},
+    "out.resume": {"uz": "Emailni qayta yoqish", "ru": "Возобновить email", "en": "Resume email"},
+    "out.resume_confirm": {
+        "uz": "Sababni tekshirdingizmi? Email qayta yoqilsinmi?",
+        "ru": "Причина проверена? Возобновить email?",
+        "en": "Checked the reason? Resume email?",
+    },
+    "out.email_today": {
+        "uz": "Bugun email / limit",
+        "ru": "Email сегодня / лимит",
+        "en": "Emails today / cap",
+    },
+    "out.telegram_today": {
+        "uz": "Bugun Telegram / limit",
+        "ru": "Telegram сегодня / лимит",
+        "en": "Telegram today / cap",
+    },
+    "out.bounces": {
+        "uz": "Qaytgan xatlar (30 kun)",
+        "ru": "Возвраты (30 дней)",
+        "en": "Bounces (30 days)",
+    },
+    "out.telegram_tasks": {
+        "uz": "Telegram — bir bosishda yuboring",
+        "ru": "Telegram — отправка в одно касание",
+        "en": "Telegram — one-tap send",
+    },
+    "out.telegram_hint": {
+        "uz": "Tugma matnni nusxalaydi va kompaniya chatini ochadi — o'z akkauntingizdan joylab "
+        'yuborasiz, so\'ng "Yubordim" ni bosing.',
+        "ru": "Кнопка копирует текст и открывает чат компании — вставьте и отправьте со своего "
+        "аккаунта, затем нажмите «Отправил».",
+        "en": "The button copies the text and opens the company chat — paste and send from your "
+        'account, then tap "Sent".',
+    },
+    "out.copy_open": {
+        "uz": "Nusxalash va ochish",
+        "ru": "Скопировать и открыть",
+        "en": "Copy and open",
+    },
+    "out.copied": {"uz": "Matn nusxalandi", "ru": "Текст скопирован", "en": "Text copied"},
+    "out.sent_it": {"uz": "Yubordim", "ru": "Отправил", "en": "Sent"},
+    "out.called": {"uz": "Qo'ng'iroq qildim", "ru": "Позвонил", "en": "Called"},
+    "out.skip": {"uz": "O'tkazib yuborish", "ru": "Пропустить", "en": "Skip"},
+    "out.phone_tasks": {
+        "uz": "Telefon — o'zingiz qo'ng'iroq qiling",
+        "ru": "Телефон — позвоните сами",
+        "en": "Phone — call yourself",
+    },
+    "out.emails": {"uz": "Emaillar", "ru": "Письма", "en": "Emails"},
+    "out.none": {"uz": "Hozircha yo'q.", "ru": "Пока нет.", "en": "None yet."},
+    "out.done_list": {"uz": "Siz yuborganlar", "ru": "Отправлено вами", "en": "Sent by you"},
+    "out.replied": {"uz": "javob keldi", "ru": "ответили", "en": "replied"},
+    "out.mark_replied": {"uz": "Javob keldi", "ru": "Ответили", "en": "They replied"},
+    "out.kind.first": {"uz": "birinchi", "ru": "первое", "en": "first"},
+    "out.kind.follow_up": {"uz": "eslatma", "ru": "напоминание", "en": "follow-up"},
+    "ostatus.QUEUED": {"uz": "navbatda", "ru": "в очереди", "en": "queued"},
+    "ostatus.SENDING": {"uz": "yuborilmoqda", "ru": "отправляется", "en": "sending"},
+    "ostatus.SENT": {"uz": "yuborildi", "ru": "отправлено", "en": "sent"},
+    "ostatus.UNKNOWN": {
+        "uz": "noma'lum — pochtani tekshiring",
+        "ru": "неизвестно — проверьте почту",
+        "en": "unknown — check mailbox",
+    },
+    "ostatus.FAILED": {"uz": "xato", "ru": "ошибка", "en": "failed"},
+    "ostatus.BOUNCED": {"uz": "qaytdi", "ru": "возврат", "en": "bounced"},
+    "ostatus.BLOCKED": {"uz": "to'xtatildi", "ru": "заблокировано", "en": "blocked"},
+    "ostatus.TASK": {"uz": "vazifa", "ru": "задача", "en": "task"},
+    "ostatus.DONE": {"uz": "bajarildi", "ru": "выполнено", "en": "done"},
+    "ostatus.SKIPPED": {"uz": "o'tkazildi", "ru": "пропущено", "en": "skipped"},
+    "agentset.email_auto_approve": {
+        "uz": "Toza takliflarni (Quality Gate: toza) mening tasdig'imsiz email qilish",
+        "ru": "Отправлять чистые предложения (Quality Gate: чисто) по email без моего одобрения",
+        "en": "Email clean offers (Quality Gate: clean) without my approval",
+    },
+    "agentset.email_auto_hint": {
+        "uz": '"Ko\'rib chiqing" belgili takliflar baribir sizga keladi. Har xatda rad etish '
+        "havolasi bo'ladi; qaytish 5% dan oshsa yoki shikoyat kelsa email o'zi to'xtaydi.",
+        "ru": "Предложения «проверьте» всё равно приходят к вам. В каждом письме ссылка отписки; "
+        "при возвратах >5% или жалобе email останавливается сам.",
+        "en": '"Needs review" offers still come to you. Every email has an unsubscribe link; '
+        "bounces >5% or a complaint pause email automatically.",
+    },
+    "agentset.email_daily_cap": {
+        "uz": "Kuniga ko'pi bilan email",
+        "ru": "Максимум писем в день",
+        "en": "Max emails per day",
+    },
+    "agentset.email_warmup_start": {
+        "uz": "Birinchi kun nechta (qizdirish)",
+        "ru": "Первый день (прогрев)",
+        "en": "First day (warm-up)",
+    },
+    "agentset.email_warmup_step": {
+        "uz": "Har kuni qo'shiladi",
+        "ru": "Прибавка в день",
+        "en": "Added per day",
+    },
+    "agentset.email_min_gap_minutes": {
+        "uz": "Xatlar orasida kamida (daqiqa)",
+        "ru": "Минимум между письмами (мин)",
+        "en": "Minimum gap between emails (min)",
+    },
+    "agentset.follow_up_days": {
+        "uz": "Eslatma necha kundan keyin (bir marta)",
+        "ru": "Напоминание через (дней, один раз)",
+        "en": "Follow-up after (days, once)",
+    },
+    "agentset.telegram_daily_cap": {
+        "uz": "Kuniga ko'pi bilan Telegram",
+        "ru": "Максимум Telegram в день",
+        "en": "Max Telegram per day",
+    },
+    "unsub.title": {"uz": "Xat olishni to'xtatish", "ru": "Отписка", "en": "Unsubscribe"},
+    "unsub.ask": {
+        "uz": "ITcoDe.Uz dan boshqa xat olishni xohlamaysizmi? Tugmani bosing.",
+        "ru": "Не хотите больше получать письма от ITcoDe.Uz? Нажмите кнопку.",
+        "en": "Don't want emails from ITcoDe.Uz any more? Press the button.",
+    },
+    "unsub.button": {"uz": "Boshqa yozmang", "ru": "Больше не писать", "en": "Stop emailing me"},
+    "unsub.done": {
+        "uz": "Tayyor. Sizga boshqa xat yuborilmaydi.",
+        "ru": "Готово. Мы больше не будем вам писать.",
+        "en": "Done. You will not receive further emails from us.",
+    },
+    "unsub.invalid": {"uz": "Havola noto'g'ri.", "ru": "Неверная ссылка.", "en": "Invalid link."},
     # conversations & orders (M8)
     "nav.conversations": {"uz": "Suhbatlar", "ru": "Диалоги", "en": "Chats"},
     "conv.title": {

@@ -63,6 +63,17 @@ def values_from_form(
         values["reply_mode"] = form.get("reply_mode", "approve_all")
         if form.get("owner_contact", "").strip():
             values["owner_contact"] = form["owner_contact"]
+        values["email_auto_approve"] = form.get("email_auto_approve") == "on"
+        for name in (
+            "email_daily_cap",
+            "email_warmup_start",
+            "email_warmup_step",
+            "email_min_gap_minutes",
+            "follow_up_days",
+            "telegram_daily_cap",
+        ):
+            if form.get(name, "").strip():
+                values[name] = form[name].strip()
     if module is AgentModule.QUALITY_GATE:
         values["extra_blocked"] = parse_words(form.get("extra_blocked", ""))
         values["extra_review"] = parse_words(form.get("extra_review", ""))

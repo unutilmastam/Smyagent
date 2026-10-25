@@ -3,7 +3,7 @@
 {% block content %}
 <div class="page-head">
   <h1>{{ t('proposals.title') }}</h1>
-  <div class="page-actions"><a class="btn-link" href="/leads">★ {{ t('leads.title') }}</a></div>
+  <div class="page-actions"><a class="btn-link" href="/leads">★ {{ t('leads.title') }}</a> <a class="btn-link" href="/outreach">📤 {{ t('out.title') }}</a></div>
 </div>
 <nav class="tabs" aria-label="{{ t('proposals.status') }}">
   <a href="/proposals" {% if not status %}aria-current="page"{% endif %}>{{ t('companies.all') }}</a>

@@ -5,6 +5,7 @@ from __future__ import annotations
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from datetime import datetime
 
 from sqlalchemy import update
 
@@ -14,6 +15,8 @@ from app.domain.agents import AgentModule
 from app.infrastructure.database import Database
 from app.infrastructure.database.models import AgentRun, Job
 from app.infrastructure.database.types import utcnow
+from app.infrastructure.email.inbox import Inbox, build_inbox
+from app.infrastructure.email.smtp import EmailSender, build_email_sender
 from app.infrastructure.http_fetcher.fetcher import SafeFetcher
 from app.infrastructure.search_providers.base import SearchProvider
 from app.infrastructure.telegram.client_bot import ClientMessenger, build_client_bot
@@ -21,6 +24,14 @@ from app.infrastructure.telegram.client_bot import ClientMessenger, build_client
 
 class RetryableTaskError(RuntimeError):
     """Temporary failure (rate limit, timeout): the job is retried with backoff."""
+
+
+class DeferTaskError(RuntimeError):
+    """Not now (daily cap, spacing): requeue at `run_after` without using an attempt."""
+
+    def __init__(self, reason: str, run_after: datetime) -> None:
+        super().__init__(reason)
+        self.run_after = run_after
 
 
 @dataclass
@@ -34,6 +45,8 @@ class TaskContext:
     fetcher_factory: Callable[[], SafeFetcher] = SafeFetcher
     notifier: OwnerNotifier = field(default_factory=NullNotifier)
     client_bot_factory: Callable[[Settings], ClientMessenger | None] = build_client_bot
+    email_sender_factory: Callable[[Settings], EmailSender | None] = build_email_sender
+    inbox_factory: Callable[[Settings], Inbox | None] = build_inbox
 
     def progress(self, step: str, pct: int) -> None:
         """Visible on the Control Center immediately (own short transaction)."""

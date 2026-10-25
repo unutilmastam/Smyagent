@@ -111,6 +111,30 @@ webhook response, so normal operation needs no outbound call). Verify with `chec
    reaches the client within one cron interval. Automatic replies go out immediately in
    the webhook response.
 
+## 6c. Outbound email (M9) — from the phone
+
+1. cPanel → **Email Accounts** → create `agent@itcode.uz` (strong password).
+2. cPanel → **Email Deliverability** → for `itcode.uz` press **Repair/Install** for
+   **SPF** and **DKIM** until both show "valid". Then add a **DMARC** record in
+   **Zone Editor** → `TXT` `_dmarc.itcode.uz` = `v=DMARC1; p=none; rua=mailto:agent@itcode.uz`
+   (move to `p=quarantine` after a few clean weeks). Without SPF/DKIM most mail lands in spam.
+3. cPanel → Setup Python App → Environment variables (values from **Connect Devices** in
+   Email Accounts):
+   - `SMTP_HOST` (e.g. `mail.itcode.uz`), `SMTP_PORT=465`, `SMTP_USE_SSL=true`,
+     `SMTP_USERNAME=agent@itcode.uz`, `SMTP_PASSWORD`, `SMTP_FROM=Mustafo — ITcoDe.Uz <agent@itcode.uz>`
+   - `IMAP_HOST` (same host), `IMAP_PORT=993`, `IMAP_USERNAME`, `IMAP_PASSWORD` — the agent
+     reads replies, "STOP", bounces and complaints every 15 minutes.
+   - `OUTBOUND_SENDING_ENABLED=true` only when you are ready. Restart the app.
+4. Dashboard → ⚙ Agent sozlamalari → Mustafo: daily cap (default 30, warm-up from 10/day,
+   +5/day), minimum gap between emails, follow-up after N ≥ 5 days (once). Optional:
+   "email clean offers without my approval".
+5. Dashboard → 📤 Yuborish shows today's count / cap, bounces, Telegram one-tap tasks and
+   phone tasks. Email pauses itself on a spam complaint or > 5 % bounces; resume there.
+
+Every email: plain text, honest sender, the Mustafo AI disclosure, "reply STOP" and a
+one-click unsubscribe link (`/u/<token>`, also as `List-Unsubscribe` header). Only public
+business addresses (info@, sales@ …) are used — never personal addresses.
+
 ## 7. Background agents (cron) — required for automatic discovery
 
 The agents work only when the job runner is invoked regularly. cPanel → **Cron Jobs** →

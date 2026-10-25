@@ -17,3 +17,4 @@ Format: Context → Decision → Consequences. New ADRs get the next number; sup
 | [0011](0011-deterministic-offers-and-quality-gate.md) | Deterministic price-free offer templates + rules-based Quality Gate; owner approves | Accepted |
 | [0012](0012-owner-editable-agent-settings.md) | Owner-editable, versioned agent settings; hard rules stay locked | Accepted |
 | [0013](0013-mustafo-deterministic-order-intake.md) | Rules-based Mustafo bot: opt-out first, gate-checked replies, explicit confirmation, owner handoff | Accepted |
+| [0014](0014-outreach-email-and-assisted-telegram.md) | Capped email to business addresses, one-tap Telegram, never send twice, auto-pause | Accepted |
