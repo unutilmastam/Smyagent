@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% set c = conversation %}
+{% block title %}{{ t('conv.title') }} — SMY Agent{% endblock %}
+{% block content %}
+<p><a href="/conversations">← {{ t('conv.title') }}</a></p>
+<h1>{{ (company.name if company else None) or c.display_name or ('Telegram ' ~ c.external_chat_id) }}</h1>
+<p class="badges">
+  <span class="badge badge-cstate-{{ c.state.value|lower }}">{{ t('cstate.' ~ c.state.value) }}</span>
+  <span class="badge">{{ c.language.value }}</span>
+  {% if c.disclosed_at %}<span class="badge badge-fact">{{ t('conv.disclosed') }}</span>{% endif %}
+</p>
+{% if company %}<p><a href="/companies/{{ company.id }}">{{ company.name }}</a></p>{% endif %}
+{% if done %}<p class="alert alert-ok" role="status">{{ t('conv.done.' ~ done) }}</p>{% endif %}
+{% if error %}<p class="alert alert-error" role="alert">{{ t('proposals.error') }}: {{ error }}</p>{% endif %}
+{% if c.state.value == 'OPTED_OUT' %}<p class="alert alert-warn">{{ t('conv.opted_out') }}</p>{% endif %}
+
+{% for b in briefs %}
+<section class="card order-card">
+  <h2>📋 {{ t('order.title') }} · <span class="badge badge-brief-{{ b.status.value|lower }}">{{ t('bstatus.' ~ b.status.value) }}</span></h2>
+  <dl class="facts">
+    {% for key in ['service', 'goal', 'features', 'examples', 'content', 'deadline', 'contact', 'notes'] %}
+    {% if b.answers.get(key) %}<dt>{{ t('order.' ~ key) }}</dt><dd class="break">{{ b.answers[key] }}</dd>{% endif %}
+    {% endfor %}
+    {% if b.budget_note %}<dt>{{ t('order.budget') }}</dt><dd class="break">{{ b.budget_note }}</dd>{% endif %}
+    {% if b.confirmed_at %}<dt>{{ t('order.confirmed_at') }}</dt><dd>{{ b.confirmed_at.strftime('%Y-%m-%d %H:%M') }}</dd>{% endif %}
+    {% if b.owner_decision %}<dt>{{ t('order.decision') }}</dt><dd>{{ t('order.decision.' ~ b.owner_decision) }}</dd>{% endif %}
+  </dl>
+  {% if b.status.value == 'CONFIRMED' %}
+  <p><a class="btn-link" href="/conversations/{{ c.id }}/brief.md">⬇ {{ t('order.spec') }}</a></p>
+  {% if user.is_owner and not b.owner_decision %}
+  <div class="module-actions">
+    {% for d, label in [('accepted', 'order.accept'), ('question', 'order.question'), ('rejected', 'order.reject')] %}
+    <form method="post" action="/orders/{{ b.id }}/decide">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="hidden" name="decision" value="{{ d }}">
+      <button type="submit" class="btn-small">{{ t(label) }}</button>
+    </form>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endif %}
+</section>
+{% endfor %}
+
+<h2>{{ t('conv.messages') }}</h2>
+<ol class="chat">
+  {% for m in messages %}
+  <li class="bubble bubble-{{ m.direction.value }} bubble-{{ m.status.value|lower }}">
+    <pre class="offer">{{ m.text }}</pre>
+    <span class="muted bubble-meta">{{ m.created_at.strftime('%m-%d %H:%M') }} · {{ t('mstatus.' ~ m.status.value) }}{% if m.intent %} · {{ t('intent.' ~ m.intent) }}{% endif %}{% if m.note %} · {{ m.note }}{% endif %}</span>
+    {% if user.is_owner and m.direction.value == 'out' and m.status.value in ('DRAFT', 'BLOCKED') and c.state.value != 'OPTED_OUT' %}
+    <div class="module-actions">
+      <form method="post" action="/conversations/messages/{{ m.id }}/send"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn-small">✅ {{ t('conv.send') }}</button></form>
+      <form method="post" action="/conversations/messages/{{ m.id }}/discard"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn-small">❌ {{ t('conv.discard') }}</button></form>
+    </div>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ol>
+
+{% if user.is_owner and c.state.value != 'OPTED_OUT' %}
+<form method="post" action="/conversations/{{ c.id }}/reply" class="card form-stack">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <label for="body">{{ t('conv.owner_reply') }}</label>
+  <textarea id="body" name="body" rows="4" maxlength="{{ max_reply }}" required></textarea>
+  <p class="hint muted">{{ t('conv.owner_reply_hint') }}</p>
+  <button type="submit" class="btn-primary">{{ t('conv.send') }}</button>
+</form>
+{% if c.state.value == 'HANDOFF' %}
+<form method="post" action="/conversations/{{ c.id }}/resume" class="inline-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <button type="submit" class="btn-secondary btn-big">🤖 {{ t('conv.resume') }}</button>
+</form>
+{% endif %}
+{% endif %}
+{% endblock %}

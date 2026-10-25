@@ -12,6 +12,7 @@ class _Model(BaseModel):
 class TgUser(_Model):
     id: int
     is_bot: bool = False
+    first_name: str | None = Field(default=None, max_length=64)
     username: str | None = None
     language_code: str | None = None
 

@@ -10,6 +10,14 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.application.controls import AgentControlService, describe_change
+from app.application.conversations import (
+    CB_DISCARD,
+    CB_ORDER_ACCEPT,
+    CB_ORDER_QUESTION,
+    CB_ORDER_REJECT,
+    CB_SEND,
+    ConversationService,
+)
 from app.application.proposals import (
     CALLBACK_APPROVE,
     CALLBACK_REJECT,
@@ -29,6 +37,12 @@ from app.infrastructure.telegram.schemas import TgCallbackQuery, TgUpdate
 logger = logging.getLogger("app.owner_bot")
 
 CHANNEL = "telegram:owner_bot"
+_ORDER_DECISIONS = {
+    CB_ORDER_ACCEPT: "accepted",
+    CB_ORDER_QUESTION: "question",
+    CB_ORDER_REJECT: "rejected",
+}
+_CALLBACK_ACTIONS = {CALLBACK_APPROVE, CALLBACK_REJECT, CB_SEND, CB_DISCARD, *_ORDER_DECISIONS}
 
 HELP_TEXT = (
     "SMY Agent — boshqaruv boti\n\n"
@@ -61,9 +75,12 @@ class BotReply:
 
 
 class OwnerBotService:
-    def __init__(self, session: Session, *, admin_ids: list[int]) -> None:
+    def __init__(
+        self, session: Session, *, admin_ids: list[int], outbound_sending_enabled: bool = False
+    ) -> None:
         self.session = session
         self.admin_ids = admin_ids
+        self.outbound_sending_enabled = outbound_sending_enabled
 
     def handle(self, update: TgUpdate) -> BotReply | None:
         """Process one update. Returns the reply for the owner, or None (ignored)."""
@@ -140,14 +157,39 @@ class OwnerBotService:
         assert chat is not None
         action, _, raw_id = (query.data or "").partition(":")
         try:
-            proposal_id = uuid.UUID(raw_id)
+            target_id = uuid.UUID(raw_id)
         except ValueError:
-            proposal_id = None
-        if action not in (CALLBACK_APPROVE, CALLBACK_REJECT) or proposal_id is None:
-            return BotReply(chat.id, "Noma'lum tugma.", callback_query_id=query.id)
+            target_id = None
         actor = Actor.user(f"tg-{query.from_.id}")
-        text = self._decide(proposal_id, action == CALLBACK_APPROVE, actor, "Telegram")
+        if target_id is None or action not in _CALLBACK_ACTIONS:
+            return BotReply(chat.id, "Noma'lum tugma.", callback_query_id=query.id)
+        if action in (CALLBACK_APPROVE, CALLBACK_REJECT):
+            text = self._decide(target_id, action == CALLBACK_APPROVE, actor, "Telegram")
+        else:
+            text = self._conversation_action(action, target_id, actor)
         return BotReply(chat.id, text, callback_query_id=query.id)
+
+    def _conversation_action(self, action: str, target_id: uuid.UUID, actor: Actor) -> str:
+        service = ConversationService(
+            self.session, outbound_sending_enabled=self.outbound_sending_enabled
+        )
+        try:
+            with self.session.begin_nested():
+                if action == CB_SEND:
+                    service.approve_message(target_id, actor)
+                    return "✅ Javob yuborish navbatiga qo'yildi."
+                if action == CB_DISCARD:
+                    service.discard_message(target_id, actor)
+                    return "❌ Javob bekor qilindi."
+                decision = _ORDER_DECISIONS[action]
+                service.decide_order(target_id, actor, decision)
+        except DomainError as exc:
+            return f"⚠️ Bajarilmadi: {exc}"
+        return {
+            "accepted": "✅ Buyurtma qabul qilindi (lid: WON). Narx va muddatni mijozga yozing.",
+            "question": "❓ Suhbat sizga o'tdi — mijozga o'zingiz yozing.",
+            "rejected": "❌ Buyurtma rad etildi (lid: LOST).",
+        }[decision]
 
     def _decide(self, proposal_id: uuid.UUID, approve: bool, actor: Actor, reason: str) -> str:
         service = ProposalService(self.session)

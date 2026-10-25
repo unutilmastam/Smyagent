@@ -16,7 +16,7 @@ Authoritative milestone definitions and acceptance criteria live in
 | M6 | Opportunity analysis & scoring | ✅ rules-based opportunities, explainable score, automatic leads (LLM explanations → M5b/AI layer) |
 | M7 | Proposals & requirements | ✅ price-free offers, Quality Gate, owner approval (dashboard + Telegram), Markdown export; M7b: internal pricing rules + PDF export |
 | M7c | Owner-editable agent settings (per agent, versioned, restorable; hard rules locked) | ✅ done |
-| M8 | Mustafo client bot (client-initiated) | planned |
+| M8 | Mustafo client bot (client-initiated) | ✅ disclosure, UZ/UZ-Cyrl/RU/EN, intents, opt-out → suppression, owner-approved or safe auto replies, Order Brief → `ORDER_CONFIRMED` → owner, project spec export |
 | M9 | Outbound: automatic email, assisted Telegram | planned |
 | M10 | Background automation hardening | 🟡 runner core done with M4b (lock, stale requeue, bounded runs, retries); hardening later |
 | M11 | Analytics, budgets, backups, hardening | planned |

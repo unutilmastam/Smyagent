@@ -147,6 +147,13 @@ class Settings(BaseSettings):
         )
 
     @property
+    def client_bot_enabled(self) -> bool:
+        return bool(
+            self.telegram_client_bot_token.get_secret_value()
+            and self.telegram_webhook_secret.get_secret_value()
+        )
+
+    @property
     def is_production(self) -> bool:
         return self.app_env is Environment.PRODUCTION
 

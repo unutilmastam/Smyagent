@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}{{ t('conv.title') }} — SMY Agent{% endblock %}
+{% block content %}
+<h1>{{ t('conv.title') }}</h1>
+<p class="muted">{{ t('conv.intro') }}</p>
+<nav class="tabs" aria-label="{{ t('proposals.status') }}">
+  <a href="/conversations" {% if not state %}aria-current="page"{% endif %}>{{ t('companies.all') }}</a>
+  {% for s in states %}<a href="/conversations?state={{ s.value }}" {% if state == s %}aria-current="page"{% endif %}>{{ t('cstate.' ~ s.value) }}</a>{% endfor %}
+</nav>
+{% if rows %}
+<ul class="company-list">
+  {% for c, company_name, drafts in rows %}
+  <li><a class="company-item" href="/conversations/{{ c.id }}">
+    <span class="company-name">{{ company_name or c.display_name or ('Telegram ' ~ c.external_chat_id) }}</span>
+    <span class="company-meta">{{ c.language.value }} · {{ c.last_message_at.strftime('%Y-%m-%d %H:%M') }}</span>
+    <span class="badges">
+      <span class="badge badge-cstate-{{ c.state.value|lower }}">{{ t('cstate.' ~ c.state.value) }}</span>
+      {% if drafts %}<span class="badge badge-gate-needs_review">{{ t('conv.drafts', n=drafts) }}</span>{% endif %}
+    </span>
+  </a></li>
+  {% endfor %}
+</ul>
+{% else %}<section class="card empty"><p>{{ t('conv.empty') }}</p></section>{% endif %}
+{% endblock %}

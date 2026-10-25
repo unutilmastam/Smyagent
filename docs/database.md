@@ -43,6 +43,10 @@ on MariaDB 10.6 + 10.11 in CI.
 | `approval_requests` | Explicit owner decisions: entity, version, PENDING/APPROVED/REJECTED/CANCELLED, who/when/why | index (entity_type, entity_id), (status, created_at) |
 | `agent_settings` | Current owner settings per agent (validated by `app/domain/agent_settings.py`; invalid data falls back to defaults) | PK `module` |
 | `agent_setting_versions` | Append-only snapshot of every saved version (restore = re-save, never rewrite) | index (module, version) |
+| `conversations` | One per Telegram chat with the Mustafo bot: language, state, company/lead link, disclosure time | **unique** (channel, external_chat_id) |
+| `conversation_messages` | In/out messages, intent, status (RECEIVED/DRAFT/APPROVED/SENT/REJECTED/BLOCKED), disclosure flag | **unique** (channel, external_message_id); index (conversation, created_at), (status) |
+| `order_briefs` | Interview answers, services, owner-only budget words, client confirmation (time + message), owner decision, notified_at (exactly-once) | index (status, updated_at) |
+| `suppression_records` | Opt-outs; checked before every send | **unique** (channel, value) |
 | `agent_controls` | Kill switch: `global` + 7 modules (ADR-0006) | PK `module`; seeded ACTIVE by migration 0001 |
 
 Duplicate detection (CLAUDE.md §8.1): by normalized domain (unique constraint) and

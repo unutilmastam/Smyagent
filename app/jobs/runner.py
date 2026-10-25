@@ -34,6 +34,7 @@ from app.infrastructure.repositories.controls import AgentControlRepository
 from app.infrastructure.repositories.jobs import JobLockRepository, JobRepository
 from app.infrastructure.search_providers.base import ProviderError, SearchProvider
 from app.infrastructure.search_providers.factory import build_search_provider
+from app.infrastructure.telegram.client_bot import ClientMessenger, build_client_bot
 from app.infrastructure.telegram.notifier import build_owner_notifier
 from app.jobs.context import RetryableTaskError, TaskContext
 from app.jobs.tasks import HANDLERS, Handler
@@ -75,6 +76,7 @@ class JobRunner:
         ] = build_search_provider,
         fetcher_factory: Callable[[], SafeFetcher] = SafeFetcher,
         notifier: OwnerNotifier | None = None,
+        client_bot_factory: Callable[[Settings], ClientMessenger | None] = build_client_bot,
         worker_id: str | None = None,
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
@@ -84,6 +86,7 @@ class JobRunner:
         self.search_provider_factory = search_provider_factory
         self.fetcher_factory = fetcher_factory
         self.notifier = notifier or build_owner_notifier(settings)
+        self.client_bot_factory = client_bot_factory
         self.worker_id = (worker_id or f"{socket.gethostname()}-{uuid.uuid4().hex[:8]}")[:64]
         self.clock = clock
 
@@ -172,6 +175,7 @@ class JobRunner:
             search_provider_factory=self.search_provider_factory,
             fetcher_factory=self.fetcher_factory,
             notifier=self.notifier,
+            client_bot_factory=self.client_bot_factory,
         )
         outcome: str
         error: str | None = None

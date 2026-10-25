@@ -59,6 +59,10 @@ def values_from_form(
             lang.value: {s.value: form.get(f"stext_{lang.value}_{s.value}", "") for s in Service}
             for lang in EDITABLE_LANGUAGES
         }
+    if module is AgentModule.CONVERSATION:
+        values["reply_mode"] = form.get("reply_mode", "approve_all")
+        if form.get("owner_contact", "").strip():
+            values["owner_contact"] = form["owner_contact"]
     if module is AgentModule.QUALITY_GATE:
         values["extra_blocked"] = parse_words(form.get("extra_blocked", ""))
         values["extra_review"] = parse_words(form.get("extra_review", ""))

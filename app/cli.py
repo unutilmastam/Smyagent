@@ -4,6 +4,7 @@ python -m app.cli check-config
 python -m app.cli create-owner --username bahrullo
 python -m app.cli telegram-set-webhook
 python -m app.cli telegram-webhook-info
+python -m app.cli telegram-set-client-webhook
 """
 
 from __future__ import annotations
@@ -20,6 +21,7 @@ from app.infrastructure.database import Database
 from app.infrastructure.telegram.client import TelegramClient, TelegramError
 
 WEBHOOK_PATH = "/api/v1/telegram/webhook"
+CLIENT_WEBHOOK_PATH = "/api/v1/telegram/client-webhook"
 
 
 def _check_config() -> int:
@@ -106,6 +108,29 @@ def _telegram_set_webhook() -> int:
     return 0
 
 
+def _telegram_set_client_webhook() -> int:
+    settings = get_settings()
+    token = settings.telegram_client_bot_token.get_secret_value()
+    secret = settings.telegram_webhook_secret.get_secret_value()
+    if not token or not secret:
+        print(
+            "Error: set TELEGRAM_CLIENT_BOT_TOKEN and TELEGRAM_WEBHOOK_SECRET first.",
+            file=sys.stderr,
+        )
+        return 1
+    base_url = settings.app_base_url.rstrip("/")
+    if not base_url.startswith("https://"):
+        print("Error: APP_BASE_URL must be https:// for Telegram webhooks.", file=sys.stderr)
+        return 1
+    try:
+        TelegramClient(token).set_webhook(base_url + CLIENT_WEBHOOK_PATH, secret_token=secret)
+    except TelegramError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+    print(f"Client bot webhook set to {base_url}{CLIENT_WEBHOOK_PATH}")
+    return 0
+
+
 def _telegram_webhook_info() -> int:
     prepared = _telegram_client()
     if prepared is None:
@@ -134,11 +159,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     sub.add_parser("telegram-set-webhook", help="register the owner bot webhook with Telegram")
     sub.add_parser("telegram-webhook-info", help="show Telegram's view of the webhook")
+    sub.add_parser("telegram-set-client-webhook", help="register the Mustafo client bot webhook")
     args = parser.parse_args(argv)
     if args.command == "check-config":
         return _check_config()
     if args.command == "telegram-set-webhook":
         return _telegram_set_webhook()
+    if args.command == "telegram-set-client-webhook":
+        return _telegram_set_client_webhook()
     if args.command == "telegram-webhook-info":
         return _telegram_webhook_info()
     return _create_owner(args.username, args.password_stdin)

@@ -109,11 +109,16 @@ def review(
     text: str,
     *,
     language: Language,
-    evidence_count: int,
+    evidence_count: int | None,
     extra_blocked: Sequence[str] = (),
     extra_review: Sequence[str] = (),
+    client_reply: bool = False,
 ) -> GateResult:
     """Check one client-facing text. Deterministic and reproducible.
+
+    Offers (default) must carry disclosure, opt-out and evidence. A `client_reply`
+    inside an existing conversation is checked for prices, commitments and claims
+    only (the disclosure was in the first message; the client wrote first).
 
     `extra_blocked` / `extra_review` are the owner's own words (agent settings); they
     add to the built-in rules and can never relax them.
@@ -134,11 +139,12 @@ def review(
         if hits:
             issues.append(Issue(code, severity, ", ".join(dict.fromkeys(hits))[:200]))
 
-    if not _DISCLOSURE.search(body):
-        issues.append(Issue("missing_disclosure", Severity.BLOCK))
-    if not _OPT_OUT.search(body):
-        issues.append(Issue("missing_opt_out", Severity.BLOCK))
-    if evidence_count < 1:
+    if not client_reply:
+        if not _DISCLOSURE.search(body):
+            issues.append(Issue("missing_disclosure", Severity.BLOCK))
+        if not _OPT_OUT.search(body):
+            issues.append(Issue("missing_opt_out", Severity.BLOCK))
+    if evidence_count is not None and evidence_count < 1:
         issues.append(Issue("no_evidence", Severity.BLOCK))
 
     ratio = cyrillic_ratio(body)

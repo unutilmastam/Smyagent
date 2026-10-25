@@ -7,6 +7,12 @@ from app.infrastructure.database.models.auth import LoginAttempt, User, UserSess
 from app.infrastructure.database.models.companies import Company, CompanyDomain, CompanySource
 from app.infrastructure.database.models.contacts import Contact
 from app.infrastructure.database.models.controls import AgentControl
+from app.infrastructure.database.models.conversations import (
+    Conversation,
+    ConversationMessage,
+    OrderBrief,
+    SuppressionRecord,
+)
 from app.infrastructure.database.models.inbound import InboundEvent
 from app.infrastructure.database.models.jobs import Job, JobLock
 from app.infrastructure.database.models.leads import Lead
@@ -37,6 +43,8 @@ __all__ = [
     "CompanyDomain",
     "CompanySource",
     "Contact",
+    "Conversation",
+    "ConversationMessage",
     "DiscoveryTarget",
     "InboundEvent",
     "Job",
@@ -45,12 +53,14 @@ __all__ = [
     "LeadScore",
     "LoginAttempt",
     "Opportunity",
+    "OrderBrief",
     "Proposal",
     "ProposalVersion",
     "ResearchFinding",
     "ResearchRun",
     "ScoreComponent",
     "ScoringSettings",
+    "SuppressionRecord",
     "User",
     "UserSession",
     "WebsiteAudit",
