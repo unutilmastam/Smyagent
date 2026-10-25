@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from decimal import Decimal
 from enum import Enum
 from functools import lru_cache
@@ -12,6 +13,8 @@ from pydantic import Field, SecretStr, ValidationError, field_validator, model_v
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 MIN_SECRET_LENGTH = 32
+# Telegram accepts 1-256 chars of A-Z, a-z, 0-9, "_" and "-" for the webhook secret_token.
+_WEBHOOK_SECRET = re.compile(r"^[A-Za-z0-9_-]{1,256}$")
 _PLACEHOLDER_SECRETS = {"changeme", "change-me", "secret", "dev", "development"}
 
 
@@ -92,6 +95,15 @@ class Settings(BaseSettings):
         return value
 
     @model_validator(mode="after")
+    def _check_telegram(self) -> Settings:
+        webhook_secret = self.telegram_webhook_secret.get_secret_value()
+        if webhook_secret and not _WEBHOOK_SECRET.match(webhook_secret):
+            raise ValueError(
+                "TELEGRAM_WEBHOOK_SECRET may only contain A-Z, a-z, 0-9, '_' and '-' (max 256)"
+            )
+        return self
+
+    @model_validator(mode="after")
     def _check_production(self) -> Settings:
         if self.app_env is not Environment.PRODUCTION:
             return self
@@ -109,7 +121,25 @@ class Settings(BaseSettings):
             raise ValueError("AI_API_KEY is required when AI_PROVIDER is set")
         if self.search_provider and not self.search_api_key.get_secret_value():
             raise ValueError("SEARCH_API_KEY is required when SEARCH_PROVIDER is set")
+        if self.telegram_admin_bot_token.get_secret_value():
+            if len(self.telegram_webhook_secret.get_secret_value()) < MIN_SECRET_LENGTH:
+                raise ValueError(
+                    f"TELEGRAM_WEBHOOK_SECRET must be at least {MIN_SECRET_LENGTH} characters "
+                    "when TELEGRAM_ADMIN_BOT_TOKEN is set"
+                )
+            if not self.telegram_admin_ids:
+                raise ValueError(
+                    "TELEGRAM_ADMIN_IDS is required when TELEGRAM_ADMIN_BOT_TOKEN is set"
+                )
         return self
+
+    @property
+    def owner_bot_enabled(self) -> bool:
+        return bool(
+            self.telegram_admin_bot_token.get_secret_value()
+            and self.telegram_webhook_secret.get_secret_value()
+            and self.telegram_admin_ids
+        )
 
     @property
     def is_production(self) -> bool:

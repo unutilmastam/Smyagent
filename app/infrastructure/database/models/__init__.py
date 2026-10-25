@@ -4,6 +4,7 @@ from app.infrastructure.database.models.audit import AuditLog, WorkflowEvent
 from app.infrastructure.database.models.auth import LoginAttempt, User, UserSession
 from app.infrastructure.database.models.companies import Company, CompanyDomain, CompanySource
 from app.infrastructure.database.models.controls import AgentControl
+from app.infrastructure.database.models.inbound import InboundEvent
 from app.infrastructure.database.models.jobs import Job, JobLock
 from app.infrastructure.database.models.leads import Lead
 from app.infrastructure.database.models.research import ResearchRun
@@ -14,6 +15,7 @@ __all__ = [
     "Company",
     "CompanyDomain",
     "CompanySource",
+    "InboundEvent",
     "Job",
     "JobLock",
     "Lead",
