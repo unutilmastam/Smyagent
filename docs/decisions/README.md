@@ -13,3 +13,4 @@
 | [0009](0009-virtual-office-view.md) | Virtual Office view: office scene driven only by real agent state | Accepted |
 
 Format: Context → Decision → Consequences. New ADRs get the next number; superseded ADRs are marked, never deleted.
+| [0010](0010-openstreetmap-first-discovery-source.md) | OpenStreetMap (Overpass) as the free first discovery source; seeded UZ cities | Accepted |

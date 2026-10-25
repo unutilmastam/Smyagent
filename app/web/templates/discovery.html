@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}{{ t('auto.title') }} — SMY Agent{% endblock %}
+{% block content %}
+<p><a href="/companies">{{ t('company.back') }}</a></p>
+<h1>{{ t('auto.title') }}</h1>
+<p class="muted">{{ t('auto.intro') }}</p>
+<p><strong>{{ t('auto.provider') }}:</strong>
+  {% if provider == 'osm' %}OpenStreetMap <span class="muted">— {{ t('auto.osm_attribution') }}</span>
+  {% elif provider %}{{ provider }}{% else %}<span class="badge badge-status-stopped">{{ t('auto.provider.off') }}</span>{% endif %}</p>
+<p class="muted hint">{{ t('auto.cron_hint') }}</p>
+{% if queued %}<p class="alert alert-ok" role="status">{{ t('auto.queued', n=queued) }}</p>{% endif %}
+{% if error %}<p class="alert alert-error" role="alert">{{ t('new.invalid', reason=error) }}</p>{% endif %}
+
+<ul class="module-cards">
+  {% for target in targets %}
+  <li class="card">
+    <div class="module-head">
+      <strong>{{ target.city }}, {{ target.country }}</strong>
+      <span class="badge">{{ found[target.id] }} {{ t('auto.found') }}</span>
+    </div>
+    <p class="muted module-stats">{{ t('auto.last_run') }}:
+      {% if target.last_run_at %}{{ target.last_run_at.strftime('%Y-%m-%d %H:%M') }} UTC{% else %}{{ t('auto.never') }}{% endif %}
+      {% if not target.enabled %} · <span class="badge badge-status-stopped">{{ t('auto.disabled') }}</span>{% endif %}</p>
+    <p class="module-step">{% for c in target.categories %}{{ t('cat.' ~ c) }}{% if not loop.last %} · {% endif %}{% endfor %}</p>
+    <div class="module-actions">
+      <form method="post" action="/discovery/targets/{{ target.id }}/run">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="btn-small is-current">{{ t('auto.run_now') }}</button>
+      </form>
+      <form method="post" action="/discovery/targets/{{ target.id }}/toggle">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="btn-small">{% if target.enabled %}{{ t('auto.disable') }}{% else %}{{ t('auto.enable') }}{% endif %}</button>
+      </form>
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+
+<h2>{{ t('auto.add') }}</h2>
+<form method="post" action="/discovery/targets" class="card form-stack">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <label for="country">{{ t('new.country') }}</label>
+  <select id="country" name="country">{% for code in ['UZ', 'KZ', 'KG', 'TJ'] %}<option value="{{ code }}">{{ code }}</option>{% endfor %}</select>
+  <label for="city">{{ t('company.city') }}</label>
+  <input id="city" name="city" required maxlength="64">
+  <fieldset class="checks"><legend>{{ t('auto.categories') }}</legend>
+    {% for c in categories %}<label class="check"><input type="checkbox" name="categories" value="{{ c.value }}" checked> {{ t('cat.' ~ c.value) }}</label>{% endfor %}
+  </fieldset>
+  <button type="submit" class="btn-primary">{{ t('auto.add') }}</button>
+</form>
+
+<h2>{{ t('auto.runs') }}</h2>
+{% if runs %}
+<ol class="timeline feed">
+  {% for r in runs %}<li><span class="muted">{{ r.started_at.strftime('%m-%d %H:%M') }}</span> · {{ r.current_step or '' }} <span class="muted">({{ r.status.value }})</span></li>{% endfor %}
+</ol>
+{% else %}<p class="muted">{{ t('control.feed.empty') }}</p>{% endif %}
+{% endblock %}

@@ -43,6 +43,9 @@ First run `scripts/check_environment.py` in cPanel Terminal and share the output
 | GET | `/` | dashboard home (login required) |
 | GET | `/companies`, `/companies/{id}` | company list (search/filter/sort/pages) and detail |
 | GET/POST | `/companies/new`, `/companies/import` | manual entry, CSV import with dry run (owner) |
+| GET/POST | `/discovery` | automatic discovery: cities, categories, search now (owner) |
+
+Background agents: `python -m app.jobs.runner --max-jobs 5 --max-seconds 240` from cron (see `docs/deployment-cpanel.md` §7).
 | GET | `/api/v1/companies`, `/api/v1/companies/{id}` | same data as JSON (session auth) |
 | GET | `/lang/{uz,ru,en}` | interface language |
 | POST | `/api/v1/telegram/webhook` | owner bot webhook (secret header) |

@@ -49,6 +49,7 @@ NETWORK_TARGETS = [
     ("2GIS API", "https://catalog.api.2gis.com/"),
     ("Google Places API", "https://places.googleapis.com/"),
     ("Yandex Search API", "https://search-maps.yandex.ru/"),
+    ("OpenStreetMap Overpass", "https://overpass-api.de/api/status"),
     ("PyPI", "https://pypi.org/simple/a2wsgi/"),
     ("GitHub", "https://github.com/"),
 ]

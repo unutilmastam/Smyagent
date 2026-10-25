@@ -230,3 +230,29 @@ Two options (owner's choice; default **M4** because it produces real value first
 
 ### Next task
 **M5** — SSRF-safe fetcher + deterministic website audit (+ LLM summary later, Haiku per ADR-0007), or **M3c-office** if the owner prefers.
+
+## Session 5 — 2026-10-25 — M4b Autonomous discovery (owner: "I won't enter companies myself")
+
+### Completed
+- `OverpassSearchProvider` (OpenStreetMap, free, no key; ADR-0010): city area inside the country, 9 business categories mapped to OSM tags, honest User-Agent, timeouts, 429/5xx/timeouts retryable, 4xx not; collects name, website, phones, emails, Telegram, industry, OSM URL as source; ODbL attribution in UI.
+- `discovery_targets` (migration `0006`) seeded with Denov, Termiz, Toshkent, Samarqand, Buxoro, Qarshi × all categories, every 7 days — works with zero setup.
+- Job runner `python -m app.jobs.runner --max-jobs N --max-seconds S`: overlap lock, stale job/run recovery, schedules due targets (idempotent per day), claims only ACTIVE modules, live progress in `agent_runs`, checkpoint between companies (PAUSE → job back to queue, STOP → cancelled), retry with backoff for rate limits, exits on global STOP.
+- Discovery task: search → `DiscoveryService.ingest` per company (dedup, events) → summary step.
+- `/discovery` page: targets with found counts, last run, enable/disable, "search now", add city with categories; recent searches.
+- `SEARCH_PROVIDER` defaults to `osm`; `check_environment.py` now also checks `overpass-api.de`.
+- Docs: ADR-0010, `privacy-and-data-retention.md`, cron setup (`deployment-cpanel.md` §7).
+
+### Verification
+| Command | Result |
+|---|---|
+| `pytest` (SQLite, Python 3.11 and 3.13) | 336 passed |
+| `TEST_DATABASE_URL=…10.6… pytest tests/integration` | 152 passed |
+| same on MariaDB 10.11 | 152 passed |
+| `alembic downgrade base && upgrade head && check` (MariaDB 10.6) | no differences |
+| `python -m app.jobs.runner --max-jobs 3` on MariaDB, `SEARCH_PROVIDER=fixture` | 54 jobs scheduled (6 cities × 9 categories), 3 executed, 51 left queued, progress in `agent_runs` |
+| `ruff`, `ruff format --check`, `mypy` | clean |
+
+Not verified: a live Overpass query — this sandbox's proxy blocks `overpass-api.de`. The adapter is tested with mocked HTTP using real response shapes; the host's reachability shows in `check_environment.py`.
+
+### Next task
+**M5** — SSRF-safe fetcher + deterministic website audit, run automatically by the Research & Audit agent for every newly discovered company with a website (then M6 scoring, M7 offers, M8/M9 conversation and outreach).

@@ -95,6 +95,8 @@ class DiscoveryService:
                         industry=item.industry,
                         domains=(item.domain,) if item.domain else (),
                         phones=item.phones,
+                        emails=item.emails,
+                        telegrams=item.telegrams,
                         source_type=provider.name,
                         source_url=item.source_url,
                         external_id=item.external_id,

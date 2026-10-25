@@ -11,13 +11,13 @@ Authoritative milestone definitions and acceptance criteria live in
 | M3 | Auth, mobile dashboard, owner Telegram bot | 🟡 M3-auth, M3-ui, M3-bot done; M3-totp open (optional) |
 | M3b | Agent Control Center (live graph, kill switch) — CLAUDE.md §13A.1–2 | ✅ done |
 | M3c-office | Virtual Office view — CLAUDE.md §13A.3, ADR-0009 | ⏭ next (or M4 first — see progress) |
-| M4 | Company discovery (manual, CSV, one provider) | ✅ manual + CSV + provider interface; real provider waits for owner credentials |
+| M4 | Company discovery (manual, CSV, one provider) | ✅ automatic via OpenStreetMap (ADR-0010) + manual + CSV |
 | M5 | Research & SSRF-safe website audit | planned |
 | M6 | Opportunity analysis & scoring | planned |
 | M7 | Proposals & requirements | planned |
 | M8 | Mustafo client bot (client-initiated) | planned |
 | M9 | Outbound: automatic email, assisted Telegram | planned |
-| M10 | Background automation hardening | planned |
+| M10 | Background automation hardening | 🟡 runner core done with M4b (lock, stale requeue, bounded runs, retries); hardening later |
 | M11 | Analytics, budgets, backups, hardening | planned |
 | M12 | Demo generation | planned |
 

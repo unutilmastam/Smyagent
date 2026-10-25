@@ -200,6 +200,70 @@ _T: dict[str, dict[str, str]] = {
     "status.invalid": {"uz": "xato", "ru": "ошибка", "en": "error"},
     "company.contacts": {"uz": "Kontaktlar", "ru": "Контакты", "en": "Contacts"},
     "company.notes": {"uz": "Izoh", "ru": "Заметки", "en": "Notes"},
+    # automatic discovery
+    "auto.link": {"uz": "🔎 Avto-qidiruv", "ru": "🔎 Автопоиск", "en": "🔎 Auto discovery"},
+    "auto.title": {
+        "uz": "Avtomatik qidiruv",
+        "ru": "Автоматический поиск",
+        "en": "Automatic discovery",
+    },
+    "auto.intro": {
+        "uz": "Qidiruv agenti quyidagi shaharlarda bizneslarni o'zi topadi (har 7 kunda), "
+        "sayt, telefon va Telegram ma'lumotlarini yig'adi. Siz hech narsa kiritmaysiz.",
+        "ru": "Агент поиска сам находит компании в этих городах (раз в 7 дней) и собирает "
+        "сайт, телефон и Telegram. Вам ничего вводить не нужно.",
+        "en": "The Discovery agent finds businesses in these cities on its own (every 7 days) "
+        "and collects website, phone and Telegram. You don't need to enter anything.",
+    },
+    "auto.provider": {"uz": "Manba", "ru": "Источник", "en": "Source"},
+    "auto.provider.off": {
+        "uz": "O'chirilgan (SEARCH_PROVIDER bo'sh)",
+        "ru": "Выключено (SEARCH_PROVIDER пуст)",
+        "en": "Off (SEARCH_PROVIDER is empty)",
+    },
+    "auto.found": {"uz": "topilgan", "ru": "найдено", "en": "found"},
+    "auto.last_run": {"uz": "Oxirgi qidiruv", "ru": "Последний поиск", "en": "Last search"},
+    "auto.never": {"uz": "hali bo'lmagan", "ru": "ещё не было", "en": "not yet"},
+    "auto.run_now": {"uz": "Hozir qidirish", "ru": "Искать сейчас", "en": "Search now"},
+    "auto.enable": {"uz": "Yoqish", "ru": "Включить", "en": "Enable"},
+    "auto.disable": {"uz": "O'chirish", "ru": "Выключить", "en": "Disable"},
+    "auto.disabled": {"uz": "o'chirilgan", "ru": "выключено", "en": "disabled"},
+    "auto.add": {"uz": "Shahar qo'shish", "ru": "Добавить город", "en": "Add city"},
+    "auto.categories": {"uz": "Sohalar", "ru": "Сферы", "en": "Categories"},
+    "auto.queued": {
+        "uz": "Navbatga qo'yildi: {n} ta qidiruv. Natija Boshqaruv sahifasida ko'rinadi.",
+        "ru": "В очереди: {n} поисков. Результат появится на странице «Управление».",
+        "en": "Queued: {n} searches. Progress shows on the Control page.",
+    },
+    "auto.runs": {"uz": "Oxirgi qidiruvlar", "ru": "Последние поиски", "en": "Recent searches"},
+    "auto.cron_hint": {
+        "uz": "Ishlashi uchun serverda cron sozlangan bo'lishi kerak "
+        "(docs/deployment-cpanel.md §7).",
+        "ru": "Для работы на сервере должен быть настроен cron (docs/deployment-cpanel.md §7).",
+        "en": "Requires the server cron job (docs/deployment-cpanel.md §7).",
+    },
+    "auto.osm_attribution": {
+        "uz": "Ma'lumotlar © OpenStreetMap hissadorlari (ODbL)",
+        "ru": "Данные © участники OpenStreetMap (ODbL)",
+        "en": "Data © OpenStreetMap contributors (ODbL)",
+    },
+    "cat.retail": {"uz": "Do'konlar", "ru": "Магазины", "en": "Retail"},
+    "cat.food": {
+        "uz": "Kafe va restoranlar",
+        "ru": "Кафе и рестораны",
+        "en": "Cafes & restaurants",
+    },
+    "cat.hospitality": {"uz": "Mehmonxonalar", "ru": "Гостиницы", "en": "Hotels"},
+    "cat.health": {
+        "uz": "Klinika va dorixonalar",
+        "ru": "Клиники и аптеки",
+        "en": "Clinics & pharmacies",
+    },
+    "cat.education": {"uz": "O'quv markazlari", "ru": "Учебные центры", "en": "Training centres"},
+    "cat.services": {"uz": "Ofis va xizmatlar", "ru": "Офисы и услуги", "en": "Offices & services"},
+    "cat.auto": {"uz": "Avto xizmatlar", "ru": "Авто сервис", "en": "Car services"},
+    "cat.beauty": {"uz": "Go'zallik salonlari", "ru": "Салоны красоты", "en": "Beauty salons"},
+    "cat.craft": {"uz": "Ustaxonalar", "ru": "Мастерские", "en": "Workshops"},
     # control center
     "nav.control": {"uz": "Boshqaruv", "ru": "Управление", "en": "Control"},
     "control.title": {

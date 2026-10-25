@@ -21,6 +21,7 @@ from app.infrastructure.telegram.notifier import TelegramOwnerNotifier
 from app.web.companies import router as companies_router
 from app.web.control import router as control_router
 from app.web.discovery import router as discovery_router
+from app.web.discovery_targets import router as discovery_targets_router
 from app.web.errors import register_web_exception_handlers
 from app.web.pwa import router as pwa_router
 from app.web.routes import router as web_router
@@ -66,6 +67,7 @@ def create_app(
     app.include_router(web_router)
     # Before companies_router so /companies/new is not captured by /companies/{id}.
     app.include_router(discovery_router)
+    app.include_router(discovery_targets_router)
     app.include_router(companies_router)
     app.include_router(control_router)
     app.include_router(pwa_router)

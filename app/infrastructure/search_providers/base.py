@@ -12,6 +12,8 @@ class SearchQuery:
     query: str
     city: str | None = None
     limit: int = 20
+    # Provider-specific business category (e.g. app.domain.discovery.Category value).
+    category: str | None = None
 
 
 @dataclass(frozen=True)
@@ -22,8 +24,18 @@ class SearchResult:
     industry: str | None = None
     domain: str | None = None
     phones: tuple[str, ...] = field(default_factory=tuple)
+    emails: tuple[str, ...] = field(default_factory=tuple)
+    telegrams: tuple[str, ...] = field(default_factory=tuple)
     source_url: str | None = None
     external_id: str | None = None
+
+
+class ProviderError(RuntimeError):
+    """Search failed. `retryable` marks rate limits / timeouts / 5xx."""
+
+    def __init__(self, message: str, *, retryable: bool) -> None:
+        super().__init__(message)
+        self.retryable = retryable
 
 
 class SearchProvider(Protocol):

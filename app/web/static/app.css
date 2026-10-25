@@ -156,3 +156,5 @@ input[type="file"] { padding: 8px; }
 .badge-import-duplicate { background: #fef3c7; color: var(--warn); }
 .badge-import-invalid { background: #fee2e2; color: var(--bad); }
 .import-rows li { margin: 6px 0; }
+.checks { border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin: 12px 0 0; }
+.checks legend { font-weight: 600; padding: 0 4px; }
