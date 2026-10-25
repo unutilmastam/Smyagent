@@ -545,7 +545,7 @@ Demo spec generator, isolated demos with labeled mock content, approval before p
 
 ## 22. WORKING AGREEMENT
 
-At the start of each session: read `CLAUDE.md`, `docs/roadmap.md`, `docs/progress.md`; inspect code, tests and Git log; pick the next incomplete (sub-)milestone; give a short plan; implement in small units; run checks; fix failures you caused; update docs and `progress.md` (completed work, files changed, test commands and actual results, limitations, decisions, next concrete task).
+At the start of each session: read `CLAUDE.md`, `docs/roadmap.md`, `docs/progress.md`, `docs/owner-setup.md` (what the owner already set up on the hosting, domains, bots — keep it updated); inspect code, tests and Git log; pick the next incomplete (sub-)milestone; give a short plan; implement in small units; run checks; fix failures you caused; update docs and `progress.md` (completed work, files changed, test commands and actual results, limitations, decisions, next concrete task).
 
 Communicate summaries to the owner **in Uzbek (Latin), short and action-oriented**. Code, comments and technical docs stay in English.
 
