@@ -23,9 +23,9 @@ Last updated: 2026-10-25 18:20 (Asia/Tashkent 20:20) — written from the planni
 | Item | Where | Notes |
 |---|---|---|
 | MySQL database + user | cPanel → MySQL Databases (or Database Wizard) | utf8mb4. Gives `DATABASE_URL=mysql+pymysql://<user>:<pass>@localhost/<db>?charset=utf8mb4`. Also read the **server version** shown there. |
-| Python app | cPanel → Setup Python App | Python **3.12**, app root e.g. `smyagent` (git clone, outside `public_html`), URL `agent.itcode.uz`, startup file `deployment/cpanel/passenger_wsgi.py` (if nested path is refused: root-level shim), entry point `application`. |
-| Code on the server | cPanel → Git Version Control (clone `https://github.com/unutilmastam/Smyagent.git`) or Terminal `git clone` | Repo is public. |
-| Environment variables | Setup Python App → Environment variables | `APP_ENV=production`, `APP_SECRET_KEY`, `APP_BASE_URL=https://agent.itcode.uz`, `DATABASE_URL`, `TELEGRAM_ADMIN_BOT_TOKEN`, `TELEGRAM_CLIENT_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`, `TELEGRAM_ADMIN_IDS`, later `SMTP_*`/`IMAP_*`, `AI_*`. Owner types the secret values himself. |
+| Python app | cPanel → Setup Python App | Python **3.12**, app root `smyagent`, URL `agent.itcode.uz`, startup file **`passenger_wsgi.py`** (root shim), entry point `application`, no environment variables in that screen. Guide §2. |
+| Code on the server | Terminal, into the app root (`git init` + `fetch` + `checkout -f`) | After the Python App exists; guide §3. Repo is public. |
+| Environment variables | Terminal: `python scripts/setup_env.py` → `~/smyagent/.env` (mode 600) | Not the Setup Python App screen (it reaches only the web app, not Terminal/cron). Owner types secrets himself; `APP_SECRET_KEY` and `TELEGRAM_WEBHOOK_SECRET` are generated. Guide §4. |
 | Migrations + owner account | Terminal in the app virtualenv | `alembic upgrade head`, `python -m app.cli create-owner --username <name>`, `python -m app.cli check-config`. |
 | Webhooks | Terminal | `python -m app.cli telegram-set-webhook`, `telegram-set-client-webhook`, check with `telegram-webhook-info`. |
 | Cron jobs | cPanel → Cron Jobs | Job runner per `docs/deployment-cpanel.md` §7; read the minimum allowed interval. |
@@ -51,8 +51,12 @@ Phone and iPad only, no computer. Every server step must be a short copy-paste f
 Terminal or a tap path in cPanel, explained in Uzbek (Latin). He never pastes tokens into
 chat or Git; ask him to type secrets directly into cPanel.
 
+## First deployment
+Ready: **`docs/deploy-first-time-uz.md`** (owner follows it on the phone),
+`scripts/setup_env.py` (writes `~/smyagent/.env`, mode 600 — settings are **not** typed in
+the Setup Python App screen, because those reach only the web app, not Terminal or cron) and
+`scripts/deploy.sh` (idempotent update: pull → pip → check-config → backup → migrate →
+restart → health). Update this file when the owner reports each step done.
+
 ## Suggested next session task
-Prepare a step-by-step **first deployment guide** in Uzbek (`docs/deploy-first-time-uz.md`)
-plus `scripts/deploy.sh` (idempotent: pip install in the app venv, DB backup if tables exist,
-`alembic upgrade head`, `touch tmp/restart.txt`, health check), following the "Not done yet"
-table above. Then continue M10 → M11 → M3c-office → M5b.
+After the owner confirms the first deploy: M10 → M11 → M3c-office → M5b.

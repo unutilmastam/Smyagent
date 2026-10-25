@@ -45,28 +45,44 @@ The script only reads information and makes unauthenticated HTTPS requests to pu
 
 Some facts cannot be read from the shell (Python versions in the Setup Python App dropdown, Resource Usage limits, cron minimum interval, MySQL server version without credentials); the script prints a short checklist of these at the end.
 
-## 3. Planned deployment layout (after verification)
+> **First deployment:** follow [`deploy-first-time-uz.md`](deploy-first-time-uz.md)
+> (Uzbek, phone-friendly, step by step). This file keeps the technical background.
+
+## 3. Deployment layout
 
 ```
-~/smyagent/                 # cPanel Git Version Control clone (not in public_html)
-~/smyagent/deployment/cpanel/passenger_wsgi.py   # Application startup file
-~/smyagent_data/            # backups, logs outside the web root
+~/smyagent/                 # Setup Python App root; code fetched into it with git (guide §3)
+~/smyagent/.env             # all settings + secrets, mode 600, ignored by Git (setup_env.py)
+~/smyagent/passenger_wsgi.py              # startup file (shim → deployment/cpanel/…)
+~/smyagent_data/            # deploy.log, runner.log, backups/ — outside the web root
+~/virtualenv/smyagent/3.12/ # created by Setup Python App
 ```
+
+**Configuration lives in `~/smyagent/.env`, not in the Setup Python App variables.**
+Variables typed in that screen reach only Passenger — not Terminal commands (migrations,
+`create-owner`, webhooks) or cron (the job runner). One `.env` file is read by all three
+(Passenger's startup file changes into the app folder first). Real environment variables
+still override `.env` if both are set. `scripts/setup_env.py` writes it with hidden input,
+generated secrets and mode 600; `--set KEY` changes one value, `--database` re-enters DB access.
 
 "Setup Python App":
 - Application root: `smyagent`
 - Application URL: `agent.itcode.uz` (decided 2026-10-25)
-- Startup file: `deployment/cpanel/passenger_wsgi.py`
+- Startup file: `passenger_wsgi.py` (root shim; loads `deployment/cpanel/passenger_wsgi.py`)
 - Entry point: `application`
-- Environment variables: from `.env.example`, with `APP_ENV=production`
+- Environment variables: none (see `.env` above)
 
 ## 4. Update flow
 
 1. Claude Code opens PR → CI green → owner merges on phone.
 2. cPanel → Git Version Control → **Update from Remote**.
-3. Terminal: `bash scripts/deploy.sh` (added in a later milestone: installs deps, backs up DB, runs migrations, touches `tmp/restart.txt`).
-   Until then, from the app virtualenv: `pip install .` → `mysqldump` backup → `alembic upgrade head` → `touch tmp/restart.txt`.
-   Create the MySQL database in cPanel with collation `utf8mb4_unicode_ci`; `DATABASE_URL=mysql+pymysql://user:pass@localhost/dbname?charset=utf8mb4`.
+3. Terminal: `cd ~/smyagent && bash scripts/deploy.sh` — one idempotent command: lock →
+   checks (venv, `.env`) → `git merge --ff-only origin/main` (aborts if tracked files were
+   edited on the server; restores `passenger_wsgi.py` if cPanel rewrote it) → `pip install .`
+   → `app.cli check-config` → `app.cli db-backup` (skipped while the DB has no tables) →
+   `alembic upgrade head` → `touch tmp/restart.txt` → `/api/v1/health` + `/ready`.
+   Output is in Uzbek and appended to `~/smyagent_data/deploy.log`; secrets are never printed.
+   (Step 2 "Update from Remote" is then optional — the script pulls.)
 4. First deploy only: create the owner account once — `python -m app.cli create-owner --username <name>` (prompts for the password twice; it is never echoed or logged). Then `python -m app.cli check-config`.
 
 Never deploy without explicit owner authorization.
@@ -144,11 +160,16 @@ The agents work only when the job runner is invoked regularly. cPanel → **Cron
 shown at the top of the Python App page):
 
 ```bash
-cd ~/smyagent && ~/virtualenv/smyagent/3.12/bin/python -m app.jobs.runner --max-jobs 5 --max-seconds 240 >> ~/logs/smy-runner.log 2>&1
+cd $HOME/smyagent && $HOME/virtualenv/smyagent/3.12/bin/python -m app.jobs.runner --max-jobs 5 --max-seconds 240 >> $HOME/smyagent_data/runner.log 2>&1
 ```
+
+Daily backup (03:17): `cd $HOME/smyagent && $HOME/virtualenv/smyagent/3.12/bin/python -m app.cli db-backup >> $HOME/smyagent_data/backup.log 2>&1`
+— gzip'd `mysqldump` (option file, `--single-transaction --no-tablespaces`) in
+`~/smyagent_data/backups/`, newest 14 kept, mode 600. Restore:
+`gunzip -c ~/smyagent_data/backups/db-<time>.sql.gz | mysql -u <user> -p <db>`.
 
 Each run takes a DB lock (no overlap), requeues jobs of crashed runs, schedules due
 discovery searches (6 seeded cities × 9 categories, every 7 days), executes at most 5 jobs
 and exits. ⛔ STOP in the dashboard or `/stop_all` in the bot makes it exit at the next check.
 Discovery needs outbound HTTPS to `overpass-api.de` (see `check_environment.py` output).
-Keep `~/logs/smy-runner.log` small (rotate or truncate monthly).
+Keep `~/smyagent_data/runner.log` small (truncate monthly: `: > ~/smyagent_data/runner.log`).

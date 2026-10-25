@@ -1,0 +1,233 @@
+"""Create or update the server `.env` interactively (owner, cPanel Terminal, phone).
+
+Usage (from the app folder, with the app's virtualenv Python):
+    python scripts/setup_env.py              # first time: asks everything needed to start
+    python scripts/setup_env.py --set SMTP_PASSWORD   # (re)enter one value later
+
+Why a file: variables typed in "Setup Python App" reach only the web app, not
+Terminal commands or cron jobs. One `.env` in the app folder (mode 600, ignored
+by Git) is read by all three. Secrets are typed hidden and never printed.
+Standard library only, so it runs before `pip install`.
+"""
+
+from __future__ import annotations
+
+import argparse
+import getpass
+import os
+import re
+import secrets
+import sys
+import tempfile
+from collections.abc import Callable
+from pathlib import Path
+from urllib.parse import quote
+
+ROOT = Path(__file__).resolve().parent.parent
+EXAMPLE = ROOT / ".env.example"
+TARGET = ROOT / ".env"
+DEFAULT_BASE_URL = "https://agent.itcode.uz"
+
+_LINE = re.compile(r"^([A-Z][A-Z0-9_]*)=(.*)$")
+_TOKEN = re.compile(r"^\d{5,}:[A-Za-z0-9_-]{30,}$")
+_IDS = re.compile(r"^\d{4,}(,\d{4,})*$")
+_DB_NAME = re.compile(r"^[A-Za-z0-9_]{1,64}$")
+_PLAIN = re.compile(r"^[A-Za-z0-9_./:@%+,=-]*$")
+
+# Keys that are secret: typed hidden, never echoed.
+SECRET_KEYS = {
+    "APP_SECRET_KEY",
+    "DATABASE_URL",
+    "AI_API_KEY",
+    "SEARCH_API_KEY",
+    "TELEGRAM_ADMIN_BOT_TOKEN",
+    "TELEGRAM_CLIENT_BOT_TOKEN",
+    "TELEGRAM_WEBHOOK_SECRET",
+    "SMTP_PASSWORD",
+    "IMAP_PASSWORD",
+}
+# Fixed production values written on first setup (owner can change them later).
+FIRST_TIME_FIXED = {
+    "APP_ENV": "production",
+    "APP_BASE_URL": DEFAULT_BASE_URL,
+    "OUTBOUND_SENDING_ENABLED": "false",
+    "SEARCH_PROVIDER": "osm",
+    "DEFAULT_TIMEZONE": "Asia/Tashkent",
+}
+
+
+class SetupError(ValueError):
+    pass
+
+
+def database_url(name: str, user: str, password: str, host: str = "localhost") -> str:
+    """mysql+pymysql URL; user and password are percent-encoded (e.g. '@', '#', '/')."""
+    if not _DB_NAME.match(name) or not _DB_NAME.match(user):
+        raise SetupError("baza nomi va foydalanuvchi faqat harf, raqam va _ dan iborat bo'ladi")
+    if not password:
+        raise SetupError("parol bo'sh bo'lmasin")
+    return (
+        f"mysql+pymysql://{quote(user, safe='')}:{quote(password, safe='')}@{host}/"
+        f"{name}?charset=utf8mb4"
+    )
+
+
+def validate(key: str, value: str) -> str:
+    value = value.strip()
+    bot_token = key in ("TELEGRAM_ADMIN_BOT_TOKEN", "TELEGRAM_CLIENT_BOT_TOKEN")
+    if bot_token and value and not _TOKEN.match(value):
+        raise SetupError("token shunday ko'rinishda bo'ladi: 123456789:AA... (BotFather)")
+    if key == "TELEGRAM_ADMIN_IDS" and value and not _IDS.match(value.replace(" ", "")):
+        raise SetupError("faqat raqamli ID (masalan 123456789), bir nechta bo'lsa vergul bilan")
+    if key == "APP_BASE_URL" and not value.startswith("https://"):
+        raise SetupError("manzil https:// bilan boshlanishi kerak")
+    if "\n" in value or "\r" in value:
+        raise SetupError("qiymat bir qatorda bo'lishi kerak")
+    if "'" in value:
+        raise SetupError("qiymatda ' (apostrof) belgisi bo'lmasin")
+    if "${" in value:
+        # The .env reader expands ${NAME} even inside quotes: the value would change.
+        raise SetupError("qiymatda ${ ketma-ketligi bo'lmasin (boshqa parol tanlang)")
+    return value.replace(" ", "") if key == "TELEGRAM_ADMIN_IDS" else value
+
+
+def format_value(value: str) -> str:
+    """Single quotes for anything not plain: no `$` expansion, no `#` comment cut-off."""
+    return value if _PLAIN.match(value) else f"'{value}'"
+
+
+def _unquote(raw: str) -> str:
+    raw = raw.strip()
+    if len(raw) >= 2 and raw[0] == raw[-1] and raw[0] in "'\"":
+        return raw[1:-1]
+    return raw
+
+
+def parse_env(text: str) -> dict[str, str]:
+    values: dict[str, str] = {}
+    for line in text.splitlines():
+        match = _LINE.match(line.strip())
+        if match:
+            values[match.group(1)] = _unquote(match.group(2))
+    return values
+
+
+def render(example: str, values: dict[str, str]) -> str:
+    """Keep the example's order and comments; fill in values; keep extra keys at the end."""
+    out: list[str] = []
+    seen: set[str] = set()
+    for line in example.splitlines():
+        match = _LINE.match(line.strip())
+        if match:
+            key = match.group(1)
+            seen.add(key)
+            out.append(f"{key}={format_value(values.get(key, _unquote(match.group(2))))}")
+        else:
+            out.append(line)
+    extra = [k for k in values if k not in seen]
+    if extra:
+        out += ["", "# Extra keys kept from the previous .env"]
+        out += [f"{k}={format_value(values[k])}" for k in extra]
+    return "\n".join(out) + "\n"
+
+
+def write_private(path: Path, text: str) -> None:
+    """Atomic write with mode 600 (only the cPanel user can read it)."""
+    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=".env.", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(text)
+        os.chmod(tmp, 0o600)
+        os.replace(tmp, path)
+    finally:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
+
+
+def first_time_values(
+    current: dict[str, str], ask: Callable[[str, str, bool], str]
+) -> dict[str, str]:
+    """Values for a first start; existing non-empty values are kept, not asked again."""
+    values = dict(current)
+    for key, fixed in FIRST_TIME_FIXED.items():
+        values.setdefault(key, fixed)
+        if not values[key]:
+            values[key] = fixed
+    for key in ("APP_SECRET_KEY", "TELEGRAM_WEBHOOK_SECRET"):
+        if len(values.get(key, "")) < 32:
+            values[key] = secrets.token_urlsafe(36)  # generated, never shown
+    if not values.get("DATABASE_URL", "").startswith("mysql"):
+        name = ask("MySQL baza nomi (cPanel → MySQL Databases, masalan cpuser_smyagent)", "", False)
+        user = ask("MySQL foydalanuvchi nomi (masalan cpuser_smy)", "", False)
+        password = ask("MySQL foydalanuvchi paroli", "", True)
+        values["DATABASE_URL"] = database_url(name.strip(), user.strip(), password)
+    prompts = (
+        ("TELEGRAM_ADMIN_BOT_TOKEN", "@direktorsmybot tokeni (BotFather)", True),
+        ("TELEGRAM_CLIENT_BOT_TOKEN", "@mustafosmybot tokeni (BotFather)", True),
+        ("TELEGRAM_ADMIN_IDS", "Sizning raqamli Telegram ID (@userinfobot)", False),
+    )
+    for key, question, hidden in prompts:
+        if not values.get(key):
+            values[key] = validate(key, ask(question, "", hidden))
+    return values
+
+
+def _ask_terminal(question: str, default: str, hidden: bool) -> str:
+    prompt = f"{question}{f' [{default}]' if default else ''}: "
+    for _ in range(3):
+        answer = getpass.getpass(prompt) if hidden else input(prompt)
+        answer = answer.strip() or default
+        if answer:
+            return answer
+        print("  Bo'sh bo'lmasin, qayta kiriting.")
+    raise SetupError(f"{question}: qiymat kiritilmadi")
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(prog="python scripts/setup_env.py")
+    parser.add_argument(
+        "--set", metavar="KEY", help="enter or replace one value (e.g. SMTP_PASSWORD)"
+    )
+    parser.add_argument(
+        "--database", action="store_true", help="re-enter MySQL name, user and password"
+    )
+    args = parser.parse_args(argv)
+    if not EXAMPLE.exists():
+        print("Xato: .env.example topilmadi — buyruqni ilova papkasida bajaring.", file=sys.stderr)
+        return 1
+    example = EXAMPLE.read_text(encoding="utf-8")
+    current = parse_env(TARGET.read_text(encoding="utf-8")) if TARGET.exists() else {}
+    known = parse_env(example)
+    try:
+        if args.set:
+            key = args.set.strip().upper()
+            if key not in known and key not in current:
+                print(f"Xato: {key} degan sozlama yo'q (.env.example ga qarang).", file=sys.stderr)
+                return 1
+            hidden = key in SECRET_KEYS
+            value = validate(
+                key, _ask_terminal(f"{key} qiymati", "" if hidden else current.get(key, ""), hidden)
+            )
+            current[key] = value
+            values = current
+        else:
+            if args.database:
+                current.pop("DATABASE_URL", None)
+            values = first_time_values(current, _ask_terminal)
+    except (SetupError, EOFError, KeyboardInterrupt) as exc:
+        print(f"\nXato: {exc}. Hech narsa o'zgarmadi.", file=sys.stderr)
+        return 1
+    write_private(TARGET, render(example, values))
+    print(f"✓ {TARGET.name} saqlandi (faqat siz o'qiy olasiz, Git'ga tushmaydi).")
+    missing = [
+        k
+        for k in ("DATABASE_URL", "TELEGRAM_ADMIN_BOT_TOKEN", "TELEGRAM_ADMIN_IDS")
+        if not values.get(k)
+    ]
+    if missing:
+        print("Hali bo'sh: " + ", ".join(missing))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

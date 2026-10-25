@@ -5,6 +5,7 @@ python -m app.cli create-owner --username bahrullo
 python -m app.cli telegram-set-webhook
 python -m app.cli telegram-webhook-info
 python -m app.cli telegram-set-client-webhook
+python -m app.cli db-backup [--dir ~/smyagent_data/backups] [--keep 14]
 """
 
 from __future__ import annotations
@@ -131,6 +132,26 @@ def _telegram_set_client_webhook() -> int:
     return 0
 
 
+def _db_backup(directory: str, keep: int) -> int:
+    from pathlib import Path
+
+    from app.infrastructure.database.backup import BackupError, backup
+
+    try:
+        settings = get_settings()
+        path = backup(
+            settings.database_url.get_secret_value(), Path(directory).expanduser(), keep=keep
+        )
+    except (ConfigurationError, BackupError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+    if path is None:
+        print("Nothing to back up yet (no tables).")
+    else:
+        print(f"Backup written: {path}")
+    return 0
+
+
 def _telegram_webhook_info() -> int:
     prepared = _telegram_client()
     if prepared is None:
@@ -160,11 +181,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     sub.add_parser("telegram-set-webhook", help="register the owner bot webhook with Telegram")
     sub.add_parser("telegram-webhook-info", help="show Telegram's view of the webhook")
     sub.add_parser("telegram-set-client-webhook", help="register the Mustafo client bot webhook")
+    backup_parser = sub.add_parser("db-backup", help="gzip'd database dump outside the web root")
+    backup_parser.add_argument("--dir", default="~/smyagent_data/backups")
+    backup_parser.add_argument("--keep", type=int, default=14)
     args = parser.parse_args(argv)
     if args.command == "check-config":
         return _check_config()
     if args.command == "telegram-set-webhook":
         return _telegram_set_webhook()
+    if args.command == "db-backup":
+        return _db_backup(args.dir, max(1, args.keep))
     if args.command == "telegram-set-client-webhook":
         return _telegram_set_client_webhook()
     if args.command == "telegram-webhook-info":
