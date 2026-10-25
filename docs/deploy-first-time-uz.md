@@ -16,6 +16,12 @@ va **Enter** ni bosing. Taxminiy vaqt: 30–40 daqiqa.
 Belgilar: 👆 = cPanel'da bosiladigan joy, 📋 = Terminalga nusxalanadigan buyruq,
 ✅ = to'g'ri natija.
 
+> 📱 **Termius (SSH) yoki cPanel Terminal'ga uzun buyruq joylash:** telefonda uzun qator
+> joylanganda **boshi kesilib qolishi** mumkin. Termius'da buyruqni avval **pastki kiritish
+> maydoniga** joylang, boshi va oxirini ko'zdan kechiring (masalan `cd ~/smyagent` bilan
+> boshlanib, `...` bilan tugashi kerak), keyin **Enter**. Qator to'liq bo'lmasa — o'chirib,
+> qayta nusxalang.
+
 ---
 
 ## 0. Tayyor bo'lishi kerak (siz qilgansiz)
@@ -48,10 +54,17 @@ Belgilar: 👆 = cPanel'da bosiladigan joy, 📋 = Terminalga nusxalanadigan buy
 > tahrirlamang, to'xtatmang, qayta ishga tushirmang. Faqat yangi ilova yaratamiz.
 
 1. 👆 cPanel → **Setup Python App** → **Create Application**.
+
+> 🛑 **DIQQAT — Application URL:** ro'yxat odatda **asosiy domen `itcode.uz`** ni o'zi
+> tanlab qo'yadi. Ro'yxatni ochib, **`agent.itcode.uz`** ni tanlang — **`itcode.uz` emas!**
+> Aks holda ilova asosiy saytingizga (`itcode.uz/`) ulanib qoladi. Xato qilgan bo'lsangiz:
+> shu ilovani o'chiring (🗑), to'g'ri URL bilan qayta yarating va 3-qadamdan davom eting
+> (3-qadam buyrug'i papkada nima bo'lsa ham kodni to'g'ri holatga keltiradi).
+
 2. To'ldiring:
    - **Python version**: `3.12` (3.12.x)
    - **Application root**: `smyagent`
-   - **Application URL**: `agent.itcode.uz` (yo'l qismi bo'sh)
+   - **Application URL**: ro'yxatdan **`agent.itcode.uz`** (⚠️ `itcode.uz` emas), yo'l qismi bo'sh
    - **Application startup file**: `passenger_wsgi.py`
    - **Application Entry point**: `application`
    - **Passenger log file**: bo'sh qoldiring
@@ -103,7 +116,18 @@ cPanel 2-qadamda `smyagent` papkasini yaratdi, shuning uchun kodni Terminal orqa
    | Raqamli Telegram ID | @userinfobot bergan raqam |
 
    ℹ️ Parol va tokenlarni kiritganda **ekranda hech narsa ko'rinmaydi** — bu normal
-   (xavfsizlik uchun). Joylang va Enter ni bosing.
+   (xavfsizlik uchun).
+
+   ⚠️ **Avval Paste, keyin Enter.** Savol chiqqanda Enter'ni bo'sh bosmang: avval tokenni
+   joylang, keyin Enter. Bo'sh yoki noto'g'ri javobda skript **qayta so'raydi** (3 marta) —
+   chiqib ketmaydi. Agar baribir chiqib ketsa, kiritilgan matnni tashlab yuboradi; shunda
+   tokenni **Terminalga yana joylamang** — avval `python scripts/setup_env.py` ni qayta
+   ishga tushiring.
+
+   🔁 Token ekranda ochiq ko'rinib qolsa yoki buyruq qatoriga tushib qolsa: @BotFather →
+   `/revoke` → yangi token → `python scripts/setup_env.py --set TELEGRAM_ADMIN_BOT_TOKEN`
+   (mijoz boti uchun `TELEGRAM_CLIENT_BOT_TOKEN`), so'ng 7-qadamdagi webhook buyrug'ini
+   qayta bajaring.
 
    ✅ `✓ .env saqlandi` — tayyor. Maxfiy kalitlar (`APP_SECRET_KEY`,
    `TELEGRAM_WEBHOOK_SECRET`) avtomatik yaratildi; ularni bilishingiz shart emas.
@@ -208,12 +232,15 @@ tekshiring. @direktorsmybot'da `/jobs` ham shuni ko'rsatadi.
 
 ---
 
-## Keyingi yangilanishlar (har safar)
+## Keyingi yangilanishlar — "SMY yangilash" (har safar)
 
-Claude Code yangi funksiyani GitHub'ga qo'shganda, Terminalda bitta buyruq:
+Claude Code yangi bosqichni GitHub'ga qo'shib "SMY yangilash" desa, Termius yoki
+Terminalda bitta buyruq:
 ```bash
-cd ~/smyagent && bash scripts/deploy.sh
+bash ~/smyagent/scripts/deploy.sh
 ```
+Har bosqich shu bitta buyruq bilan yangilanadi; boshqa narsa kerak bo'lsa (yangi sozlama,
+yangi cron) Claude Code buni alohida aytadi.
 U o'zi kodni tortadi, zaxira oladi, bazani yangilaydi va saytni tekshiradi.
 (cPanel → Git Version Control → *Update from Remote* ni bosish shart emas.)
 

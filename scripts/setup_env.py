@@ -20,6 +20,7 @@ import secrets
 import sys
 import tempfile
 from collections.abc import Callable
+from functools import partial
 from pathlib import Path
 from urllib.parse import quote
 
@@ -32,6 +33,7 @@ _LINE = re.compile(r"^([A-Z][A-Z0-9_]*)=(.*)$")
 _TOKEN = re.compile(r"^\d{5,}:[A-Za-z0-9_-]{30,}$")
 _IDS = re.compile(r"^\d{4,}(,\d{4,})*$")
 _DB_NAME = re.compile(r"^[A-Za-z0-9_]{1,64}$")
+ATTEMPTS = 3
 _PLAIN = re.compile(r"^[A-Za-z0-9_./:@%+,=-]*$")
 
 # Keys that are secret: typed hidden, never echoed.
@@ -157,10 +159,17 @@ def first_time_values(
         if len(values.get(key, "")) < 32:
             values[key] = secrets.token_urlsafe(36)  # generated, never shown
     if not values.get("DATABASE_URL", "").startswith("mysql"):
-        name = ask("MySQL baza nomi (cPanel → MySQL Databases, masalan cpuser_smyagent)", "", False)
-        user = ask("MySQL foydalanuvchi nomi (masalan cpuser_smy)", "", False)
-        password = ask("MySQL foydalanuvchi paroli", "", True)
-        values["DATABASE_URL"] = database_url(name.strip(), user.strip(), password)
+        name = ask_valid(
+            ask,
+            "MySQL baza nomi (cPanel → MySQL Databases, masalan cpuser_smyagent)",
+            False,
+            _check_db_name,
+        )
+        user = ask_valid(
+            ask, "MySQL foydalanuvchi nomi (masalan cpuser_smy)", False, _check_db_name
+        )
+        password = ask_valid(ask, "MySQL foydalanuvchi paroli", True, lambda v: v)
+        values["DATABASE_URL"] = database_url(name, user, password)
     prompts = (
         ("TELEGRAM_ADMIN_BOT_TOKEN", "@direktorsmybot tokeni (BotFather)", True),
         ("TELEGRAM_CLIENT_BOT_TOKEN", "@mustafosmybot tokeni (BotFather)", True),
@@ -168,19 +177,59 @@ def first_time_values(
     )
     for key, question, hidden in prompts:
         if not values.get(key):
-            values[key] = validate(key, ask(question, "", hidden))
+            values[key] = ask_valid(ask, question, hidden, partial(validate, key))
     return values
+
+
+def _check_db_name(value: str) -> str:
+    value = value.strip()
+    if not _DB_NAME.match(value):
+        raise SetupError("faqat harf, raqam va _ (masalan cpuser_smyagent)")
+    return value
+
+
+def ask_valid(
+    ask: Callable[[str, str, bool], str],
+    question: str,
+    hidden: bool,
+    check: Callable[[str], str],
+    attempts: int = ATTEMPTS,
+) -> str:
+    """Ask again (up to `attempts` times) on an empty or invalid answer instead of exiting.
+
+    Exiting early is dangerous on a phone: the token pasted next would land in bash and be
+    saved in the shell history.
+    """
+    last = ""
+    for _ in range(attempts):
+        try:
+            return check(ask(question, "", hidden))
+        except SetupError as exc:
+            last = str(exc)
+            print(f"  ✗ {last}. Qayta kiriting (avval Paste, keyin Enter).")
+    raise SetupError(f"{question}: {last}")
 
 
 def _ask_terminal(question: str, default: str, hidden: bool) -> str:
     prompt = f"{question}{f' [{default}]' if default else ''}: "
-    for _ in range(3):
+    for _ in range(ATTEMPTS):
         answer = getpass.getpass(prompt) if hidden else input(prompt)
         answer = answer.strip() or default
         if answer:
             return answer
-        print("  Bo'sh bo'lmasin, qayta kiriting.")
+        print("  Bo'sh bo'lmasin — avval Paste qiling, keyin Enter.")
     raise SetupError(f"{question}: qiymat kiritilmadi")
+
+
+def _discard_pending_input() -> None:
+    """Drop typed-ahead/pasted text so it is not run by bash after we exit."""
+    try:
+        import termios
+
+        if sys.stdin.isatty():
+            termios.tcflush(sys.stdin.fileno(), termios.TCIFLUSH)
+    except (ImportError, OSError, ValueError):
+        pass
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -205,8 +254,12 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Xato: {key} degan sozlama yo'q (.env.example ga qarang).", file=sys.stderr)
                 return 1
             hidden = key in SECRET_KEYS
-            value = validate(
-                key, _ask_terminal(f"{key} qiymati", "" if hidden else current.get(key, ""), hidden)
+            default = "" if hidden else current.get(key, "")
+            value = ask_valid(
+                lambda q, _d, h: _ask_terminal(q, default, h),
+                f"{key} qiymati",
+                hidden,
+                lambda v: validate(key, v),
             )
             current[key] = value
             values = current
@@ -215,6 +268,7 @@ def main(argv: list[str] | None = None) -> int:
                 current.pop("DATABASE_URL", None)
             values = first_time_values(current, _ask_terminal)
     except (SetupError, EOFError, KeyboardInterrupt) as exc:
+        _discard_pending_input()
         print(f"\nXato: {exc}. Hech narsa o'zgarmadi.", file=sys.stderr)
         return 1
     write_private(TARGET, render(example, values))
