@@ -1,25 +1,35 @@
 # Deployment — cPanel (hostmaster.uz)
 
-> **Status: UNVERIFIED.** Nothing below has been checked on the real account yet.
-> The owner runs `scripts/check_environment.py` once in cPanel Terminal and
-> pastes the output into a Claude Code session; the results then replace the
-> "Expected" column with "Verified (date)".
+> **Status: VERIFIED 2026-10-25** from `scripts/check_environment.py` output on
+> hosting1.hostmaster.uz (raw report kept by the owner; usernames masked).
+> Items marked ☐ still need a manual look in cPanel.
 
-## 1. Hosting facts to verify
+## 1. Hosting facts
 
-| Item | Expected / assumed | Verified |
+| Item | Result | Status |
 |---|---|---|
-| Python versions in "Setup Python App" | 3.10–3.12 | ☐ |
-| App server | Phusion Passenger, WSGI only | ☐ |
-| Env vars settable in Python App UI | yes | ☐ |
-| Database | MySQL or MariaDB | ☐ |
-| Outbound HTTPS to api.telegram.org, api.anthropic.com, search APIs | allowed | ☐ |
-| Cron Jobs, minimum interval | available, ≥1–5 min | ☐ |
-| Memory / process limits | small (≈512 MB–1 GB, few processes) | ☐ |
-| Request timeout | ≈30–120 s | ☐ |
-| `pip install` inside app virtualenv | works | ☐ |
-| Git Version Control (pull from GitHub) | available | ☐ |
-| Terminal | available | ☐ |
+| OS | RHEL/AlmaLinux 9 family (kernel 5.14 el9), x86_64, CloudLinux LVE limits active | ✅ 2026-10-25 |
+| Setup Python App versions | 2.7, 3.3–3.13 (latest **3.13.11**, 3.12.12, 3.11.14, 3.10.19) | ✅ |
+| **Chosen runtime** | **Python 3.12** (tested in CI; 3.13 also tested) | ✅ decision |
+| System `python3` | 3.9.25 without `ensurepip` → `python3 -m venv` fails; **always use the Setup Python App virtualenv**, never system Python | ✅ |
+| App server | Phusion Passenger (`/bin/passenger`), apps created by cloudlinux-selector | ✅ |
+| Database | **MySQL 8.0** (client 8.0.44; server version ☐ in cPanel → MySQL Databases). Not MariaDB → CI now also tests MySQL 8.0. PyMySQL needs `cryptography` for MySQL 8 auth (added) | ✅ / ☐ |
+| PostgreSQL | `psql` 13 client present; server not checked (not needed) | — |
+| Outbound HTTPS | Anthropic, Telegram, 2GIS, Google Places, Yandex, OpenStreetMap Overpass, PyPI, GitHub all reachable (180–910 ms) | ✅ |
+| Cron | `crontab` available, 16 existing entries; minimum interval ☐ | ✅ / ☐ |
+| Git | git 2.56 available; `~/repositories` not yet created | ✅ |
+| Node.js / npm / Docker / Redis | not available (matches ADR-0003/0004) | ✅ |
+| Build tools | gcc 11.5, make → wheels without binaries can compile | ✅ |
+| Resource limits (LVE: CPU, PMEM, EP, NPROC, IO) | not readable from shell ☐ cPanel → Resource Usage | ☐ |
+| Request timeout | not measured ☐ | ☐ |
+| Env vars in Python App UI | ☐ (existing apps show `env_vars` support in selector config) | ☐ |
+| Nested startup file path accepted | ☐ — fallback: one-line `passenger_wsgi.py` at app root that imports `deployment/cpanel/passenger_wsgi.py` | ☐ |
+
+### Existing apps on the account — conflict to resolve before deploy
+- An app **`smarthome-api`** (Python 3.10) is mounted on **`smy.itcode.uz/api`**, and a virtualenv **`smy-api` (3.10)** exists.
+- SMY Agent serves `/api/v1/...` and the dashboard at `/`. Mounting it at the root of `smy.itcode.uz` would collide with `smarthome-api` at `/api`.
+- **Decided 2026-10-25 (owner):** SMY Agent gets its own subdomain **`agent.itcode.uz`**. `smy.itcode.uz` and `smarthome-api` stay untouched.
+- The `smy-api` virtualenv is reused only if confirmed unused; otherwise a fresh 3.12 app is created.
 
 ## 2. Running the check (owner, from phone)
 
@@ -45,7 +55,7 @@ Some facts cannot be read from the shell (Python versions in the Setup Python Ap
 
 "Setup Python App":
 - Application root: `smyagent`
-- Application URL: chosen subdomain, e.g. `agent.itcode.uz`
+- Application URL: `agent.itcode.uz` (decided 2026-10-25)
 - Startup file: `deployment/cpanel/passenger_wsgi.py`
 - Entry point: `application`
 - Environment variables: from `.env.example`, with `APP_ENV=production`
