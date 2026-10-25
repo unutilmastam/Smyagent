@@ -29,3 +29,13 @@ def test_script_is_safe_to_rerun() -> None:
     assert 'main "$@"' in text.splitlines()[-1]  # whole body parsed before `git pull` runs
     assert "--ff-only" in text and "db-backup" in text and "alembic upgrade head" in text
     assert "set -x" not in text  # never echo commands (secrets)
+
+
+def test_no_process_substitution() -> None:
+    """CageFS (shared hosting) has no /dev/fd: `>(…)` / `<(…)` fail with 'No such file'."""
+    code = "\n".join(
+        line
+        for line in SCRIPT.read_text(encoding="utf-8").splitlines()
+        if not line.lstrip().startswith("#")
+    )
+    assert ">(" not in code and "<(" not in code
