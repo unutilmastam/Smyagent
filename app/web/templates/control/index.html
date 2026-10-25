@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block title %}{{ t('control.title') }} — SMY Agent{% endblock %}
 {% block content %}
+<nav class="tabs" aria-label="{{ t('control.title') }}">
+  <a href="/control/office">{{ t('office.tab.office') }}</a>
+  <a href="/control" aria-current="page">{{ t('office.tab.graph') }}</a>
+</nav>
 <div class="page-head">
   <h1>{{ t('control.title') }}</h1>
   <div class="page-actions"><a class="btn-link" href="/jobs">🧾 {{ t('jobs.open') }}</a></div>

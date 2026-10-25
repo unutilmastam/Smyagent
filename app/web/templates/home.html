@@ -6,6 +6,7 @@
 <p class="alert alert-warn" role="status">{{ t('home.paused', state=global_state) }}</p>
 {% endif %}
 {% if cron.health.value != 'ok' %}{% include "jobs/_cron.html" %}{% endif %}
+<a class="btn-link office-home-link" href="/control/office">{{ t('office.open') }}</a>
 {% if stats.new_orders %}<a class="alert alert-ok order-alert" href="/conversations?state=ORDER_CONFIRMED">✅ {{ t('home.new_orders', n=stats.new_orders) }}</a>{% endif %}
 <section class="stats" aria-label="{{ t('stats.companies') }}">
   <a class="stat" href="/companies"><span class="stat-value">{{ stats.companies }}</span><span class="stat-label">{{ t('stats.companies') }}</span></a>

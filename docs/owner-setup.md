@@ -66,6 +66,6 @@ the Setup Python App screen, because those reach only the web app, not Terminal 
 restart → health). Update this file when the owner reports each step done.
 
 ## Suggested next session task
-Owner order (2026-10-25): **M3c-office** Virtual Office (`/control/office`, one tap from the
-home screen) → **M11** → **M5b** AI layer once the key exists. Each stage ships with only
+Owner order (2026-10-25): ~~M3c-office Virtual Office~~ (done) → **M11** → **M5b** AI layer
+once the key exists. Each stage ships with only
 "SMY yangilash" (`bash ~/smyagent/scripts/deploy.sh`) needed on the server.

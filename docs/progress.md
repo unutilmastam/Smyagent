@@ -485,3 +485,26 @@ agent.itcode.uz is live: MySQL `itcode_smyagent`/`itcode_smy`, Python 3.12.12 ap
 
 ### Next task
 **M3c-office** Virtual Office → **M11** → **M5b**.
+
+## Session 6 (cont.) — M3c-office Virtual Office
+
+### Completed
+- **Scene mapping** `app/domain/office.py`: pure `character_state(facts, now)` → work / idle / queued / wait / pause / stop / error, exactly the §13A.3 table (STOP wins; fresh heartbeat = work, also while PAUSED finishing a step; stale heartbeat = "not responding", never work; failed job ≤ 10 min = "!" with the error class and job link; due jobs without a run = at the desk "next cron"; not-yet-due jobs = restroom with the real reason and retry time; else coffee). Wait kinds: rate limit / backoff / AI budget / daily cap. Workflow hand-offs → paper between desks.
+- **API** `GET /api/v1/control/office`: per-agent facts and stats today (done, failed, AI cost), events of the last 3 min (email sent → envelope to the mail desk; ORDER_CONFIRMED → folder to the director + "✅ Yangi buyurtma" toast; hand-offs), today's funnel on the meeting-room board, night flag in `DEFAULT_TIMEZONE`, cron health.
+- **Page** `/control/office` (home → "🏢 Virtual ofis", tabs Ofis / Grafik / Vazifalar): canvas office drawn in code from the owner's "SMY Ofis" demo (7 desks, kitchen, restroom, director's room with the big red STOP, meeting room, mail desk, day/night); text list of employees as accessible alternative; tap a character or list row → side sheet with live stats, job link, settings link and Activate / Pause / Stop (owner only, same audit-logged forms, return to the office). Director's STOP and resume ask for confirmation.
+- Vanilla JS (`static/office.js`, 27 KB, no inline code, CSP unchanged), polling every 4 s only while visible, 30 fps cap, `prefers-reduced-motion` → no walking/flying, 375 px (scroll the building) and iPad layouts, dark mode.
+- Service worker: static shell now **network-first** (cache only offline) and cache `v3` — before, CSS/JS changes did not reach phones that had the old cache.
+- `[hidden]` always hides (a `display` rule had overridden it).
+
+### Verification
+| Command | Result |
+|---|---|
+| `pytest` (SQLite, Python 3.13) | 729 passed, 1 skipped |
+| integration on MariaDB 10.6 / 10.11 / MySQL 8.0 | 291 / 291 / 291 passed |
+| `ruff`, `ruff format --check`, `mypy app`, `node --check office.js` | clean |
+| Playwright (Chromium) 375 px phone, 1024 px iPad, dark, reduced motion, seeded real states | no console errors, no horizontal page scroll, every row of the table visible; sheet Pause and director STOP → `/control/office?changed=1`, two `agent_control.set` audit rows, everyone walks to the exit with lights dimmed |
+
+Not verified: real devices (only Chromium emulation); frame rate on a mid-range phone.
+
+### Next task
+**M11** analytics (funnel), budgets, provider usage, restore drill → **M5b** AI layer once the key exists. Deploy: "SMY yangilash" (`bash ~/smyagent/scripts/deploy.sh`), nothing else.

@@ -10,7 +10,7 @@ Authoritative milestone definitions and acceptance criteria live in
 | M2 | SQLAlchemy, Alembic, core models, repositories, MariaDB in CI | ✅ done |
 | M3 | Auth, mobile dashboard, owner Telegram bot | 🟡 M3-auth, M3-ui, M3-bot done; M3-totp open (optional) |
 | M3b | Agent Control Center (live graph, kill switch) — CLAUDE.md §13A.1–2 | ✅ done |
-| M3c-office | Virtual Office view — CLAUDE.md §13A.3, ADR-0009 | ⏭ next (or M4 first — see progress) |
+| M3c-office | Virtual Office view — CLAUDE.md §13A.3, ADR-0009 | ✅ `/control/office` (home → 🏢), real-state mapping, events, tap-to-control, phone/iPad, reduced motion |
 | M4 | Company discovery (manual, CSV, one provider) | ✅ automatic via OpenStreetMap (ADR-0010) + manual + CSV |
 | M5 | Research & SSRF-safe website audit | ✅ fetcher + deterministic audit + automatic research (AI summary → M5b, needs AI key) |
 | M6 | Opportunity analysis & scoring | ✅ rules-based opportunities, explainable score, automatic leads (LLM explanations → M5b/AI layer) |
