@@ -236,3 +236,12 @@ input[type="file"] { padding: 8px; }
 .office-toast { position: fixed; top: calc(12px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); z-index: 40; background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-weight: 700; max-width: calc(100% - 32px); box-shadow: 0 8px 24px rgba(0, 0, 0, .25); }
 .office-home-link { display: block; text-align: center; font-size: 1.05rem; padding: 14px; margin: 0 0 16px; }
 [hidden] { display: none !important; }
+
+/* --- M11: analytics ------------------------------------------------------- */
+.an-budget meter, .an-funnel meter { width: 100%; height: 14px; }
+.an-funnel { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.an-row { display: flex; justify-content: space-between; gap: 8px; }
+.an-rate { margin: 2px 0 0; font-size: .8rem; }
+.an-agents { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.an-agents li { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid var(--border); padding: 6px 0; }
+.card + .card { margin-top: 12px; }

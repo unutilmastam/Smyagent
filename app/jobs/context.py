@@ -7,11 +7,12 @@ import threading
 import uuid
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 
 from sqlalchemy import update
 
+from app.application.budget import BudgetService, UsageRecord
 from app.application.controls import ControlGate, NullNotifier, OwnerNotifier
 from app.core.config import Settings
 from app.domain.agents import AgentModule
@@ -73,6 +74,27 @@ class TaskContext:
                 .values(heartbeat_at=now)
                 .execution_options(synchronize_session=False)
             )
+
+    def ensure_may_call_ai(self) -> None:
+        """Before every optional AI call (§13A.2 point 4, §12): kill switch, then budget.
+
+        Raises AgentHaltedError (paused/stopped) or BudgetExhaustedError (the runner
+        defers the job as BUDGET_DEFERRED until the next day/month).
+        """
+        self.checkpoint()
+        with self.database.transaction() as session:
+            BudgetService(session, self.settings).ensure_may_spend()
+
+    def record_usage(self, usage: UsageRecord) -> None:
+        """After a provider call: cost accounting; a budget alert is sent after commit."""
+        usage = replace(usage, module=usage.module or self.module.value)
+        usage = replace(
+            usage, job_id=usage.job_id or self.job_id, run_id=usage.run_id or self.run_id
+        )
+        with self.database.transaction() as session:
+            alert = BudgetService(session, self.settings).record(usage)
+        if alert is not None:
+            self.notifier.notify(alert.text, alert.buttons)
 
     def checkpoint(self) -> None:
         """Raise AgentHaltedError if the module was paused or stopped meanwhile."""

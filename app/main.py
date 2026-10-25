@@ -18,6 +18,7 @@ from app.core.middleware import RequestIdMiddleware, SecurityHeadersMiddleware
 from app.infrastructure.database import Database
 from app.infrastructure.telegram.notifier import build_owner_notifier
 from app.web.agent_settings import router as agent_settings_router
+from app.web.analytics import router as analytics_router
 from app.web.companies import router as companies_router
 from app.web.control import router as control_router
 from app.web.conversations import router as conversations_router
@@ -76,6 +77,7 @@ def create_app(
     app.include_router(conversations_router)
     app.include_router(outreach_router)
     app.include_router(jobs_router)
+    app.include_router(analytics_router)
     app.include_router(pwa_router)
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
     return app

@@ -166,6 +166,17 @@ class JobRepository:
         )
         return _rowcount(result)
 
+    def release_budget_deferred(self, *, now: datetime | None = None) -> int:
+        """BUDGET_DEFERRED jobs whose day/month has turned go back to the queue."""
+        now = now or utcnow()
+        result = self.session.execute(
+            update(Job)
+            .where(Job.status == JobStatus.BUDGET_DEFERRED, Job.run_after <= now)
+            .values(status=JobStatus.QUEUED, updated_at=now)
+            .execution_options(synchronize_session=False)
+        )
+        return _rowcount(result)
+
     def fail_stale(self, *, stale_after: timedelta, now: datetime | None = None) -> list[Job]:
         """FAIL stale RUNNING jobs that have no attempts left; returns them (for alerts)."""
         now = now or utcnow()

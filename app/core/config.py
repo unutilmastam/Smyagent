@@ -74,7 +74,9 @@ class Settings(BaseSettings):
     imap_password: SecretStr = SecretStr("")
 
     log_level: str = "INFO"
-    # 0 means "no AI spending allowed" (optional AI calls are deferred), not "unlimited".
+    # Hard monthly AI budget (ADR-0007); 0 = no AI spending allowed.
+    monthly_ai_budget_usd: Decimal = Field(default=Decimal("10"), ge=0)
+    # 0 = automatic: the monthly budget spread evenly over the days of the month.
     daily_ai_budget_usd: Decimal = Field(default=Decimal("0"), ge=0)
     daily_search_limit: int = Field(default=0, ge=0)
     default_timezone: str = "Asia/Tashkent"
