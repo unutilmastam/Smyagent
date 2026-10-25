@@ -142,7 +142,9 @@ class OfficeSnapshotService:
                 select(Job.agent_module, func.count())
                 .where(Job.status == JobStatus.QUEUED, Job.run_after <= now)
                 .group_by(Job.agent_module)
-            ).all()
+            )
+            .tuples()
+            .all()
         )
 
     def _queued_counts(self) -> dict[str, int]:
@@ -151,7 +153,9 @@ class OfficeSnapshotService:
                 select(Job.agent_module, func.count())
                 .where(Job.status.in_([JobStatus.QUEUED, JobStatus.BUDGET_DEFERRED]))
                 .group_by(Job.agent_module)
-            ).all()
+            )
+            .tuples()
+            .all()
         )
 
     def _waiting(self, module: AgentModule, now: datetime) -> WaitFact | None:
