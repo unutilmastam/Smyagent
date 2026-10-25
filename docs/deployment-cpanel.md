@@ -28,7 +28,7 @@
 ### Existing apps on the account — conflict to resolve before deploy
 - An app **`smarthome-api`** (Python 3.10) is mounted on **`smy.itcode.uz/api`**, and a virtualenv **`smy-api` (3.10)** exists.
 - SMY Agent serves `/api/v1/...` and the dashboard at `/`. Mounting it at the root of `smy.itcode.uz` would collide with `smarthome-api` at `/api`.
-- **Decision needed from the owner:** (a) use a new subdomain for SMY Agent (e.g. `agent.itcode.uz`) — recommended, no risk to Smart Home; or (b) move `smarthome-api` to its own subdomain and give `smy.itcode.uz` to SMY Agent.
+- **Decided 2026-10-25 (owner):** SMY Agent gets its own subdomain **`agent.itcode.uz`**. `smy.itcode.uz` and `smarthome-api` stay untouched.
 - The `smy-api` virtualenv is reused only if confirmed unused; otherwise a fresh 3.12 app is created.
 
 ## 2. Running the check (owner, from phone)
@@ -55,7 +55,7 @@ Some facts cannot be read from the shell (Python versions in the Setup Python Ap
 
 "Setup Python App":
 - Application root: `smyagent`
-- Application URL: chosen subdomain, e.g. `agent.itcode.uz`
+- Application URL: `agent.itcode.uz` (decided 2026-10-25)
 - Startup file: `deployment/cpanel/passenger_wsgi.py`
 - Entry point: `application`
 - Environment variables: from `.env.example`, with `APP_ENV=production`
