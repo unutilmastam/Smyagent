@@ -28,7 +28,15 @@ main() {
   local log_dir="$HOME/smyagent_data"
   mkdir -p "$log_dir" "$app_dir/tmp"
   chmod 700 "$log_dir"
-  exec > >(tee -a "$log_dir/deploy.log") 2>&1
+  # Log to deploy.log as well as the screen. No process substitution (`>(tee …)`):
+  # CageFS on shared hosting has no /dev/fd, so re-run ourselves through a plain pipe.
+  if [[ -z "${SMY_DEPLOY_LOGGING:-}" ]]; then
+    export SMY_DEPLOY_LOGGING=1
+    local status=0
+    bash "${BASH_SOURCE[0]}" "$@" 2>&1 | tee -a "$log_dir/deploy.log" || status=$?
+    # pipefail: status is the script's own exit code unless tee itself failed.
+    return "$status"
+  fi
   echo "=== $(date '+%Y-%m-%d %H:%M:%S') deploy boshlandi ($app_dir)"
 
   # Only one deploy at a time.
