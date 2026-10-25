@@ -508,3 +508,24 @@ Not verified: real devices (only Chromium emulation); frame rate on a mid-range 
 
 ### Next task
 **M11** analytics (funnel), budgets, provider usage, restore drill → **M5b** AI layer once the key exists. Deploy: "SMY yangilash" (`bash ~/smyagent/scripts/deploy.sh`), nothing else.
+
+## Session 6 (cont.) — M11a AI budget, usage accounting, analytics
+
+### Completed
+- **Budget** (`app/domain/budget.py`, `app/application/budget.py`): `MONTHLY_AI_BUDGET_USD=10` (new), `DAILY_AI_BUDGET_USD=0` = automatic (monthly ÷ days in month); local-time day/month windows; `ensure_may_spend()` raises `BudgetExhaustedError` → the runner sets the job `BUDGET_DEFERRED` until the next day/month without using an attempt and releases it when the window turns; owner bot told once per day; 80 % and 100 % alerts once per window. Hook for the AI layer: `ctx.ensure_may_call_ai()` before, `ctx.record_usage()` after every call.
+- **Usage** table `provider_usage` (migration `0014`): kind (ai/search), provider, model, module, job, requests, tokens, estimated USD — no texts. Discovery records every search; paid search providers obey `DAILY_SEARCH_LIMIT` (deferred to tomorrow).
+- Control Center / Virtual Office show the effective daily budget.
+- **📈 `/analytics`** (home link): period Today / 7 / 30 days / all; AI budget month/day meters; funnel found → researched → qualified → offer → approved → contacted → replied → order → won with each rate's denominator printed, inbound bot clients separate from outreach replies, "how is this counted" definition; outreach (emails, Telegram, replies %, bounces %); agent success per module; AI cost by module and model; search requests.
+
+### Verification
+| Command | Result |
+|---|---|
+| `pytest` (SQLite, Python 3.13, SQLAlchemy 2.0.55 as in CI) | 740 passed, 1 skipped |
+| integration on MariaDB 10.6 / 10.11 / MySQL 8.0; `alembic check` (MySQL 8.0) | 298 / 298 / 298 passed; no differences |
+| Playwright 375 px `/analytics` | no horizontal scroll, no errors |
+
+### Server change for the owner
+None required: `MONTHLY_AI_BUDGET_USD` defaults to 10 when missing from `.env`. "SMY yangilash" applies migration `0014`.
+
+### Next task
+**M11b**: backup verification + restore drill into a scratch DB, post-deploy smoke test, security review.

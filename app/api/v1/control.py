@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
 
 from app.api.deps import get_database
+from app.application.budget import daily_limit
 from app.application.control_snapshot import ControlSnapshotService
 from app.application.controls import AgentControlService, describe_change
 from app.application.office import OfficeSnapshotService
@@ -28,7 +29,7 @@ def snapshot(
 ) -> dict[str, Any]:
     with database.transaction() as session:
         snap = ControlSnapshotService(session).build(
-            timezone=settings.default_timezone, ai_budget_today=settings.daily_ai_budget_usd
+            timezone=settings.default_timezone, ai_budget_today=daily_limit(settings)
         )
     return snap.to_json()
 
@@ -42,7 +43,7 @@ def office(
     """Virtual Office state (CLAUDE.md §13A.3): every animation comes from these facts."""
     with database.transaction() as session:
         return OfficeSnapshotService(session).build(
-            timezone=settings.default_timezone, ai_budget_today=settings.daily_ai_budget_usd
+            timezone=settings.default_timezone, ai_budget_today=daily_limit(settings)
         )
 
 

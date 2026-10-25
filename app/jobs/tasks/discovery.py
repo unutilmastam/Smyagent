@@ -9,9 +9,11 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.application.budget import BudgetService, UsageRecord
 from app.application.discovery import DiscoveryService, IntakeStatus
 from app.domain.actors import Actor
 from app.domain.agents import AgentModule
+from app.domain.budget import BudgetWindow, UsageKind, next_window
 from app.domain.discovery import Category, is_due
 from app.infrastructure.database.models import DiscoveryTarget
 from app.infrastructure.database.types import utcnow
@@ -19,7 +21,7 @@ from app.infrastructure.repositories.agent_settings import AgentSettingsReposito
 from app.infrastructure.repositories.companies import NewCompany
 from app.infrastructure.repositories.jobs import JobRepository
 from app.infrastructure.search_providers.base import ProviderError, SearchQuery
-from app.jobs.context import RetryableTaskError, TaskContext
+from app.jobs.context import DeferTaskError, RetryableTaskError, TaskContext
 
 DISCOVERY_SEARCH = "discovery.search"
 ACTOR = Actor.agent(AgentModule.DISCOVERY.value)
@@ -69,6 +71,13 @@ def run_discovery_search(ctx: TaskContext, payload: dict[str, Any]) -> str:
     provider = ctx.search_provider_factory(ctx.settings)
     if provider is None:
         return "automatic discovery is off (SEARCH_PROVIDER is empty)"
+    if getattr(provider, "paid", False):
+        # Paid providers stay inside DAILY_SEARCH_LIMIT (e.g. Google Places free quota).
+        with ctx.database.transaction() as session:
+            used = BudgetService(session, ctx.settings).searches_today(provider.name)
+        if used >= ctx.settings.daily_search_limit:
+            tomorrow = next_window(BudgetWindow.DAY, utcnow(), ctx.settings.default_timezone)
+            raise DeferTaskError(f"daily search limit {ctx.settings.daily_search_limit}", tomorrow)
     ctx.progress(f"{city}: {category.value} qidirilmoqda", 5)
     try:
         results = provider.search(
@@ -84,6 +93,7 @@ def run_discovery_search(ctx: TaskContext, payload: dict[str, Any]) -> str:
         if exc.retryable:
             raise RetryableTaskError(str(exc)) from None
         raise
+    ctx.record_usage(UsageRecord(provider=provider.name, module="", kind=UsageKind.SEARCH))
 
     created = duplicates = invalid = 0
     for index, item in enumerate(results, start=1):

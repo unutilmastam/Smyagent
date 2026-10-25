@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}{{ t('an.title') }} — SMY Agent{% endblock %}
+{% block content %}
+<h1>{{ t('an.title') }}</h1>
+<nav class="tabs" aria-label="{{ t('an.period') }}">
+  {% for d in periods %}<a href="/analytics?days={{ d }}" {% if r.days == d %}aria-current="page"{% endif %}>{{ t('an.days.' ~ d) }}</a>{% endfor %}
+</nav>
+
+{% set b = r.budget %}
+<section class="card an-budget" aria-labelledby="an-budget-h">
+  <h2 id="an-budget-h">{{ t('an.budget') }}</h2>
+  {% if not b.allowed %}<p class="alert alert-warn" role="status">💤 {{ t('an.budget.used.' ~ b.exhausted.value) }}</p>{% endif %}
+  <p><strong>{{ t('an.budget.month') }}</strong>: ${{ '%.2f'|format(b.spent_month_usd) }} / ${{ '%.2f'|format(b.limits.monthly_usd) }}</p>
+  {% set mm = (b.limits.monthly_usd|float) or 1.0 %}
+  <meter min="0" max="{{ mm }}" low="{{ mm * 0.6 }}" high="{{ mm * 0.8 }}" optimum="0" value="{{ b.spent_month_usd|float }}">{{ b.spent_month_usd }}</meter>
+  <p><strong>{{ t('an.budget.day') }}</strong>: ${{ '%.4f'|format(b.spent_today_usd) }} / ${{ '%.4f'|format(b.limits.daily_usd) }}</p>
+  {% set dd = (b.limits.daily_usd|float) or 1.0 %}
+  <meter min="0" max="{{ dd }}" low="{{ dd * 0.6 }}" high="{{ dd * 0.8 }}" optimum="0" value="{{ b.spent_today_usd|float }}">{{ b.spent_today_usd }}</meter>
+  <p class="muted">{{ t('an.budget.hint') }}</p>
+</section>
+
+<section class="card" aria-labelledby="an-funnel-h">
+  <h2 id="an-funnel-h">{{ t('an.funnel') }}</h2>
+  <ol class="an-funnel">
+    {% for s in r.funnel %}
+    <li>
+      <div class="an-row"><span>{{ t('an.step.' ~ s.key) }}</span><strong>{{ s.count }}</strong></div>
+      <meter min="0" max="{{ r.max_funnel }}" value="{{ s.count }}">{{ s.count }}</meter>
+      {% if s.denominator_key %}<p class="muted an-rate">{% if s.rate_pct is not none %}{{ s.rate_pct }}%{% else %}—{% endif %} {{ t('an.of') }} «{{ t('an.step.' ~ s.denominator_key) }}»</p>{% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+  <p class="muted">{{ t('an.inbound', n=r.inbound) }}</p>
+  <details><summary>{{ t('an.how') }}</summary><p class="muted">{{ t('an.definition') }}</p></details>
+</section>
+
+<section class="card" aria-labelledby="an-out-h">
+  <h2 id="an-out-h">{{ t('an.outreach') }}</h2>
+  {% set o = r.outreach %}
+  <dl class="facts">
+    <dt>{{ t('an.out.sent') }}</dt><dd>{{ o.emails_sent }}</dd>
+    <dt>{{ t('an.out.telegram') }}</dt><dd>{{ o.telegram_sent }}</dd>
+    <dt>{{ t('an.out.replies') }}</dt><dd>{{ o.replies }}{% if o.reply_pct is not none %} ({{ o.reply_pct }}%){% endif %}</dd>
+    <dt>{{ t('an.out.bounced') }}</dt><dd>{{ o.bounced }}{% if o.bounce_pct is not none %} ({{ o.bounce_pct }}%){% endif %}</dd>
+  </dl>
+</section>
+
+<section class="card" aria-labelledby="an-agents-h">
+  <h2 id="an-agents-h">{{ t('an.agents') }}</h2>
+  <ul class="an-agents">
+    {% for a in r.agents %}
+    <li><span>{{ t('agent.' ~ a.module) }}</span><span class="muted">✓ {{ a.succeeded }} · ✗ {{ a.failed }}{% if a.success_pct is not none %} · {{ a.success_pct }}%{% endif %}</span></li>
+    {% endfor %}
+  </ul>
+  <p><a href="/jobs?status=FAILED">🧾 {{ t('jobs.open') }}</a></p>
+</section>
+
+<section class="card" aria-labelledby="an-cost-h">
+  <h2 id="an-cost-h">{{ t('an.cost') }}</h2>
+  {% if r.cost_by_module %}
+  <ul class="an-agents">
+    {% for c in r.cost_by_module %}<li><span>{% set k = 'agent.' ~ c.label %}{% set tx = t(k) %}{{ c.label if tx == k else tx }}</span><span class="muted">${{ '%.4f'|format(c.cost_usd) }} · {{ c.requests }} · {{ c.tokens_in + c.tokens_out }} tok</span></li>{% endfor %}
+  </ul>
+  <h3>{{ t('an.cost.models') }}</h3>
+  <ul class="an-agents">
+    {% for c in r.cost_by_model %}<li><span class="break">{{ c.label }}</span><span class="muted">${{ '%.4f'|format(c.cost_usd) }}</span></li>{% endfor %}
+  </ul>
+  {% else %}<p class="muted">{{ t('an.cost.none') }}</p>{% endif %}
+  <p class="muted">{{ t('an.searches', n=r.searches) }}</p>
+</section>
+{% endblock %}

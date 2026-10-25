@@ -9,6 +9,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from app.api.deps import get_database
 from app.application.automation import cron_view
+from app.application.budget import daily_limit
 from app.application.control_snapshot import ControlSnapshotService, Snapshot
 from app.application.controls import AgentControlService, describe_change
 from app.core.config import Settings, get_settings
@@ -43,7 +44,7 @@ GRAPH_HEIGHT = Y0 + len(PIPELINE) * (NODE_H + GAP)
 def build_snapshot(database: Database, settings: Settings) -> tuple[Snapshot, dict[str, object]]:
     with database.transaction() as session:
         snapshot = ControlSnapshotService(session).build(
-            timezone=settings.default_timezone, ai_budget_today=settings.daily_ai_budget_usd
+            timezone=settings.default_timezone, ai_budget_today=daily_limit(settings)
         )
     return snapshot, {
         "snap": snapshot,

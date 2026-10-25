@@ -32,6 +32,7 @@ from app.infrastructure.database.models.scoring import (
     ScoringSettings,
 )
 from app.infrastructure.database.models.targets import DiscoveryTarget
+from app.infrastructure.database.models.usage import ProviderUsage
 
 __all__ = [
     "AgentControl",
@@ -61,6 +62,7 @@ __all__ = [
     "OwnerAlert",
     "Proposal",
     "ProposalVersion",
+    "ProviderUsage",
     "ResearchFinding",
     "ResearchRun",
     "RunnerRun",

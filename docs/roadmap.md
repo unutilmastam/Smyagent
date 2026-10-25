@@ -19,7 +19,7 @@ Authoritative milestone definitions and acceptance criteria live in
 | M8 | Mustafo client bot (client-initiated) | ✅ disclosure, UZ/UZ-Cyrl/RU/EN, intents, opt-out → suppression, owner-approved or safe auto replies, Order Brief → `ORDER_CONFIRMED` → owner, project spec export |
 | M9 | Outbound: automatic email, assisted Telegram | ✅ email (caps, warm-up, spacing, opt-out link, auto-pause, inbox replies/STOP/bounces, follow-up once), one-tap Telegram + phone tasks |
 | M10 | Background automation hardening | ✅ runner invocation records + cron liveness, per-job time limit, stale jobs capped by attempts, deduplicated owner alerts with retry button, `/jobs` monitoring + retry/cancel, `/jobs` `/retry` bot commands, daily retention cleanup, rotated runner log (`docs/operations.md`) |
-| M11 | Analytics, budgets, backups, hardening | planned |
+| M11 | Analytics, budgets, backups, hardening | 🟡 M11a ✅ AI budget (monthly $10, auto daily, 80 % alert, BUDGET_DEFERRED), `provider_usage`, 📈 `/analytics`; M11b next: backup verify + restore drill, smoke test, security review |
 | M12 | Demo generation | planned |
 
 ## M2 — done

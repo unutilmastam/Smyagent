@@ -50,6 +50,7 @@ on MariaDB 10.6 + 10.11 in CI.
 | `outreach_events` | Every first contact / follow-up per company and channel: email (QUEUED → SENDING → SENT / UNKNOWN / BOUNCED / BLOCKED) or owner task (TASK → DONE / SKIPPED), recipient, text, Message-ID, sent/replied | **unique** `idempotency_key` (`first:<company>`, `follow_up:<company>`); index (channel, sent_at), (status), (channel, recipient) |
 | `channel_states` | Email auto-pause (reason, complaint count) and owner resume | PK `channel` |
 | `runner_runs` | One row per cron invocation of the job runner: status (RUNNING/OK/LOCKED/STOPPED/ERROR), counts, error class, `cleaned_up` — cron liveness (M10) | index (started_at); kept 14 days |
+| `provider_usage` | One AI or search provider call: kind, provider, model, module, job, requests, tokens, estimated USD (no prompts or texts) | index (kind, created_at), (module, created_at); FK job SET NULL |
 | `owner_alerts` | Dedup state per alert key: last sent, total, pending repeats (one Telegram message per key per 6 h) | **unique** `alert_key` |
 | `agent_controls` | Kill switch: `global` + 7 modules (ADR-0006) | PK `module`; seeded ACTIVE by migration 0001 |
 

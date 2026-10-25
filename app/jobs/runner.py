@@ -31,6 +31,7 @@ from app.core.config import ConfigurationError, Settings, get_settings
 from app.core.logging import configure_logging
 from app.domain.agents import GLOBAL_CONTROL, AgentHaltedError, AgentModule, ControlState
 from app.domain.automation import CLEANUP_EVERY, RunnerStatus
+from app.domain.budget import BudgetExhaustedError
 from app.domain.jobs import JobStatus
 from app.infrastructure.database import Database
 from app.infrastructure.database.models import AgentRun, AgentRunStatus, RunnerRun
@@ -81,6 +82,7 @@ class RunSummary:
     timed_out: int = 0
     alerts_sent: int = 0
     cleaned_up: bool = False
+    budget_deferred: int = 0
     error: str | None = None
     messages: list[str] = field(default_factory=list)
 
@@ -220,6 +222,7 @@ class JobRunner:
             for job in dead:
                 self.alerts.add(alerts.job_failed(job, base_url=self.settings.app_base_url))
             summary.requeued_stale = jobs.requeue_stale(stale_after=STALE_AFTER)
+            jobs.release_budget_deferred()
             session.execute(
                 update(AgentRun)
                 .where(
@@ -307,6 +310,9 @@ class JobRunner:
             halted_state, outcome = exc.state, f"halted: {exc.state.value}"
         except DeferTaskError as exc:
             defer_until, outcome = exc.run_after, f"deferred: {exc}"[:200]
+        except BudgetExhaustedError as exc:
+            self._budget_defer(job_id, run_id, exc, summary)
+            return
         except JobTimeoutError as exc:
             # The alarm may have fired mid-query: drop pooled connections, start clean.
             self.database.dispose()
@@ -322,6 +328,37 @@ class JobRunner:
             self._defer(job_id, run_id, outcome, defer_until)
             return
         self._finish(job_id, run_id, outcome, error, retryable, halted_state, summary)
+
+    def _budget_defer(
+        self,
+        job_id: uuid.UUID,
+        run_id: uuid.UUID,
+        exc: BudgetExhaustedError,
+        summary: RunSummary,
+    ) -> None:
+        """BUDGET_DEFERRED until the next day/month; the owner is told once per day."""
+        now = utcnow()
+        with self.database.transaction() as session:
+            job = JobRepository(session).get(job_id)
+            run = session.get(AgentRun, run_id)
+            if job is not None and job.status is JobStatus.RUNNING:
+                job.status = JobStatus.BUDGET_DEFERRED
+                job.claimed_by, job.claimed_at = None, None
+                job.attempts = max(0, job.attempts - 1)
+                job.run_after = exc.run_after
+            if run is not None:
+                run.status, run.current_step = AgentRunStatus.CANCELLED, f"budget: {exc}"[:191]
+                run.finished_at = now
+            self.alerts.add(
+                AlertService(session).raise_alert(
+                    f"budget_deferred:{now:%Y%m%d}",
+                    "💤 AI byudjeti tugagani uchun AI ishlari keyinga qoldirildi "
+                    f"({exc.window.value}). Byudjet: MONTHLY_AI_BUDGET_USD.",
+                    now=now,
+                    window=timedelta(hours=24),
+                )
+            )
+        summary.budget_deferred += 1
 
     def _defer(self, job_id: uuid.UUID, run_id: uuid.UUID, outcome: str, until: datetime) -> None:
         with self.database.transaction() as session:

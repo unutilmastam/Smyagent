@@ -1746,6 +1746,203 @@ _T: dict[str, dict[str, str]] = {
         "ru": "Мустафо — общается с клиентами (AI)",
         "en": "Mustafo — talks to clients (AI)",
     },
+    "an.title": {
+        "uz": "Analitika",
+        "ru": "Аналитика",
+        "en": "Analytics",
+    },
+    "an.period": {
+        "uz": "Davr",
+        "ru": "Период",
+        "en": "Period",
+    },
+    "an.days.1": {
+        "uz": "Bugun",
+        "ru": "Сегодня",
+        "en": "Today",
+    },
+    "an.days.7": {
+        "uz": "7 kun",
+        "ru": "7 дней",
+        "en": "7 days",
+    },
+    "an.days.30": {
+        "uz": "30 kun",
+        "ru": "30 дней",
+        "en": "30 days",
+    },
+    "an.days.0": {
+        "uz": "Hammasi",
+        "ru": "Всё время",
+        "en": "All time",
+    },
+    "an.budget": {
+        "uz": "AI byudjeti",
+        "ru": "Бюджет AI",
+        "en": "AI budget",
+    },
+    "an.budget.month": {
+        "uz": "Shu oy",
+        "ru": "Этот месяц",
+        "en": "This month",
+    },
+    "an.budget.day": {
+        "uz": "Bugun",
+        "ru": "Сегодня",
+        "en": "Today",
+    },
+    "an.budget.used.month": {
+        "uz": "Oylik AI byudjeti tugadi — AI ishlari keyingi oyga qoldirildi.",
+        "ru": "Месячный бюджет AI исчерпан — AI-задачи отложены до следующего месяца.",
+        "en": "Monthly AI budget used up — AI work waits for next month.",
+    },
+    "an.budget.used.day": {
+        "uz": "Bugungi AI byudjeti tugadi — AI ishlari ertaga davom etadi.",
+        "ru": "Дневной бюджет AI исчерпан — AI-задачи продолжатся завтра.",
+        "en": "Today's AI budget used up — AI work continues tomorrow.",
+    },
+    "an.budget.hint": {
+        "uz": "Chegara .env da: MONTHLY_AI_BUDGET_USD (kunlik = oylik ÷ kunlar). 80% da botga "
+        "xabar keladi.",
+        "ru": "Лимит в .env: MONTHLY_AI_BUDGET_USD (дневной = месячный ÷ дни). При 80% придёт "
+        "сообщение в бот.",
+        "en": "Limit in .env: MONTHLY_AI_BUDGET_USD (daily = monthly ÷ days). The bot warns at "
+        "80%.",
+    },
+    "an.funnel": {
+        "uz": "Voronka",
+        "ru": "Воронка",
+        "en": "Funnel",
+    },
+    "an.step.found": {
+        "uz": "Kompaniya topildi",
+        "ru": "Найдено компаний",
+        "en": "Companies found",
+    },
+    "an.step.researched": {
+        "uz": "Tahlil qilindi",
+        "ru": "Проанализировано",
+        "en": "Researched",
+    },
+    "an.step.qualified": {
+        "uz": "Mos lid",
+        "ru": "Подходящий лид",
+        "en": "Qualified lead",
+    },
+    "an.step.proposals": {
+        "uz": "Taklif tayyorlandi",
+        "ru": "Предложение готово",
+        "en": "Offer drafted",
+    },
+    "an.step.approved": {
+        "uz": "Taklif tasdiqlandi",
+        "ru": "Предложение одобрено",
+        "en": "Offer approved",
+    },
+    "an.step.contacted": {
+        "uz": "Murojaat qilindi",
+        "ru": "Связались",
+        "en": "Contacted",
+    },
+    "an.step.replied": {
+        "uz": "Javob berdi",
+        "ru": "Ответили",
+        "en": "Replied",
+    },
+    "an.step.replied_all": {
+        "uz": "Javob bergan + o'zi yozgan",
+        "ru": "Ответили + написали сами",
+        "en": "Replied + wrote first",
+    },
+    "an.step.orders": {
+        "uz": "Buyurtma tasdiqlandi",
+        "ru": "Заказ подтверждён",
+        "en": "Order confirmed",
+    },
+    "an.step.won": {
+        "uz": "Yutildi (WON)",
+        "ru": "Выиграно (WON)",
+        "en": "Won",
+    },
+    "an.of": {
+        "uz": "dan",
+        "ru": "от",
+        "en": "of",
+    },
+    "an.inbound": {
+        "uz": "Botga o'zi yozgan mijozlar: {n}",
+        "ru": "Клиенты, написавшие в бот сами: {n}",
+        "en": "Clients who wrote to the bot first: {n}",
+    },
+    "an.how": {
+        "uz": "Qanday hisoblanadi?",
+        "ru": "Как считается?",
+        "en": "How is this counted?",
+    },
+    "an.definition": {
+        "uz": "Har bir qator — davr ichida shu bosqichga yetgan alohida kompaniya/lidlar soni "
+        "(audit jurnalidan, hozirgi holatdan emas). Foiz — shu davrdagi oldingi bosqichga "
+        "nisbat; qisqa davrda 100% dan oshishi mumkin. Buyurtma foizi javob berganlar va "
+        "botga o'zi yozganlar yig'indisiga nisbatan.",
+        "ru": "Каждая строка — число разных компаний/лидов, достигших этапа в периоде (из "
+        "журнала, не из текущего состояния). Процент — к предыдущему этапу того же "
+        "периода; на коротком периоде может быть больше 100%. Процент заказов — от суммы "
+        "ответивших и написавших сами.",
+        "en": "Each row counts distinct companies/leads that reached the step within the period "
+        "(from the audit trail, not current state). The rate is relative to the previous "
+        "step in the same period and can exceed 100% for short periods. The order rate is "
+        "relative to replies plus clients who wrote first.",
+    },
+    "an.outreach": {
+        "uz": "Murojaatlar",
+        "ru": "Рассылка",
+        "en": "Outreach",
+    },
+    "an.out.sent": {
+        "uz": "Email yuborildi",
+        "ru": "Отправлено email",
+        "en": "Emails sent",
+    },
+    "an.out.telegram": {
+        "uz": "Telegram (siz yubordingiz)",
+        "ru": "Telegram (отправили вы)",
+        "en": "Telegram (sent by you)",
+    },
+    "an.out.replies": {
+        "uz": "Javoblar",
+        "ru": "Ответы",
+        "en": "Replies",
+    },
+    "an.out.bounced": {
+        "uz": "Qaytgan email",
+        "ru": "Возвраты email",
+        "en": "Bounced",
+    },
+    "an.agents": {
+        "uz": "Agentlar ishi",
+        "ru": "Работа агентов",
+        "en": "Agent work",
+    },
+    "an.cost": {
+        "uz": "AI xarajati (davr)",
+        "ru": "Расходы AI (период)",
+        "en": "AI cost (period)",
+    },
+    "an.cost.models": {
+        "uz": "Model bo'yicha",
+        "ru": "По моделям",
+        "en": "By model",
+    },
+    "an.cost.none": {
+        "uz": "Bu davrda AI ishlatilmadi.",
+        "ru": "В этом периоде AI не использовался.",
+        "en": "No AI used in this period.",
+    },
+    "an.searches": {
+        "uz": "Qidiruv so'rovlari: {n}",
+        "ru": "Поисковых запросов: {n}",
+        "en": "Search requests: {n}",
+    },
 }
 
 
