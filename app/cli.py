@@ -6,6 +6,9 @@ python -m app.cli telegram-set-webhook
 python -m app.cli telegram-webhook-info
 python -m app.cli telegram-set-client-webhook
 python -m app.cli db-backup [--dir ~/smyagent_data/backups] [--keep 14]
+python -m app.cli db-backup-verify [--file PATH]
+python -m app.cli db-restore-drill --target-database itcode_smyrestore
+python -m app.cli smoke-test [--no-http]
 """
 
 from __future__ import annotations
@@ -152,6 +155,77 @@ def _db_backup(directory: str, keep: int) -> int:
     return 0
 
 
+def _backup_verify(directory: str, file: str | None) -> int:
+    from pathlib import Path
+
+    from app.infrastructure.database.backup import latest_backup, verify
+
+    path = Path(file).expanduser() if file else latest_backup(Path(directory).expanduser())
+    if path is None or not path.exists():
+        print("Zaxira fayli topilmadi.", file=sys.stderr)
+        return 1
+    result = verify(path)
+    size_kb = result.size_bytes // 1024
+    if result.ok:
+        print(
+            f"✓ {path.name}: {len(result.tables)} jadval, "
+            f"{result.insert_statements} INSERT, {size_kb} KB — butun"
+        )
+        return 0
+    print(f"✗ {path.name}: {result.problem}", file=sys.stderr)
+    return 1
+
+
+def _restore_drill(directory: str, file: str | None, target: str, keep: bool) -> int:
+    from pathlib import Path
+
+    from app.infrastructure.database.backup import latest_backup, restore_drill
+
+    try:
+        settings = get_settings()
+    except ConfigurationError as exc:
+        print(exc, file=sys.stderr)
+        return 1
+    path = Path(file).expanduser() if file else latest_backup(Path(directory).expanduser())
+    if path is None or not path.exists():
+        print("Zaxira fayli topilmadi.", file=sys.stderr)
+        return 1
+    print(f"Tiklash mashqi: {path.name} → {target} (asosiy bazaga tegilmaydi)")
+    result = restore_drill(settings.database_url.get_secret_value(), path, target, keep=keep)
+    if not result.ok:
+        print(f"✗ {result.problem}", file=sys.stderr)
+        return 1
+    print(f"✓ {result.tables} jadval tiklandi, jami {sum(result.rows.values())} qator.")
+    for name, (restored, live) in sorted(result.differences.items()):
+        print(f"  ~ {name}: zaxirada {restored}, hozir {live} (zaxiradan keyin o'zgargan)")
+    print("✓ Mashq tugadi." + ("" if keep else f" {target} yana bo'shatildi."))
+    return 0
+
+
+def _smoke_test(directory: str, check_http: bool) -> int:
+    from pathlib import Path
+
+    from app.application.smoke import SmokeTest, exit_code
+
+    try:
+        settings = get_settings()
+    except ConfigurationError as exc:
+        print(f"✗ Sozlamalar: {exc}", file=sys.stderr)
+        return 1
+    database = Database(settings.database_url.get_secret_value())
+    try:
+        checks = SmokeTest(
+            settings, database, Path(directory).expanduser(), check_http=check_http
+        ).run()
+    finally:
+        database.dispose()
+    for check in checks:
+        print(check.line())
+    code = exit_code(checks)
+    print("\n" + ("✅ Hammasi joyida." if code == 0 else "❌ Yuqoridagi ✗ larni tuzating."))
+    return code
+
+
 def _telegram_webhook_info() -> int:
     prepared = _telegram_client()
     if prepared is None:
@@ -184,7 +258,28 @@ def main(argv: Sequence[str] | None = None) -> int:
     backup_parser = sub.add_parser("db-backup", help="gzip'd database dump outside the web root")
     backup_parser.add_argument("--dir", default="~/smyagent_data/backups")
     backup_parser.add_argument("--keep", type=int, default=14)
+    verify_parser = sub.add_parser("db-backup-verify", help="check that a backup is complete")
+    verify_parser.add_argument("--dir", default="~/smyagent_data/backups")
+    verify_parser.add_argument("--file", help="a backup file (default: the newest)")
+    drill = sub.add_parser(
+        "db-restore-drill", help="restore a backup into an empty scratch database and compare"
+    )
+    drill.add_argument(
+        "--target-database", required=True, help="an EMPTY database, not the live one"
+    )
+    drill.add_argument("--dir", default="~/smyagent_data/backups")
+    drill.add_argument("--file", help="a backup file (default: the newest)")
+    drill.add_argument("--keep", action="store_true", help="keep the restored copy")
+    smoke = sub.add_parser("smoke-test", help="post-deploy health check of the live system")
+    smoke.add_argument("--dir", default="~/smyagent_data/backups")
+    smoke.add_argument("--no-http", action="store_true", help="skip the HTTPS health check")
     args = parser.parse_args(argv)
+    if args.command == "db-backup-verify":
+        return _backup_verify(args.dir, args.file)
+    if args.command == "db-restore-drill":
+        return _restore_drill(args.dir, args.file, args.target_database, args.keep)
+    if args.command == "smoke-test":
+        return _smoke_test(args.dir, not args.no_http)
     if args.command == "check-config":
         return _check_config()
     if args.command == "telegram-set-webhook":

@@ -46,7 +46,7 @@ main() {
   fi
   trap 'rmdir "$DEPLOY_LOCK" 2>/dev/null || true' EXIT
 
-  step "1/8 Tekshiruv"
+  step "1/9 Tekshiruv"
   [[ -x "$py" ]] || fail "Virtualenv topilmadi: $venv
    cPanel → Setup Python App da Python 3.12 ilovasini yarating (Application root: $(basename "$app_dir")).
    Boshqa yo'l bo'lsa: VENV=/to'liq/yo'l bash scripts/deploy.sh"
@@ -56,7 +56,7 @@ main() {
   cd "$app_dir"
   ok "Python: $("$py" --version 2>&1), ilova: $app_dir"
 
-  step "2/8 Kod (GitHub main)"
+  step "2/9 Kod (GitHub main)"
   if [[ $pull -eq 1 ]]; then
     # cPanel may rewrite the startup file when the app is (re)created: restore ours.
     if ! git diff --quiet -- passenger_wsgi.py 2>/dev/null; then
@@ -72,27 +72,27 @@ main() {
   fi
   ok "Versiya: $(git log -1 --format='%h %s' | cut -c1-70)"
 
-  step "3/8 Kutubxonalar (pip)"
+  step "3/9 Kutubxonalar (pip)"
   "$py" -m pip install --quiet --disable-pip-version-check --upgrade pip
   "$py" -m pip install --quiet --disable-pip-version-check .
   ok "O'rnatildi"
 
-  step "4/8 Sozlamalar va baza"
+  step "4/9 Sozlamalar va baza"
   "$py" -m app.cli check-config || fail "Sozlama yoki bazada xato (yuqoridagi xabar). .env ni tekshiring:
    $py scripts/setup_env.py --set DATABASE_URL"
 
-  step "5/8 Zaxira nusxa (backup)"
+  step "5/9 Zaxira nusxa (backup)"
   "$py" -m app.cli db-backup --dir "$backup_dir" --keep 14 || fail "Zaxira olinmadi — migratsiya qilinmadi (ma'lumot xavfsiz)."
 
-  step "6/8 Migratsiya"
+  step "6/9 Migratsiya"
   "$py" -m alembic upgrade head
   ok "Baza versiyasi: $("$py" -m alembic current 2>/dev/null | tail -1)"
 
-  step "7/8 Qayta ishga tushirish"
+  step "7/9 Qayta ishga tushirish"
   touch "$app_dir/tmp/restart.txt"
   ok "tmp/restart.txt yangilandi (Passenger keyingi so'rovda yangi kodni yuklaydi)"
 
-  step "8/8 Sayt tekshiruvi"
+  step "8/9 Sayt tekshiruvi"
   if [[ $health -eq 1 ]]; then
     local base
     base="$("$py" -c 'from app.core.config import get_settings; print(get_settings().app_base_url.rstrip("/"))')"
@@ -108,6 +108,12 @@ main() {
   else
     warn "Sayt tekshiruvi o'tkazib yuborildi (--skip-health)"
   fi
+
+  step "9/9 Umumiy tekshiruv (smoke test)"
+  # Informational: the deploy already succeeded; ✗ lines tell the owner what to fix.
+  local smoke_args=(--dir "$backup_dir")
+  [[ $health -eq 1 ]] || smoke_args+=(--no-http)
+  "$py" -m app.cli smoke-test "${smoke_args[@]}" | sed 's/^/  /' || warn "Smoke test ✗ ko'rsatdi — yuqoridagi qatorlarni o'qing."
   echo "=== $(date '+%Y-%m-%d %H:%M:%S') deploy tugadi ✅"
 }
 

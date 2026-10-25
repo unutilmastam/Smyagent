@@ -76,6 +76,25 @@ Retry and cancel are owner-only, CSRF-protected and audit-logged (`job.retry`, `
 | jobs failing with `timeout` | the provider/site is slow; raise `--max-job-seconds` (keep it < 600) |
 | jobs failing with `stale` | the host killed the process (memory/CPU limit) during that job |
 
+## Backups: verify and restore drill (M11)
+
+- Daily `db-backup` (cron 03:17) keeps 14 gzip'd dumps, mode 600.
+- `python -m app.cli db-backup-verify` — reads the newest archive end to end: gzip intact,
+  `-- Dump completed` present, `alembic_version` included.
+- `python -m app.cli db-restore-drill --target-database itcode_smyrestore` — restores the
+  newest backup into an **empty scratch database** with the mysql client (password through a
+  600 option file), compares row counts with the live DB (later changes are listed, not
+  errors) and empties the scratch DB again. Refuses the live DB or a non-empty target.
+  Recommended monthly; Uzbek steps in `deploy-first-time-uz.md`.
+- `python -m app.cli smoke-test` — config, DB, migrations at head, owner account, cron,
+  HTTPS health, both webhooks, newest backup (age + verification). `deploy.sh` runs it as
+  step 9 (informational; ✗ lines say what to fix).
+
+**Real restore (data loss only, with Claude Code):** STOP all agents → `db-backup` of the
+current state → in cPanel phpMyAdmin empty the live DB → `gunzip -c <file> | mysql
+--defaults-extra-file=<600 file> <db>` → `bash scripts/deploy.sh --no-pull` → smoke test.
+Never done without the owner.
+
 ## On a VPS later
 
 The same queue is served by a persistent worker looping `JobRunner.run()`; `runner_runs`,

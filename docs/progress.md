@@ -529,3 +529,23 @@ None required: `MONTHLY_AI_BUDGET_USD` defaults to 10 when missing from `.env`. 
 
 ### Next task
 **M11b**: backup verification + restore drill into a scratch DB, post-deploy smoke test, security review.
+
+## Session 6 (cont.) — M11b backups verified, restore drill, smoke test, security review
+
+### Completed
+- `python -m app.cli db-backup-verify [--file]`: newest archive read end to end (gzip intact, `-- Dump completed`, `alembic_version`, table and INSERT counts); SQLite: `PRAGMA integrity_check`.
+- `python -m app.cli db-restore-drill --target-database <empty scratch DB>`: restore with the mysql client (password via 600 option file), row counts compared with the live DB (later changes listed, not errors), scratch DB emptied afterwards; refuses the live DB, a non-empty target or an invalid backup.
+- `python -m app.cli smoke-test [--no-http]`: config, DB, migrations at head, owner account, cron liveness, HTTPS health/ready, both Telegram webhooks (URL + last error), newest backup (age + verification); Uzbek ✓/⚠/✗, exit 1 on ✗; `deploy.sh` step 9/9 runs it (informational).
+- Security review table in `docs/security.md` (open item: optional TOTP); `pip-audit` clean.
+- Owner steps (Uzbek) for the monthly drill in `deploy-first-time-uz.md`; `docs/operations.md` backup section incl. the real-restore procedure.
+
+### Verification
+| Command | Result |
+|---|---|
+| MySQL 8.0 container: migrate → seed → `db-backup` → `db-backup-verify` → `db-restore-drill --target-database smy_restore` | ✓ 38 tables, 25 rows restored; scratch DB empty afterwards; live DB as target refused (exit 1) |
+| `smoke-test` against it | all ✓ except expected ⚠ (development env, no bot tokens) |
+| `shellcheck scripts/deploy.sh`, `bash -n` | clean |
+| new tests on SQLite / MariaDB 10.6 / MySQL 8.0 | 9 / 4 / 4 passed (drill skips if mysql client tools are absent) |
+
+### Next task
+**M5b** AI layer once the owner has the Anthropic API key; meanwhile optional TOTP for the owner.
