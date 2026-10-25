@@ -414,3 +414,29 @@ Not verified: real SMTP/IMAP delivery and deliverability (sandbox has no mail se
 
 ### Next task
 **M10** background-automation hardening (runner observability, failure alerts deduplicated, cron docs) → **M11** analytics, budgets, backups → **M3c-office** Virtual Office view; **M5b** AI layer once an AI key is configured.
+
+## Session 6 — First deployment tooling (cPanel, phone)
+
+### Completed
+- `docs/deploy-first-time-uz.md`: Uzbek step-by-step for the owner (MySQL DB/user, Git clone before Python App, Setup Python App values, `.env` wizard, deploy, owner account, both webhooks + test, two cron jobs, checklist, troubleshooting table).
+- `scripts/setup_env.py` (stdlib only): asks DB name/user/password, both bot tokens, Telegram ID; generates `APP_SECRET_KEY` + `TELEGRAM_WEBHOOK_SECRET`; production defaults (`OUTBOUND_SENDING_ENABLED=false`); hidden input; percent-encoded DB URL; single-quotes non-plain values; rejects `'` and `${` (the dotenv reader expands `${…}` even in quotes — found by test); atomic write, mode 600; `--set KEY`, `--database`.
+- `scripts/deploy.sh`: lock, venv/.env checks, `git merge --ff-only` (aborts on server-side edits, restores a cPanel-rewritten `passenger_wsgi.py`), pip, `check-config`, backup, `alembic upgrade head`, restart, health + ready with retries; Uzbek output to `~/smyagent_data/deploy.log`; body in `main()` so a pull can't corrupt the running script.
+- `python -m app.cli db-backup`: gzip'd mysqldump via a 600 option file (password never in argv), `--single-transaction --no-tablespaces`, streamed, rotation (14), skipped while no tables; sqlite copy for dev.
+- Root `passenger_wsgi.py` shim (startup file `passenger_wsgi.py`), loads the real entry by path.
+- Decision: one `.env` in the app folder is the configuration source (web, Terminal, cron).
+
+### Verification
+| Check | Result |
+|---|---|
+| Dry run in a fake cPanel home: fresh clone + venv (Python 3.13) + MySQL 8.0 user with password `P@ss#w0rd$x/1`, `setup_env.py` via stdin | `.env` mode 600, production config OK, DB reachable |
+| `deploy.sh` 1st run (empty DB) | backup skipped, 12 migrations, exit 0 |
+| `deploy.sh` 2nd run | real mysqldump (35 tables) gz mode 600, no migration, exit 0 |
+| pull path + cPanel-overwritten `passenger_wsgi.py` | restored, exit 0; edited tracked file → aborted, nothing changed |
+| health step against the real root `passenger_wsgi.py` (WSGI server) | `/ready` ready, deploy exit 0 |
+| `shellcheck scripts/deploy.sh`, `bash -n` | clean |
+| `pytest` (SQLite, Python 3.13 / 3.11) | 665 passed / 664 passed + 1 skipped (no shellcheck in that venv) |
+
+Bug found and fixed during the dry run: the EXIT trap referenced a `local` variable → `unbound variable` at the end under `set -u`.
+
+### Next task
+Owner runs `docs/deploy-first-time-uz.md`; then M10 → M11 → M3c-office → M5b.

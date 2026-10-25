@@ -51,8 +51,12 @@ Phone and iPad only, no computer. Every server step must be a short copy-paste f
 Terminal or a tap path in cPanel, explained in Uzbek (Latin). He never pastes tokens into
 chat or Git; ask him to type secrets directly into cPanel.
 
+## First deployment
+Ready: **`docs/deploy-first-time-uz.md`** (owner follows it on the phone),
+`scripts/setup_env.py` (writes `~/smyagent/.env`, mode 600 — settings are **not** typed in
+the Setup Python App screen, because those reach only the web app, not Terminal or cron) and
+`scripts/deploy.sh` (idempotent update: pull → pip → check-config → backup → migrate →
+restart → health). Update this file when the owner reports each step done.
+
 ## Suggested next session task
-Prepare a step-by-step **first deployment guide** in Uzbek (`docs/deploy-first-time-uz.md`)
-plus `scripts/deploy.sh` (idempotent: pip install in the app venv, DB backup if tables exist,
-`alembic upgrade head`, `touch tmp/restart.txt`, health check), following the "Not done yet"
-table above. Then continue M10 → M11 → M3c-office → M5b.
+After the owner confirms the first deploy: M10 → M11 → M3c-office → M5b.

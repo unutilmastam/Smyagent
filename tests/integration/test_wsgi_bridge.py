@@ -60,3 +60,18 @@ def test_misconfiguration_serves_503_without_secrets(monkeypatch: pytest.MonkeyP
     assert status.startswith("503")
     assert b"configuration_error" in body
     assert b"tooshort-secret-abc" not in body
+
+
+def test_root_startup_file_serves_the_app(monkeypatch: pytest.MonkeyPatch) -> None:
+    """cPanel startup file `passenger_wsgi.py` at the app root (nested path fallback)."""
+    root_file = PASSENGER_FILE.parents[2] / "passenger_wsgi.py"
+    monkeypatch.setenv("APP_ENV", "test")
+    from app.core.config import get_settings
+
+    get_settings.cache_clear()
+    spec = importlib.util.spec_from_file_location("root_passenger_under_test", root_file)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    status, _, body = _call(module.application, "/api/v1/health")
+    assert status.startswith("200") and json.loads(body)["status"] == "ok"

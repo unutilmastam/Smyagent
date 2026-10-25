@@ -33,6 +33,7 @@ dev = [
     "mypy>=1.13",
     "pip-audit>=2.7",
     "uvicorn>=0.32",
+    "shellcheck-py>=0.10",
 ]
 
 [tool.setuptools.packages.find]
