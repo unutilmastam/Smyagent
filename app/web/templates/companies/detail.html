@@ -39,6 +39,34 @@
   {% else %}<li class="muted">{{ t('company.none') }}</li>{% endfor %}
 </ul>
 
+<h2>{{ t('audit.title') }}</h2>
+{% set a = detail.latest_audit %}
+{% if a and a.score is not none %}
+<section class="card">
+  <p><strong>{{ t('audit.score', score=a.score) }}</strong>
+    <span class="muted"> · {{ a.final_url }} · {{ a.fetched_at.strftime('%Y-%m-%d %H:%M') }} UTC</span></p>
+  <ul class="checks-list">
+    {% for c in a.checks %}
+    <li class="check-{{ c.severity }}"><span aria-hidden="true">{% if c.severity == 'ok' %}✓{% elif c.severity == 'bad' %}✗{% elif c.severity == 'warn' %}!{% else %}·{% endif %}</span>
+      {{ t('check.' ~ c.key) }}: <span class="muted break">{{ c.evidence }}</span></li>
+    {% endfor %}
+  </ul>
+</section>
+{% elif a and a.error_category %}
+<p class="alert alert-warn">{{ t('audit.error', cat=a.error_category) }}</p>
+{% else %}<p class="muted">{{ t('audit.none') }}</p>{% endif %}
+
+{% if detail.findings %}
+<h2>{{ t('audit.findings') }}</h2>
+<ul class="plain-list findings">
+  {% for f in detail.findings %}
+  <li><span class="badge badge-{{ f.kind.value }}">{{ t('audit.' ~ f.kind.value) }}{% if f.confidence < 1 %} · {{ (f.confidence * 100)|round|int }}%{% endif %}</span>
+    {% set key = 'finding.' ~ f.key %}{% set text = t(key) %}{{ f.statement if text == key else text }}
+    <span class="muted"> · {{ f.retrieved_at.strftime('%Y-%m-%d') }}{% if f.source_url %} · <span class="break">{{ f.source_url }}</span>{% endif %}</span></li>
+  {% endfor %}
+</ul>
+{% endif %}
+
 <h2>{{ t('company.research') }}</h2>
 {% if detail.research_runs %}
 <ul class="plain-list">

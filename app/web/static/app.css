@@ -158,3 +158,11 @@ input[type="file"] { padding: 8px; }
 .import-rows li { margin: 6px 0; }
 .checks { border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin: 12px 0 0; }
 .checks legend { font-weight: 600; padding: 0 4px; }
+.checks-list { list-style: none; padding: 0; margin: 8px 0 0; }
+.checks-list li { margin: 4px 0; overflow-wrap: anywhere; }
+.check-ok span[aria-hidden] { color: var(--ok); font-weight: 800; }
+.check-bad span[aria-hidden] { color: var(--bad); font-weight: 800; }
+.check-warn span[aria-hidden] { color: var(--warn); font-weight: 800; }
+.badge-fact { background: #dbeafe; color: #1d4ed8; }
+.badge-inference { background: #f3e8ff; color: #7e22ce; }
+.findings li { margin: 8px 0; }

@@ -264,6 +264,120 @@ _T: dict[str, dict[str, str]] = {
     "cat.auto": {"uz": "Avto xizmatlar", "ru": "Авто сервис", "en": "Car services"},
     "cat.beauty": {"uz": "Go'zallik salonlari", "ru": "Салоны красоты", "en": "Beauty salons"},
     "cat.craft": {"uz": "Ustaxonalar", "ru": "Мастерские", "en": "Workshops"},
+    # research & audit (M5)
+    "audit.title": {"uz": "Sayt auditi", "ru": "Аудит сайта", "en": "Website audit"},
+    "audit.score": {
+        "uz": "Sayt holati: {score}/100",
+        "ru": "Состояние сайта: {score}/100",
+        "en": "Website health: {score}/100",
+    },
+    "audit.none": {
+        "uz": "Hali tekshirilmagan.",
+        "ru": "Ещё не проверен.",
+        "en": "Not audited yet.",
+    },
+    "audit.error": {
+        "uz": "Sayt ochilmadi ({cat}).",
+        "ru": "Сайт не открылся ({cat}).",
+        "en": "Site did not open ({cat}).",
+    },
+    "audit.findings": {"uz": "Topilmalar", "ru": "Находки", "en": "Findings"},
+    "audit.fact": {"uz": "fakt", "ru": "факт", "en": "fact"},
+    "audit.inference": {"uz": "taxmin", "ru": "предположение", "en": "inference"},
+    "audit.measured": {"uz": "o'lchangan", "ru": "измерено", "en": "measured"},
+    "check.https": {"uz": "HTTPS", "ru": "HTTPS", "en": "HTTPS"},
+    "check.status": {"uz": "Javob kodi", "ru": "Код ответа", "en": "HTTP status"},
+    "check.title": {"uz": "Sarlavha", "ru": "Заголовок", "en": "Title"},
+    "check.meta_description": {
+        "uz": "Tavsif (SEO)",
+        "ru": "Описание (SEO)",
+        "en": "Description (SEO)",
+    },
+    "check.mobile_viewport": {
+        "uz": "Telefonga moslashgan",
+        "ru": "Мобильная версия",
+        "en": "Mobile-friendly",
+    },
+    "check.response_time": {"uz": "Tezlik", "ru": "Скорость", "en": "Response time"},
+    "check.page_size": {"uz": "Sahifa hajmi", "ru": "Размер страницы", "en": "Page size"},
+    "check.visible_contacts": {
+        "uz": "Kontaktlar ko'rinadi",
+        "ru": "Контакты видны",
+        "en": "Visible contacts",
+    },
+    "check.telegram_link": {
+        "uz": "Telegram havolasi",
+        "ru": "Ссылка на Telegram",
+        "en": "Telegram link",
+    },
+    "check.contact_form": {"uz": "Formalar soni", "ru": "Количество форм", "en": "Forms"},
+    "check.image_alt_text": {
+        "uz": "Rasm tavsiflari",
+        "ru": "Alt у картинок",
+        "en": "Image alt text",
+    },
+    "check.lang_attribute": {
+        "uz": "Til belgisi",
+        "ru": "Атрибут языка",
+        "en": "Language attribute",
+    },
+    "check.copyright_year": {"uz": "Copyright yili", "ru": "Год копирайта", "en": "Copyright year"},
+    "check.site_builder": {"uz": "Platforma", "ru": "Платформа", "en": "Platform"},
+    "finding.no_website": {
+        "uz": "Ochiq ma'lumotlarda bu biznesning sayti topilmadi.",
+        "ru": "В открытых данных у бизнеса не найден сайт.",
+        "en": "No website was found for this business in its public listing.",
+    },
+    "finding.website_unreachable": {
+        "uz": "Ko'rsatilgan sayt ochilmadi.",
+        "ru": "Указанный сайт не открывается.",
+        "en": "The listed website could not be opened.",
+    },
+    "finding.no_https": {
+        "uz": "Sayt HTTPS'siz ishlaydi.",
+        "ru": "Сайт работает без HTTPS.",
+        "en": "The website is served without HTTPS.",
+    },
+    "finding.http_error": {
+        "uz": "Bosh sahifa xato kodi qaytardi.",
+        "ru": "Главная страница вернула ошибку.",
+        "en": "The homepage returned an error code.",
+    },
+    "finding.weak_seo_metadata": {
+        "uz": "Bosh sahifada sarlavha yoki tavsif yo'q.",
+        "ru": "На главной нет заголовка или описания.",
+        "en": "The homepage lacks a title or meta description.",
+    },
+    "finding.not_mobile_friendly": {
+        "uz": "Sayt telefonga moslashmagan (viewport yo'q).",
+        "ru": "Сайт не адаптирован под телефон (нет viewport).",
+        "en": "The homepage has no responsive (mobile) viewport tag.",
+    },
+    "finding.slow_response": {
+        "uz": "Bosh sahifa sekin ochildi (bir o'lchov).",
+        "ru": "Главная открылась медленно (одно измерение).",
+        "en": "The homepage loaded slowly (one measurement).",
+    },
+    "finding.no_visible_contacts": {
+        "uz": "Bosh sahifada telefon yoki email ko'rinmaydi.",
+        "ru": "На главной не видно телефона или email.",
+        "en": "No phone number or email is visible on the homepage.",
+    },
+    "finding.no_online_inquiry": {
+        "uz": "Saytdan onlayn murojaat qilib bo'lmaydi (forma yoki Telegram yo'q).",
+        "ru": "С сайта нельзя оставить заявку онлайн (нет формы или Telegram).",
+        "en": "Visitors cannot send a request online (no form or Telegram link).",
+    },
+    "finding.possibly_outdated": {
+        "uz": "Copyright yili eski — sayt yangilanmayotgan bo'lishi mumkin.",
+        "ru": "Старый год копирайта — сайт, возможно, не обновляется.",
+        "en": "Old copyright year — the site may not be maintained.",
+    },
+    "finding.audit_not_allowed": {
+        "uz": "Sayt robots.txt orqali avtomatik tekshirishni taqiqlagan.",
+        "ru": "Сайт запрещает автоматическую проверку в robots.txt.",
+        "en": "The site's robots.txt disallows automated reading.",
+    },
     # control center
     "nav.control": {"uz": "Boshqaruv", "ru": "Управление", "en": "Control"},
     "control.title": {

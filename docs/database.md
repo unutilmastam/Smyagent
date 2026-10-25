@@ -32,6 +32,8 @@ on MariaDB 10.6 + 10.11 in CI.
 | `job_locks` | Named locks with expiry (cron overlap prevention) | PK `name` |
 | `contacts` | Public business phones (E.164), emails (role flag), Telegram | unique (company, kind, value); index (kind, value) for cross-company dedup |
 | `discovery_targets` | Cities × categories the Discovery agent searches; seeded with 6 UZ cities (migration 0006) | unique (country, city) |
+| `website_audits` | Homepage audit: status, timing, size, title, score, checks (JSON), text excerpt + hash, error category — never raw HTML | index (company, fetched_at) |
+| `research_findings` | Facts / inferences with confidence, source URL and retrieval time | index (company, retrieved_at), key |
 | `agent_controls` | Kill switch: `global` + 7 modules (ADR-0006) | PK `module`; seeded ACTIVE by migration 0001 |
 
 Duplicate detection (CLAUDE.md §8.1): by normalized domain (unique constraint) and

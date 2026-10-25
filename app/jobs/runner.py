@@ -29,6 +29,7 @@ from app.domain.jobs import JobStatus
 from app.infrastructure.database import Database
 from app.infrastructure.database.models import AgentRun, AgentRunStatus
 from app.infrastructure.database.types import utcnow
+from app.infrastructure.http_fetcher.fetcher import SafeFetcher
 from app.infrastructure.repositories.controls import AgentControlRepository
 from app.infrastructure.repositories.jobs import JobLockRepository, JobRepository
 from app.infrastructure.search_providers.base import ProviderError, SearchProvider
@@ -36,6 +37,7 @@ from app.infrastructure.search_providers.factory import build_search_provider
 from app.jobs.context import RetryableTaskError, TaskContext
 from app.jobs.tasks import HANDLERS, Handler
 from app.jobs.tasks.discovery import enqueue_due_targets
+from app.jobs.tasks.research import enqueue_new_companies
 
 logger = logging.getLogger("app.runner")
 
@@ -68,6 +70,7 @@ class JobRunner:
         search_provider_factory: Callable[
             [Settings], SearchProvider | None
         ] = build_search_provider,
+        fetcher_factory: Callable[[], SafeFetcher] = SafeFetcher,
         worker_id: str | None = None,
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
@@ -75,6 +78,7 @@ class JobRunner:
         self.settings = settings
         self.handlers = handlers if handlers is not None else HANDLERS
         self.search_provider_factory = search_provider_factory
+        self.fetcher_factory = fetcher_factory
         self.worker_id = (worker_id or f"{socket.gethostname()}-{uuid.uuid4().hex[:8]}")[:64]
         self.clock = clock
 
@@ -119,6 +123,10 @@ class JobRunner:
             gate = ControlGate(session, outbound_sending_enabled=False)
             if gate.state(AgentModule.DISCOVERY) is ControlState.ACTIVE:
                 summary.scheduled = enqueue_due_targets(session)
+        with self.database.transaction() as session:
+            gate = ControlGate(session, outbound_sending_enabled=False)
+            if gate.state(AgentModule.RESEARCH_AUDIT) is ControlState.ACTIVE:
+                summary.scheduled += enqueue_new_companies(session)
 
     def _globally_stopped(self) -> bool:
         with self.database.transaction() as session:
@@ -149,6 +157,7 @@ class JobRunner:
             job_id=job_id,
             run_id=run_id,
             search_provider_factory=self.search_provider_factory,
+            fetcher_factory=self.fetcher_factory,
         )
         outcome: str
         error: str | None = None
