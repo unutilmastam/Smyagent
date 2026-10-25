@@ -130,3 +130,36 @@ def test_cli_set_one_value(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> N
     assert env.main(["--set", "smtp_username"]) == 0
     assert "SMTP_USERNAME=agent@itcode.uz" in (tmp_path / ".env").read_text()
     assert env.main(["--set", "NOT_A_SETTING"]) == 1
+
+
+def test_invalid_or_empty_answer_is_asked_again(capsys: pytest.CaptureFixture[str]) -> None:
+    # A bad DB name and a truncated token are asked again instead of exiting: on a phone the
+    # next paste would otherwise land in bash (and its history).
+    values = env.first_time_values(
+        {"TELEGRAM_ADMIN_IDS": "42424242"},
+        _answers(
+            "bad name!", "cpu_smyagent", "cpu_smy", HARD_PASSWORD, "123:short", TOKEN_A, TOKEN_B
+        ),
+    )
+    assert values["TELEGRAM_ADMIN_BOT_TOKEN"] == TOKEN_A
+    assert values["DATABASE_URL"].endswith("/cpu_smyagent?charset=utf8mb4")
+    assert "avval Paste, keyin Enter" in capsys.readouterr().out
+
+
+def test_gives_up_after_three_bad_answers() -> None:
+    with pytest.raises(env.SetupError):
+        env.first_time_values({}, _answers("x y", "a b", "c d"))
+
+
+def test_failed_run_discards_pasted_input(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(env, "EXAMPLE", ROOT / ".env.example")
+    monkeypatch.setattr(env, "TARGET", tmp_path / ".env")
+
+    def refuse(_q: str, _d: str, _h: bool) -> str:
+        raise EOFError
+
+    flushed: list[bool] = []
+    monkeypatch.setattr(env, "_ask_terminal", refuse)
+    monkeypatch.setattr(env, "_discard_pending_input", lambda: flushed.append(True))
+    assert env.main([]) == 1
+    assert flushed == [True] and not (tmp_path / ".env").exists()

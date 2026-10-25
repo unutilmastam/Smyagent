@@ -4,34 +4,41 @@ What the **owner** has already done outside the code, from his phone, and what i
 open. Every Claude Code session reads this before planning deployment or integration
 work (CLAUDE.md §22). Secrets are **never** written here — only whether they exist.
 
-Last updated: 2026-10-25 18:20 (Asia/Tashkent 20:20) — written from the planning chat session.
+Last updated: 2026-10-25 (Asia/Tashkent evening) — after the owner reported the first deploy.
+
+## Status: **live** at https://agent.itcode.uz (first deploy done 2026-10-25)
 
 ## Done
 
 | Item | Details | Date |
 |---|---|---|
-| Hosting check | `scripts/check_environment.py` run in cPanel Terminal on hosting1.hostmaster.uz, 0 internal errors. Results and decisions are in `docs/deployment-cpanel.md` §1 (Python 3.12 chosen; MySQL 8.0; all external APIs reachable; no Node/Docker/Redis; system python 3.9 has no `ensurepip` → use only the Setup Python App virtualenv). | 2026-10-25 |
-| Subdomain | **`agent.itcode.uz`** created in cPanel → Domains, own document root (`~/agent.itcode.uz`, not shared with `public_html`). | 2026-10-25 |
-| SSL | Let's Encrypt certificate for `agent.itcode.uz` requested in cPanel → SSL/TLS (status was "Adding certificate…" at 18:16). Confirm the green lock before setting the Telegram webhook (webhooks require valid HTTPS). | 2026-10-25 (in progress) |
-| Owner bot | **@direktorsmybot** — display name *DIREKTOR-SMY*. Created in @BotFather; commands list set (`status, stop_all, resume_all, agent, proposals, approve, reject, help`); joining groups disabled. Token kept by the owner. | 2026-10-25 |
-| Client bot | **@mustafosmybot** — display name *Mustafo SMY agent*; about text "ITcoDe.Uz AI yordamchisi • itcode.uz • @ITcoDe_Uz"; description with the AI disclosure. Token kept by the owner. | 2026-10-25 |
-| Owner Telegram ID | Numeric ID obtained via @userinfobot and kept by the owner (goes into `TELEGRAM_ADMIN_IDS`). | 2026-10-25 |
-| GitHub access | Claude GitHub App installed for `unutilmastam/Smyagent`; auto-merge on green CI authorized (CLAUDE.md §23). | 2026-10-25 |
+| Hosting check | `scripts/check_environment.py` on hosting1.hostmaster.uz; results in `docs/deployment-cpanel.md` §1 (Python 3.12, MySQL 8.0, external APIs reachable, no Node/Docker/Redis). | 2026-10-25 |
+| Subdomain + SSL | **`agent.itcode.uz`**, own document root; Let's Encrypt certificate active (webhooks accepted). | 2026-10-25 |
+| MySQL | Database **`itcode_smyagent`**, user **`itcode_smy`** with ALL PRIVILEGES. Password only in `~/smyagent/.env`. | 2026-10-25 |
+| Python app | Setup Python App: **Python 3.12.12**, root `~/smyagent`, URL `agent.itcode.uz`, startup `passenger_wsgi.py`, entry `application`, no env vars in that screen. (First attempt was attached to `itcode.uz/` by the dropdown default; destroyed and recreated — guide §2 now warns.) | 2026-10-25 |
+| Code | `git` checkout of `main` in `~/smyagent` (guide §3). Updates: `bash ~/smyagent/scripts/deploy.sh` ("SMY yangilash"). | 2026-10-25 |
+| `.env` | Written by `scripts/setup_env.py` (mode 600): DB URL, both bot tokens, admin ID, generated `APP_SECRET_KEY` and `TELEGRAM_WEBHOOK_SECRET`, `OUTBOUND_SENDING_ENABLED=false`, `SEARCH_PROVIDER=osm`. | 2026-10-25 |
+| Deploy | `deploy.sh`: 13 migrations applied, health ✅. First run failed at line 31 (`/dev/fd` missing on the host) — fixed in PR #26. | 2026-10-25 |
+| Owner account | `python -m app.cli create-owner` done; dashboard login works. | 2026-10-25 |
+| Owner bot | **@direktorsmybot** (*DIREKTOR-SMY*); webhook set, `last_error` empty. Token was shown on screen once → **revoked** in @BotFather, new token in `.env`, webhook re-set. | 2026-10-25 |
+| Client bot | **@mustafosmybot** (*Mustafo SMY agent*), AI-disclosure description; webhook set, `last_error` empty. Token also revoked and replaced as above. | 2026-10-25 |
+| Cron | `*/5` job runner with `--log-file ~/smyagent_data/runner.log`; `17 3 * * *` `db-backup`. | 2026-10-25 |
+| Owner Telegram ID | In `TELEGRAM_ADMIN_IDS`. | 2026-10-25 |
+| GitHub access | Claude GitHub App on `unutilmastam/Smyagent`; auto-merge on green CI authorized (CLAUDE.md §23). | 2026-10-25 |
 
-## Not done yet (needed for go-live)
+## Not done yet
 
 | Item | Where | Notes |
 |---|---|---|
-| MySQL database + user | cPanel → MySQL Databases (or Database Wizard) | utf8mb4. Gives `DATABASE_URL=mysql+pymysql://<user>:<pass>@localhost/<db>?charset=utf8mb4`. Also read the **server version** shown there. |
-| Python app | cPanel → Setup Python App | Python **3.12**, app root `smyagent`, URL `agent.itcode.uz`, startup file **`passenger_wsgi.py`** (root shim), entry point `application`, no environment variables in that screen. Guide §2. |
-| Code on the server | Terminal, into the app root (`git init` + `fetch` + `checkout -f`) | After the Python App exists; guide §3. Repo is public. |
-| Environment variables | Terminal: `python scripts/setup_env.py` → `~/smyagent/.env` (mode 600) | Not the Setup Python App screen (it reaches only the web app, not Terminal/cron). Owner types secrets himself; `APP_SECRET_KEY` and `TELEGRAM_WEBHOOK_SECRET` are generated. Guide §4. |
-| Migrations + owner account | Terminal in the app virtualenv | `alembic upgrade head`, `python -m app.cli create-owner --username <name>`, `python -m app.cli check-config`. |
-| Webhooks | Terminal | `python -m app.cli telegram-set-webhook`, `telegram-set-client-webhook`, check with `telegram-webhook-info`. |
-| Cron jobs | cPanel → Cron Jobs | Job runner per `docs/deployment-cpanel.md` §7; read the minimum allowed interval. |
-| Email for outreach | cPanel → Email Accounts + Email Deliverability | `agent@itcode.uz`, SPF/DKIM valid, DMARC TXT (§6c). Keep `OUTBOUND_SENDING_ENABLED=false` until the owner decides. |
-| Anthropic API key | platform.claude.com | Needed for M5b (AI summaries). Owner was told: international Visa/Mastercard, set a spend limit; budget target ≤ $10/month (ADR-0007). |
+| Email for outreach | cPanel → Email Accounts + Email Deliverability | `agent@itcode.uz`, SPF/DKIM valid, DMARC TXT (`deployment-cpanel.md` §6c), then `setup_env.py --set SMTP_PASSWORD` etc. Keep `OUTBOUND_SENDING_ENABLED=false` until the owner decides. |
+| Anthropic API key | platform.claude.com | For M5b (AI layer). International card, spend limit; budget ≤ $10/month (ADR-0007). Owner types it with `setup_env.py --set AI_API_KEY`. |
 | Resource limits | cPanel → Resource Usage | CPU / PMEM / EP / NPROC not yet reported. |
+| Bot command list | @BotFather → /setcommands for @direktorsmybot | Add `jobs` and `retry` (M10) to the existing list. |
+
+## How the owner connects
+SSH with **Termius** on the phone (pasting into cPanel Terminal is awkward). Long pasted
+lines can lose their beginning in Termius: paste into the bottom input field, check, then
+Enter (guide intro). Secrets are typed only at hidden prompts — paste first, then Enter.
 
 ## Things on the account that must not be touched
 - `smy.itcode.uz` with app **`smarthome-api`** mounted at `/api` (Python 3.10) — owner's Smart Home project.
@@ -51,12 +58,14 @@ Phone and iPad only, no computer. Every server step must be a short copy-paste f
 Terminal or a tap path in cPanel, explained in Uzbek (Latin). He never pastes tokens into
 chat or Git; ask him to type secrets directly into cPanel.
 
-## First deployment
-Ready: **`docs/deploy-first-time-uz.md`** (owner follows it on the phone),
+## First deployment (done)
+Guide: **`docs/deploy-first-time-uz.md`** (owner follows it on the phone),
 `scripts/setup_env.py` (writes `~/smyagent/.env`, mode 600 — settings are **not** typed in
 the Setup Python App screen, because those reach only the web app, not Terminal or cron) and
 `scripts/deploy.sh` (idempotent update: pull → pip → check-config → backup → migrate →
 restart → health). Update this file when the owner reports each step done.
 
 ## Suggested next session task
-After the owner confirms the first deploy: M10 → M11 → M3c-office → M5b.
+Owner order (2026-10-25): **M3c-office** Virtual Office (`/control/office`, one tap from the
+home screen) → **M11** → **M5b** AI layer once the key exists. Each stage ships with only
+"SMY yangilash" (`bash ~/smyagent/scripts/deploy.sh`) needed on the server.

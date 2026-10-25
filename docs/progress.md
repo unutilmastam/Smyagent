@@ -467,3 +467,21 @@ Not verified: SIGALRM behaviour under the real cPanel cron (expected to work: pl
 
 ### Next task
 **M11** analytics (funnel), budgets, provider usage, backup restore drill, deployment smoke test → **M3c-office** Virtual Office → **M5b** AI layer once the key is configured.
+
+## 2026-10-25 — First deploy done (owner) + guide fixes
+
+### Owner report
+agent.itcode.uz is live: MySQL `itcode_smyagent`/`itcode_smy`, Python 3.12.12 app at `~/smyagent`, `.env` via `setup_env.py`, `deploy.sh` (13 migrations, health ✅; the `/dev/fd` failure on the first run is fixed in #26), owner account, both webhooks set (no `last_error`), cron runner (`--log-file`) and 03:17 backup. Bot tokens were shown on screen once and were revoked and replaced. Email and AI key are not set up yet. Details: `docs/owner-setup.md`.
+
+### Fixed from the owner's findings
+- `setup_env.py`: an empty **or invalid** answer is asked again (3 times) instead of exiting; on exit the pending terminal input is discarded (`tcflush`) so a token pasted next cannot run as a bash command or land in the history. `--set` uses the same loop. Tests added.
+- `deploy-first-time-uz.md`: big warning in §2 that the Application URL dropdown defaults to `itcode.uz` — choose `agent.itcode.uz`; "paste first, then Enter" and the token-revoke recipe in §4; Termius tip (paste into the bottom input field, check the start of long lines); "SMY yangilash" = `bash ~/smyagent/scripts/deploy.sh`.
+
+### Verification
+| Command | Result |
+|---|---|
+| `pytest tests/unit/test_setup_env.py` | 15 passed |
+| `ruff`, `mypy scripts/setup_env.py` | clean |
+
+### Next task
+**M3c-office** Virtual Office → **M11** → **M5b**.
