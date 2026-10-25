@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from app.api.deps import get_database
+from app.application.automation import cron_view
 from app.application.control_snapshot import ControlSnapshotService, Snapshot
 from app.application.controls import AgentControlService, describe_change
 from app.core.config import Settings, get_settings
@@ -68,6 +69,7 @@ def control_page(
         return render(request, "control/_live.html", context)
     with database.transaction() as session:
         context.update(layout_context(session, user))
+        context["cron"] = cron_view(session)
     context["changed"] = request.query_params.get("changed") == "1"
     return render(request, "control/index.html", context)
 

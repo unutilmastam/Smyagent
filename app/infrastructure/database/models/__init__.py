@@ -4,6 +4,7 @@ from app.infrastructure.database.models.agent_settings import AgentSetting, Agen
 from app.infrastructure.database.models.audit import AuditLog, WorkflowEvent
 from app.infrastructure.database.models.audits import ResearchFinding, WebsiteAudit
 from app.infrastructure.database.models.auth import LoginAttempt, User, UserSession
+from app.infrastructure.database.models.automation import OwnerAlert, RunnerRun
 from app.infrastructure.database.models.companies import Company, CompanyDomain, CompanySource
 from app.infrastructure.database.models.contacts import Contact
 from app.infrastructure.database.models.controls import AgentControl
@@ -57,10 +58,12 @@ __all__ = [
     "Opportunity",
     "OrderBrief",
     "OutreachEvent",
+    "OwnerAlert",
     "Proposal",
     "ProposalVersion",
     "ResearchFinding",
     "ResearchRun",
+    "RunnerRun",
     "ScoreComponent",
     "ScoringSettings",
     "SuppressionRecord",

@@ -13,9 +13,16 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.domain.agents import GLOBAL_CONTROL, AgentModule, ControlState
+from app.domain.automation import CronHealth, cron_health
 from app.domain.control_view import NodeStatus, node_status
 from app.domain.jobs import JobStatus
-from app.infrastructure.database.models import AgentRun, AgentRunStatus, Job, WorkflowEvent
+from app.infrastructure.database.models import (
+    AgentRun,
+    AgentRunStatus,
+    Job,
+    RunnerRun,
+    WorkflowEvent,
+)
 from app.infrastructure.database.types import utcnow
 from app.infrastructure.repositories.controls import AgentControlRepository
 
@@ -60,6 +67,9 @@ class Snapshot:
     feed: list[FeedItem] = field(default_factory=list)
     ai_cost_today_usd: Decimal = Decimal("0")
     ai_budget_today_usd: Decimal = Decimal("0")
+    # Cron liveness (M10): "ok" | "late" | "never", minutes since the last runner start.
+    cron_health: str = CronHealth.NEVER.value
+    cron_minutes_ago: int | None = None
 
     def module(self, key: str) -> ModuleView | None:
         return next((m for m in self.modules if m.key == key), None)
@@ -151,6 +161,8 @@ class ControlSnapshotService:
                 )
             )
 
+        last_runner = self.session.scalar(select(func.max(RunnerRun.started_at)))
+        cron = cron_health(last_runner, now)
         day_start = start_of_local_day(now, timezone)
         cost = self.session.scalar(
             select(func.coalesce(func.sum(AgentRun.cost_usd), 0)).where(
@@ -164,6 +176,8 @@ class ControlSnapshotService:
             feed=self._feed(),
             ai_cost_today_usd=Decimal(str(cost or 0)).quantize(Decimal("0.0001")),
             ai_budget_today_usd=ai_budget_today,
+            cron_health=cron.health.value,
+            cron_minutes_ago=cron.minutes_ago,
         )
 
     def _feed(self) -> list[FeedItem]:

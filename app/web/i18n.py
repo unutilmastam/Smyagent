@@ -1317,6 +1317,181 @@ _T: dict[str, dict[str, str]] = {
         "ru": "Контакт для клиента, если он просит человека",
         "en": "Contact shown when a client asks for a human",
     },
+    "jobs.title": {
+        "uz": "Vazifalar",
+        "ru": "Задачи",
+        "en": "Jobs",
+    },
+    "jobs.status": {
+        "uz": "Holat",
+        "ru": "Статус",
+        "en": "Status",
+    },
+    "jobs.agent": {
+        "uz": "Agent",
+        "ru": "Агент",
+        "en": "Agent",
+    },
+    "jobs.filter": {
+        "uz": "Ko'rsatish",
+        "ru": "Показать",
+        "en": "Show",
+    },
+    "jobs.attempts": {
+        "uz": "Urinish",
+        "ru": "Попытки",
+        "en": "Attempts",
+    },
+    "jobs.empty": {
+        "uz": "Bu yerda hozircha vazifa yo'q.",
+        "ru": "Задач пока нет.",
+        "en": "No jobs here yet.",
+    },
+    "jobs.pages": {
+        "uz": "Sahifalar",
+        "ru": "Страницы",
+        "en": "Pages",
+    },
+    "jobs.prev": {
+        "uz": "Oldingi",
+        "ru": "Назад",
+        "en": "Previous",
+    },
+    "jobs.next": {
+        "uz": "Keyingi",
+        "ru": "Далее",
+        "en": "Next",
+    },
+    "jobs.created": {
+        "uz": "Yaratilgan",
+        "ru": "Создана",
+        "en": "Created",
+    },
+    "jobs.run_after": {
+        "uz": "Bajarish vaqti",
+        "ru": "Запуск после",
+        "en": "Run after",
+    },
+    "jobs.finished": {
+        "uz": "Tugagan",
+        "ru": "Завершена",
+        "en": "Finished",
+    },
+    "jobs.worker": {
+        "uz": "Ishchi",
+        "ru": "Исполнитель",
+        "en": "Worker",
+    },
+    "jobs.error": {
+        "uz": "Xato",
+        "ru": "Ошибка",
+        "en": "Error",
+    },
+    "jobs.input": {
+        "uz": "Kirish ma'lumoti",
+        "ru": "Входные данные",
+        "en": "Input",
+    },
+    "jobs.runs": {
+        "uz": "Ishga tushirishlar",
+        "ru": "Запуски",
+        "en": "Runs",
+    },
+    "jobs.no_runs": {
+        "uz": "Hali ishga tushmagan.",
+        "ru": "Ещё не запускалась.",
+        "en": "Not run yet.",
+    },
+    "jobs.retry": {
+        "uz": "Qayta urinish",
+        "ru": "Повторить",
+        "en": "Retry",
+    },
+    "jobs.cancel": {
+        "uz": "Bekor qilish",
+        "ru": "Отменить",
+        "en": "Cancel",
+    },
+    "jobs.cancel.confirm": {
+        "uz": "Vazifani bekor qilasizmi?",
+        "ru": "Отменить задачу?",
+        "en": "Cancel this job?",
+    },
+    "jobs.done.retry": {
+        "uz": "Vazifa navbatga qaytarildi — keyingi cron'da bajariladi.",
+        "ru": "Задача снова в очереди — выполнится при следующем cron.",
+        "en": "Job re-queued — it runs at the next cron.",
+    },
+    "jobs.done.cancel": {
+        "uz": "Vazifa bekor qilindi.",
+        "ru": "Задача отменена.",
+        "en": "Job cancelled.",
+    },
+    "jobs.open": {
+        "uz": "Vazifalar va xatolar",
+        "ru": "Задачи и ошибки",
+        "en": "Jobs and errors",
+    },
+    "jstatus.QUEUED": {
+        "uz": "navbatda",
+        "ru": "в очереди",
+        "en": "queued",
+    },
+    "jstatus.RUNNING": {
+        "uz": "bajarilmoqda",
+        "ru": "выполняется",
+        "en": "running",
+    },
+    "jstatus.SUCCEEDED": {
+        "uz": "bajarildi",
+        "ru": "выполнена",
+        "en": "succeeded",
+    },
+    "jstatus.FAILED": {
+        "uz": "xato",
+        "ru": "ошибка",
+        "en": "failed",
+    },
+    "jstatus.CANCELLED": {
+        "uz": "bekor qilingan",
+        "ru": "отменена",
+        "en": "cancelled",
+    },
+    "jstatus.BUDGET_DEFERRED": {
+        "uz": "byudjet kutilmoqda",
+        "ru": "ждёт бюджета",
+        "en": "budget deferred",
+    },
+    "cron.never": {
+        "uz": "Fon ishlari (cron) hali bir marta ham ishga tushmagan. cPanel → Cron Jobs'da "
+        "runner qatorini qo'shing (docs/deploy-first-time-uz.md, 8-qadam).",
+        "ru": "Фоновые задачи (cron) ещё ни разу не запускались. Добавьте строку runner в "
+        "cPanel → Cron Jobs.",
+        "en": "Background jobs (cron) have never run. Add the runner line in cPanel → Cron Jobs.",
+    },
+    "cron.late": {
+        "uz": "Fon ishlari {m} daqiqadan beri ishlamayapti! cPanel → Cron Jobs va "
+        "~/smyagent_data/runner.log ni tekshiring.",
+        "ru": "Фоновые задачи не запускались {m} мин! Проверьте cPanel → Cron Jobs и "
+        "~/smyagent_data/runner.log.",
+        "en": "Background jobs have not run for {m} min! Check cPanel → Cron Jobs and "
+        "~/smyagent_data/runner.log.",
+    },
+    "cron.ok": {
+        "uz": "Cron ishlayapti: oxirgi marta {m} daqiqa oldin",
+        "ru": "Cron работает: последний запуск {m} мин назад",
+        "en": "Cron is running: last run {m} min ago",
+    },
+    "cron.last": {
+        "uz": "✓ {ok} · ✗ {bad}",
+        "ru": "✓ {ok} · ✗ {bad}",
+        "en": "✓ {ok} · ✗ {bad}",
+    },
+    "cron.crashed": {
+        "uz": "runner xato bilan to'xtagan",
+        "ru": "runner завершился с ошибкой",
+        "en": "the runner crashed",
+    },
 }
 
 

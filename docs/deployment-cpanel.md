@@ -160,7 +160,7 @@ The agents work only when the job runner is invoked regularly. cPanel → **Cron
 shown at the top of the Python App page):
 
 ```bash
-cd $HOME/smyagent && $HOME/virtualenv/smyagent/3.12/bin/python -m app.jobs.runner --max-jobs 5 --max-seconds 240 >> $HOME/smyagent_data/runner.log 2>&1
+cd $HOME/smyagent && $HOME/virtualenv/smyagent/3.12/bin/python -m app.jobs.runner --max-jobs 5 --max-seconds 240 --log-file $HOME/smyagent_data/runner.log >> $HOME/smyagent_data/runner-errors.log 2>&1
 ```
 
 Daily backup (03:17): `cd $HOME/smyagent && $HOME/virtualenv/smyagent/3.12/bin/python -m app.cli db-backup >> $HOME/smyagent_data/backup.log 2>&1`
@@ -168,8 +168,13 @@ Daily backup (03:17): `cd $HOME/smyagent && $HOME/virtualenv/smyagent/3.12/bin/p
 `~/smyagent_data/backups/`, newest 14 kept, mode 600. Restore:
 `gunzip -c ~/smyagent_data/backups/db-<time>.sql.gz | mysql -u <user> -p <db>`.
 
-Each run takes a DB lock (no overlap), requeues jobs of crashed runs, schedules due
-discovery searches (6 seeded cities × 9 categories, every 7 days), executes at most 5 jobs
-and exits. ⛔ STOP in the dashboard or `/stop_all` in the bot makes it exit at the next check.
-Discovery needs outbound HTTPS to `overpass-api.de` (see `check_environment.py` output).
-Keep `~/smyagent_data/runner.log` small (truncate monthly: `: > ~/smyagent_data/runner.log`).
+Each run records itself in `runner_runs` (cron liveness), takes a DB lock (no overlap),
+fails or requeues jobs of crashed runs, schedules due work (discovery: 6 seeded cities × 9
+categories, every 7 days), executes at most 5 jobs (each cut after 120 s,
+`--max-job-seconds`), runs the daily retention cleanup and exits. ⛔ STOP in the dashboard
+or `/stop_all` in the bot makes it exit at the next check. Discovery needs outbound HTTPS to
+`overpass-api.de` (see `check_environment.py` output).
+
+`--log-file` writes JSON logs rotated at 1 MB × 3; `runner-errors.log` only receives output
+from before logging starts (e.g. a configuration error), so neither file grows unbounded.
+Monitoring, alerts and retry: see `docs/operations.md`.

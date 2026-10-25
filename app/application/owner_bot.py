@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.application.automation import CB_JOB_RETRY, JobAdminService, cron_view
 from app.application.controls import AgentControlService, describe_change
 from app.application.conversations import (
     CB_DISCARD,
@@ -25,6 +26,7 @@ from app.application.proposals import (
 )
 from app.domain.actors import Actor
 from app.domain.agents import GLOBAL_CONTROL, AgentModule, ControlState
+from app.domain.automation import CronHealth, error_category
 from app.domain.errors import DomainError
 from app.domain.jobs import JobStatus
 from app.domain.telegram import is_owner_message, parse_command
@@ -42,7 +44,14 @@ _ORDER_DECISIONS = {
     CB_ORDER_QUESTION: "question",
     CB_ORDER_REJECT: "rejected",
 }
-_CALLBACK_ACTIONS = {CALLBACK_APPROVE, CALLBACK_REJECT, CB_SEND, CB_DISCARD, *_ORDER_DECISIONS}
+_CALLBACK_ACTIONS = {
+    CALLBACK_APPROVE,
+    CALLBACK_REJECT,
+    CB_SEND,
+    CB_DISCARD,
+    CB_JOB_RETRY,
+    *_ORDER_DECISIONS,
+}
 
 HELP_TEXT = (
     "SMY Agent — boshqaruv boti\n\n"
@@ -53,6 +62,8 @@ HELP_TEXT = (
     "/proposals — tasdiqlashni kutayotgan takliflar\n"
     "/approve <id> — taklifni tasdiqlash\n"
     "/reject <id> [sabab] — taklifni rad etish\n"
+    "/jobs — fon ishlari: cron, navbat, oxirgi xatolar\n"
+    "/retry <id> — xato bergan vazifani qayta urinish\n"
     "/help — buyruqlar ro'yxati\n\n"
     "Agent nomlari: " + ", ".join(m.value for m in AgentModule)
 )
@@ -61,6 +72,12 @@ AGENT_ACTIONS = {
     "on": ControlState.ACTIVE,
     "pause": ControlState.PAUSED,
     "off": ControlState.STOPPED,
+}
+
+_CRON_ICONS = {
+    CronHealth.OK: "✅ ishlayapti",
+    CronHealth.LATE: "🛑 to'xtab qolgan",
+    CronHealth.NEVER: "⏰ sozlanmagan",
 }
 
 STATE_ICONS = {ControlState.ACTIVE: "🟢", ControlState.PAUSED: "🟡", ControlState.STOPPED: "🔴"}
@@ -137,6 +154,14 @@ class OwnerBotService:
                 return BotReply(chat_id, "Taklif topilmadi. /proposals ro'yxatidagi ID ni yozing.")
             approve = command.name == "approve"
             return BotReply(chat_id, self._decide(proposal.id, approve, actor, reason))
+        if command.name == "jobs":
+            return BotReply(chat_id, self._jobs_text())
+        if command.name == "retry":
+            try:
+                job = JobAdminService(self.session).find_by_prefix(command.args)
+            except DomainError:
+                return BotReply(chat_id, "Vazifa topilmadi. /jobs ro'yxatidagi ID ni yozing.")
+            return BotReply(chat_id, self._retry(job.id, actor))
         return BotReply(chat_id, f"Noma'lum buyruq: /{command.name}\n\n{HELP_TEXT}")
 
     def _callback(self, query: TgCallbackQuery) -> BotReply | None:
@@ -165,6 +190,8 @@ class OwnerBotService:
             return BotReply(chat.id, "Noma'lum tugma.", callback_query_id=query.id)
         if action in (CALLBACK_APPROVE, CALLBACK_REJECT):
             text = self._decide(target_id, action == CALLBACK_APPROVE, actor, "Telegram")
+        elif action == CB_JOB_RETRY:
+            text = self._retry(target_id, actor)
         else:
             text = self._conversation_action(action, target_id, actor)
         return BotReply(chat.id, text, callback_query_id=query.id)
@@ -207,6 +234,42 @@ class OwnerBotService:
             return f"✅ Taklif {short} tasdiqlandi. Yuborish M9 (outreach) ishga tushganda bo'ladi."
         return f"❌ Taklif {short} rad etildi; kompaniyaga murojaat qilinmaydi."
 
+    def _retry(self, job_id: uuid.UUID, actor: Actor) -> str:
+        try:
+            with self.session.begin_nested():
+                job = JobAdminService(self.session).retry(job_id, actor)
+        except DomainError as exc:
+            return f"⚠️ Bajarilmadi: {exc}"
+        return f"🔁 Vazifa {str(job.id)[:8]} ({job.job_type}) navbatga qaytdi — keyingi cron'da."
+
+    def _jobs_text(self) -> str:
+        service = JobAdminService(self.session)
+        cron = cron_view(self.session)
+        if cron.health is CronHealth.NEVER:
+            cron_line = "⏰ Cron hali ishga tushmagan — cPanel → Cron Jobs ni sozlang."
+        elif cron.health is CronHealth.LATE:
+            cron_line = f"🛑 Cron {cron.minutes_ago} daqiqadan beri ishlamayapti!"
+        else:
+            cron_line = f"✅ Cron ishlayapti (oxirgi: {cron.minutes_ago} daqiqa oldin)"
+        counts = service.counts()
+        lines = [
+            "🧾 Fon ishlari",
+            cron_line,
+            "",
+            f"Navbatda: {counts.get(JobStatus.QUEUED, 0)}"
+            f" · Ishlayapti: {counts.get(JobStatus.RUNNING, 0)}"
+            f" · Xato: {counts.get(JobStatus.FAILED, 0)}",
+        ]
+        failures = service.recent_failures()
+        if failures:
+            lines += ["", "Oxirgi xatolar:"]
+            for job in failures:
+                lines.append(
+                    f"{str(job.id)[:8]} · {job.job_type} · {error_category(job.last_error)}"
+                )
+            lines.append("\n/retry <id> — qayta urinish")
+        return "\n".join(lines)
+
     def _pending_text(self) -> str:
         rows = ProposalService(self.session).pending()
         if not rows:
@@ -233,9 +296,12 @@ class OwnerBotService:
         )
         states = AgentControlRepository(self.session).states()
         global_state = states.get(GLOBAL_CONTROL, ControlState.STOPPED)
+        cron = cron_view(self.session)
         lines = [
             "📊 SMY Agent holati",
             f"Umumiy: {STATE_ICONS[global_state]} {global_state.value}",
+            f"Cron: {_CRON_ICONS[cron.health]}"
+            + (f" ({cron.minutes_ago} daq. oldin)" if cron.minutes_ago is not None else ""),
             "",
             f"Kompaniyalar: {companies}",
             f"Lidlar: {leads}",

@@ -177,7 +177,7 @@ Ro'yxatdagi **mavjud cron'larga tegmang** (boshqa saytlaringizniki) — faqat ik
 **1) Agentlar** — *Common Settings*: **Once Per Five Minutes** (`*/5 * * * *`).
 Agar 5 daqiqaga ruxsat bo'lmasa — 10 yoki 15 daqiqa. **Command**:
 ```bash
-cd $HOME/smyagent && $HOME/virtualenv/smyagent/3.12/bin/python -m app.jobs.runner --max-jobs 5 --max-seconds 240 >> $HOME/smyagent_data/runner.log 2>&1
+cd $HOME/smyagent && $HOME/virtualenv/smyagent/3.12/bin/python -m app.jobs.runner --max-jobs 5 --max-seconds 240 --log-file $HOME/smyagent_data/runner.log >> $HOME/smyagent_data/runner-errors.log 2>&1
 ```
 
 **2) Kunlik zaxira** — Minute `17`, Hour `3`, qolganlari `*`. **Command**:
@@ -187,8 +187,13 @@ cd $HOME/smyagent && $HOME/virtualenv/smyagent/3.12/bin/python -m app.cli db-bac
 Zaxiralar `~/smyagent_data/backups/` da, oxirgi 14 tasi saqlanadi.
 Haftada bir marta bittasini telefoningizga yuklab oling (👆 File Manager → Download).
 
+Log fayli o'zi kichik saqlanadi (1 MB dan oshsa almashadi) — tozalash shart emas.
+
 ✅ 10–15 daqiqadan keyin dashboard → **Kompaniyalar** ko'paya boshlaydi
 (OpenStreetMap'dan avtomatik qidiruv), **Boshqaruv** sahifasida agentlar ishlaydi.
+Boshqaruv va **🧾 Vazifalar** sahifasida "Cron ishlayapti: oxirgi marta N daqiqa oldin"
+yozuvi chiqadi. Qizil "Fon ishlari N daqiqadan beri ishlamayapti" chiqsa — cron qatorini
+tekshiring. @direktorsmybot'da `/jobs` ham shuni ko'rsatadi.
 
 ---
 
@@ -198,6 +203,7 @@ Haftada bir marta bittasini telefoningizga yuklab oling (👆 File Manager → D
 - [ ] @direktorsmybot `/status` ga javob beradi
 - [ ] @mustafosmybot ga yozilganda sizga tasdiqlash xabari keladi
 - [ ] Cron qo'shildi; 15 daqiqadan keyin **Boshqaruv** sahifasida faoliyat bor
+- [ ] @direktorsmybot `/jobs` → "✅ Cron ishlayapti"
 - [ ] Dashboardda ⛔ **STOP** tugmasi ko'rinadi (favqulodda to'xtatish)
 
 ---
@@ -224,6 +230,8 @@ U o'zi kodni tortadi, zaxira oladi, bazani yangilaydi va saytni tekshiradi.
 | `Serverdagi kod qo'lda o'zgartirilgan` | Serverda fayl tahrirlangan. Claude Code'ga xabarni yuboring — o'zingiz o'chirmang |
 | `Boshqa deploy ishlayapti` | 10 daqiqa kuting; to'xtab qolgan bo'lsa xabardagi `rmdir ...` buyrug'ini bajaring |
 | Webhook: `SSL` yoki `certificate` xatosi | 0-qadam: SSL hali tayyor emas — kuting va 7-qadamni qaytaring |
+| "Fon ishlari N daqiqadan beri ishlamayapti" | cPanel → Cron Jobs: qator bormi, yo'li to'g'rimi? 📋 `tail -5 ~/smyagent_data/runner-errors.log` — xabarni Claude Code'ga yuboring |
+| Botga "⚠️ Vazifa bajarilmadi" keldi | Tugmani bosing: 🔁 *Qayta urinish* yoki 🔎 *Ko'rish*. Bir xil xato 6 soatda bir marta keladi |
 | `mysqldump not found` | hostmaster.uz qo'llab-quvvatlashiga yozing: MySQL client kerak |
 
 Xato chiqsa — **xabarni to'liq nusxalab** Claude Code'ga yuboring (parol/token

@@ -148,15 +148,43 @@ class JobRepository:
         return _rowcount(result)
 
     def requeue_stale(self, *, stale_after: timedelta, now: datetime | None = None) -> int:
-        """Return RUNNING jobs whose runner died (no heartbeat) to the queue."""
+        """Return RUNNING jobs whose runner died (no heartbeat) to the queue.
+
+        A job that already used all its attempts is FAILED instead (see `fail_stale`), so a
+        job that kills the process every time (memory limit, host timeout) cannot loop.
+        """
         now = now or utcnow()
         result = self.session.execute(
             update(Job)
-            .where(Job.status == JobStatus.RUNNING, Job.heartbeat_at < now - stale_after)
+            .where(
+                Job.status == JobStatus.RUNNING,
+                Job.heartbeat_at < now - stale_after,
+                Job.attempts < Job.max_attempts,
+            )
             .values(status=JobStatus.QUEUED, claimed_by=None, claimed_at=None, updated_at=now)
             .execution_options(synchronize_session=False)
         )
         return _rowcount(result)
+
+    def fail_stale(self, *, stale_after: timedelta, now: datetime | None = None) -> list[Job]:
+        """FAIL stale RUNNING jobs that have no attempts left; returns them (for alerts)."""
+        now = now or utcnow()
+        jobs = list(
+            self.session.scalars(
+                select(Job).where(
+                    Job.status == JobStatus.RUNNING,
+                    Job.heartbeat_at < now - stale_after,
+                    Job.attempts >= Job.max_attempts,
+                )
+            )
+        )
+        for job in jobs:
+            job.status = JobStatus.FAILED
+            job.finished_at = now
+            job.claimed_by = job.claimed_at = None
+            job.last_error = "stale: runner stopped during the job (time or memory limit?)"
+        self.session.flush()
+        return jobs
 
 
 class JobLockRepository:

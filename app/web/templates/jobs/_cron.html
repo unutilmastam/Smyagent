@@ -1,0 +1,7 @@
+{% if cron.health.value == 'never' %}
+<p class="alert alert-warn" role="status">⏰ {{ t('cron.never') }}</p>
+{% elif cron.health.value == 'late' %}
+<p class="alert alert-error" role="alert">⏰ {{ t('cron.late', m=cron.minutes_ago) }}</p>
+{% else %}
+<p class="muted cron-ok">⏱ {{ t('cron.ok', m=cron.minutes_ago) }}{% if last_run is defined and last_run %} · {{ t('cron.last', ok=last_run.succeeded, bad=last_run.failed) }}{% if last_run.status.value == 'ERROR' %} · <strong>{{ t('cron.crashed') }}</strong>{% endif %}{% endif %}</p>
+{% endif %}
