@@ -52,11 +52,14 @@ First run `scripts/check_environment.py` in cPanel Terminal and share the output
 | POST | `/conversations/messages/{id}/send\|discard`, `/conversations/{id}/reply\|resume`, `/orders/{id}/decide` | owner actions (CSRF) |
 | GET | `/conversations/{id}/brief.md` | confirmed order as a Markdown project spec |
 | POST | `/api/v1/telegram/client-webhook` | Mustafo client bot webhook (secret header) |
+| GET | `/outreach` | email queue/caps/bounces, one-tap Telegram tasks, phone tasks |
+| POST | `/outreach/events/{id}/done\|skip\|replied`, `/outreach/email/resume` | owner actions (CSRF) |
+| GET/POST | `/u/{token}` | public one-click unsubscribe (signed token; GET never changes anything) |
 | POST | `/settings/agents/{module}`, `/reset`, `/restore/{version}` | save / reset / restore (owner, CSRF, audit-logged) |
 | GET/POST | `/companies/new`, `/companies/import` | manual entry, CSV import with dry run (owner) |
 | GET/POST | `/discovery` | automatic discovery: cities, categories, search now (owner) |
 
-Agents run automatically: Discovery (OpenStreetMap) → Research & Audit (website audit + findings) → Opportunity & Scoring (needs, score, lead) → Proposal (price-free offer) → Quality Gate → owner approval in the dashboard or Telegram. Clients who write to the Mustafo bot are interviewed, confirm an Order Brief and are handed to the owner ("✅ Yangi buyurtma").
+Agents run automatically: Discovery (OpenStreetMap) → Research & Audit (website audit + findings) → Opportunity & Scoring (needs, score, lead) → Proposal (price-free offer) → Quality Gate → owner approval in the dashboard or Telegram. Clients who write to the Mustafo bot are interviewed, confirm an Order Brief and are handed to the owner ("✅ Yangi buyurtma"). Approved offers go out by email to public business addresses (caps, opt-out, auto-pause) or as one-tap Telegram / phone tasks.
 Background agents: `python -m app.jobs.runner --max-jobs 5 --max-seconds 240` from cron (see `docs/deployment-cpanel.md` §7).
 | GET | `/api/v1/companies`, `/api/v1/companies/{id}` | same data as JSON (session auth) |
 | GET | `/lang/{uz,ru,en}` | interface language |

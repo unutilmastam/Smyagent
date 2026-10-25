@@ -25,6 +25,7 @@ from app.web.discovery import router as discovery_router
 from app.web.discovery_targets import router as discovery_targets_router
 from app.web.errors import register_web_exception_handlers
 from app.web.leads import router as leads_router
+from app.web.outreach import router as outreach_router
 from app.web.proposals import router as proposals_router
 from app.web.pwa import router as pwa_router
 from app.web.routes import router as web_router
@@ -72,6 +73,7 @@ def create_app(
     app.include_router(proposals_router)
     app.include_router(agent_settings_router)
     app.include_router(conversations_router)
+    app.include_router(outreach_router)
     app.include_router(pwa_router)
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
     return app

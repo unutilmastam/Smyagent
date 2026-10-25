@@ -195,3 +195,8 @@ input[type="file"] { padding: 8px; }
 .badge-cstate-opted_out, .badge-brief-cancelled { background: #fee2e2; color: var(--bad); }
 .badge-cstate-handoff { background: #dbeafe; color: #1d4ed8; }
 .order-alert { display: block; font-weight: 700; text-decoration: none; }
+/* outreach (M9) */
+.btn-copy { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.badge-ostatus-sent, .badge-ostatus-done { background: #dcfce7; color: var(--ok); }
+.badge-ostatus-queued, .badge-ostatus-sending, .badge-ostatus-task { background: #fef3c7; color: var(--warn); }
+.badge-ostatus-bounced, .badge-ostatus-failed, .badge-ostatus-blocked, .badge-ostatus-unknown { background: #fee2e2; color: var(--bad); }

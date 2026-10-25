@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}{{ t('out.title') }} — SMY Agent{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>{{ t('out.title') }}</h1>
+  <div class="page-actions"><a class="btn-link" href="/settings/agents/conversation">⚙ {{ t('agentset.configure') }}</a></div>
+</div>
+{% if saved %}<p class="alert alert-ok" role="status">{{ t('out.saved') }}</p>{% endif %}
+{% if error %}<p class="alert alert-error" role="alert">{{ t('proposals.error') }}: {{ error }}</p>{% endif %}
+{% if not sending_enabled %}<p class="alert alert-warn">{{ t('out.sending_off') }}</p>{% endif %}
+{% if not email_enabled %}<p class="alert alert-warn">{{ t('out.email_off') }}</p>{% endif %}
+{% if stats.paused %}
+<div class="alert alert-error" role="alert"><p>⛔ {{ t('out.paused') }}: {{ stats.pause_reason }}</p>
+  {% if user.is_owner %}<form method="post" action="/outreach/email/resume" class="inline-form" data-confirm="{{ t('out.resume_confirm') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn-small">{{ t('out.resume') }}</button></form>{% endif %}
+</div>
+{% endif %}
+
+<section class="stats">
+  <div class="stat"><span class="stat-value">{{ stats.email_sent }}/{{ stats.email_cap }}</span><span class="stat-label">{{ t('out.email_today') }}</span></div>
+  <div class="stat"><span class="stat-value">{{ stats.telegram_done }}/{{ stats.telegram_cap }}</span><span class="stat-label">{{ t('out.telegram_today') }}</span></div>
+  <div class="stat {% if stats.bounced_30d %}stat-bad{% endif %}"><span class="stat-value">{{ stats.bounced_30d }}/{{ stats.sent_30d }}</span><span class="stat-label">{{ t('out.bounces') }}</span></div>
+</section>
+
+<h2>📲 {{ t('out.telegram_tasks') }}</h2>
+<p class="muted hint">{{ t('out.telegram_hint') }}</p>
+{% if telegram_tasks %}
+<ul class="module-cards">
+  {% for e in telegram_tasks %}
+  {% set handle = e.recipient.lstrip('@') %}
+  <li class="card">
+    <strong>{{ names.get(e.company_id, '?') }}</strong> · {{ e.recipient }} · {{ t('out.kind.' ~ e.kind.value) }}
+    <details><summary>{{ t('proposals.text') }}</summary><pre class="offer" id="msg-{{ e.id }}">{{ e.body }}</pre></details>
+    {% if user.is_owner %}
+    <div class="module-actions">
+      <a class="btn-small btn-copy" href="https://t.me/{{ handle }}" target="_blank" rel="noopener" data-copy="msg-{{ e.id }}" data-copied="{{ t('out.copied') }}">📋 {{ t('out.copy_open') }}</a>
+      <form method="post" action="/outreach/events/{{ e.id }}/done"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn-small">✅ {{ t('out.sent_it') }}</button></form>
+      <form method="post" action="/outreach/events/{{ e.id }}/skip"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn-small">{{ t('out.skip') }}</button></form>
+    </div>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% else %}<p class="muted">{{ t('out.none') }}</p>{% endif %}
+
+<h2>📞 {{ t('out.phone_tasks') }}</h2>
+{% if phone_tasks %}
+<ul class="module-cards">
+  {% for e in phone_tasks %}
+  <li class="card">
+    <strong>{{ names.get(e.company_id, '?') }}</strong> · <a href="tel:{{ e.recipient }}">{{ e.recipient }}</a>
+    <details><summary>{{ t('proposals.text') }}</summary><pre class="offer">{{ e.body }}</pre></details>
+    {% if user.is_owner %}
+    <div class="module-actions">
+      <form method="post" action="/outreach/events/{{ e.id }}/done"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn-small">✅ {{ t('out.called') }}</button></form>
+      <form method="post" action="/outreach/events/{{ e.id }}/skip"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn-small">{{ t('out.skip') }}</button></form>
+    </div>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% else %}<p class="muted">{{ t('out.none') }}</p>{% endif %}
+
+<h2>✉️ {{ t('out.emails') }}</h2>
+{% if emails %}
+<ul class="plain-list">
+  {% for e in emails %}
+  <li><strong>{{ names.get(e.company_id, '?') }}</strong> · {{ e.recipient }} · {{ t('out.kind.' ~ e.kind.value) }} ·
+    <span class="badge badge-ostatus-{{ e.status.value|lower }}">{{ t('ostatus.' ~ e.status.value) }}</span>
+    {% if e.sent_at %}<span class="muted"> · {{ e.sent_at.strftime('%Y-%m-%d %H:%M') }}</span>{% endif %}
+    {% if e.replied_at %}<span class="badge badge-fact">{{ t('out.replied') }}</span>{% endif %}
+    {% if e.error %}<span class="muted"> · {{ e.error }}</span>{% endif %}
+    {% if user.is_owner and e.status.value == 'SENT' and not e.replied_at %}
+    <form method="post" action="/outreach/events/{{ e.id }}/replied" class="inline-form"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn-small">📩 {{ t('out.mark_replied') }}</button></form>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% else %}<p class="muted">{{ t('out.none') }}</p>{% endif %}
+
+{% if done %}
+<h2>{{ t('out.done_list') }}</h2>
+<ul class="plain-list">
+  {% for e in done %}
+  <li>{{ names.get(e.company_id, '?') }} · {{ e.channel.value }} · {{ e.sent_at.strftime('%Y-%m-%d %H:%M') if e.sent_at else '' }}{% if e.replied_at %} · <span class="badge badge-fact">{{ t('out.replied') }}</span>{% elif user.is_owner %}
+    <form method="post" action="/outreach/events/{{ e.id }}/replied" class="inline-form"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn-small">📩 {{ t('out.mark_replied') }}</button></form>{% endif %}</li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

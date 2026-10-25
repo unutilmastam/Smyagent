@@ -16,6 +16,7 @@ from app.infrastructure.database.models.conversations import (
 from app.infrastructure.database.models.inbound import InboundEvent
 from app.infrastructure.database.models.jobs import Job, JobLock
 from app.infrastructure.database.models.leads import Lead
+from app.infrastructure.database.models.outreach import ChannelState, OutreachEvent
 from app.infrastructure.database.models.proposals import (
     ApprovalRequest,
     Proposal,
@@ -39,6 +40,7 @@ __all__ = [
     "AgentSettingVersion",
     "ApprovalRequest",
     "AuditLog",
+    "ChannelState",
     "Company",
     "CompanyDomain",
     "CompanySource",
@@ -54,6 +56,7 @@ __all__ = [
     "LoginAttempt",
     "Opportunity",
     "OrderBrief",
+    "OutreachEvent",
     "Proposal",
     "ProposalVersion",
     "ResearchFinding",

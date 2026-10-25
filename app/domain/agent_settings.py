@@ -139,6 +139,14 @@ class ConversationSettings(_Settings):
     reply_mode: ReplyMode = ReplyMode.APPROVE_ALL
     # Shown to the client on a human handoff (CLAUDE.md §5.1 rule 4).
     owner_contact: str = Field("Telegram: @ITcoDe_Uz", min_length=3, max_length=120)
+    # Outreach (M9). Approved offers are emailed to public business addresses only.
+    email_auto_approve: bool = False  # also send gate-clean offers without your tap
+    email_daily_cap: int = Field(30, ge=1, le=100)
+    email_warmup_start: int = Field(10, ge=1, le=100)
+    email_warmup_step: int = Field(5, ge=0, le=50)
+    email_min_gap_minutes: int = Field(3, ge=1, le=60)
+    follow_up_days: int = Field(5, ge=5, le=30)
+    telegram_daily_cap: int = Field(20, ge=1, le=50)
 
     @field_validator("owner_contact")
     @classmethod

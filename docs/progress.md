@@ -390,3 +390,27 @@ Not verified: live Telegram delivery (sandbox has no Bot API access); all paths 
 
 ### Next task
 **M9** — outbound to public business contacts: automatic email (caps, warm-up, opt-out link, SPF/DKIM/DMARC docs, bounce auto-pause) and assisted one-tap Telegram for approved offers.
+
+## Session 5 (cont.) — M9 Outbound outreach
+
+### Completed
+- Rules (`app/domain/outreach.py`, ADR-0014): warm-up cap (10 → +5/day → 30), auto-pause on any spam complaint or > 5 % bounces (≥ 20 sends), follow-up once after ≥ 5 days, signed unsubscribe tokens, follow-up texts (UZ/RU/EN, gate-clean, no numbers), email footer with unsubscribe link + sender identity.
+- Adapters: SMTP sender (verified TLS, SSL/STARTTLS, 5xx = permanent), RFC 8058 one-click unsubscribe headers, IMAP inbox + parser (replies, DSN bounces, `X-Failed-Recipients`, ARF complaints).
+- `OutreachService`: one first contact per company on the best public channel (role email → Telegram task → phone task), follow-ups, sender jobs only when sending is enabled and email not paused, optional auto-approval of gate-clean offers, unsubscribe → suppression + blocked queue + lead `DO_NOT_CONTACT`, replies → `RESPONDED` + owner note (quoted text stripped), STOP by email.
+- Jobs: `outbound.email` (SENDING committed before SMTP → never twice; UNKNOWN on interrupted runs; caps/spacing via `DeferTaskError` without using retries; cancelled by global STOP), `email.inbox` every 15 min when IMAP is set.
+- UI: 📤 `/outreach` (today/cap, bounces, pause + resume, Telegram copy-and-open tasks, phone `tel:` tasks, email log, "they replied"), public `/u/<token>` (GET shows, POST unsubscribes), outreach settings in ⚙ Mustafo.
+- Tables `outreach_events`, `channel_states` (migration `0012`); new env vars `SMTP_*`, `IMAP_*` in `.env.example`; cPanel steps incl. SPF/DKIM/DMARC in `deployment-cpanel.md` §6c.
+
+### Verification
+| Command | Result |
+|---|---|
+| `pytest` (SQLite, Python 3.11 and 3.13) | 643 passed |
+| `TEST_DATABASE_URL=…10.6… pytest tests/integration` | 259 passed |
+| same on MariaDB 10.11 / MySQL 8.0 | 259 / 259 passed |
+| `alembic downgrade base && upgrade head && check` (MariaDB 10.6, MySQL 8.0) | no differences |
+| `ruff`, `ruff format --check`, `mypy` | clean |
+
+Not verified: real SMTP/IMAP delivery and deliverability (sandbox has no mail server access); fake sender/inbox cover all paths.
+
+### Next task
+**M10** background-automation hardening (runner observability, failure alerts deduplicated, cron docs) → **M11** analytics, budgets, backups → **M3c-office** Virtual Office view; **M5b** AI layer once an AI key is configured.

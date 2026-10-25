@@ -47,6 +47,8 @@ on MariaDB 10.6 + 10.11 in CI.
 | `conversation_messages` | In/out messages, intent, status (RECEIVED/DRAFT/APPROVED/SENT/REJECTED/BLOCKED), disclosure flag | **unique** (channel, external_message_id); index (conversation, created_at), (status) |
 | `order_briefs` | Interview answers, services, owner-only budget words, client confirmation (time + message), owner decision, notified_at (exactly-once) | index (status, updated_at) |
 | `suppression_records` | Opt-outs; checked before every send | **unique** (channel, value) |
+| `outreach_events` | Every first contact / follow-up per company and channel: email (QUEUED → SENDING → SENT / UNKNOWN / BOUNCED / BLOCKED) or owner task (TASK → DONE / SKIPPED), recipient, text, Message-ID, sent/replied | **unique** `idempotency_key` (`first:<company>`, `follow_up:<company>`); index (channel, sent_at), (status), (channel, recipient) |
+| `channel_states` | Email auto-pause (reason, complaint count) and owner resume | PK `channel` |
 | `agent_controls` | Kill switch: `global` + 7 modules (ADR-0006) | PK `module`; seeded ACTIVE by migration 0001 |
 
 Duplicate detection (CLAUDE.md §8.1): by normalized domain (unique constraint) and

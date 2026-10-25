@@ -17,11 +17,12 @@ import time
 import uuid
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from sqlalchemy import update
 
 from app.application.controls import ControlGate, OwnerNotifier
+from app.application.outreach import INBOX_JOB, OutreachService
 from app.core.config import ConfigurationError, Settings, get_settings
 from app.core.logging import configure_logging
 from app.domain.agents import GLOBAL_CONTROL, AgentHaltedError, AgentModule, ControlState
@@ -29,6 +30,8 @@ from app.domain.jobs import JobStatus
 from app.infrastructure.database import Database
 from app.infrastructure.database.models import AgentRun, AgentRunStatus
 from app.infrastructure.database.types import utcnow
+from app.infrastructure.email.inbox import Inbox, build_inbox
+from app.infrastructure.email.smtp import EmailSender, build_email_sender
 from app.infrastructure.http_fetcher.fetcher import SafeFetcher
 from app.infrastructure.repositories.controls import AgentControlRepository
 from app.infrastructure.repositories.jobs import JobLockRepository, JobRepository
@@ -36,7 +39,7 @@ from app.infrastructure.search_providers.base import ProviderError, SearchProvid
 from app.infrastructure.search_providers.factory import build_search_provider
 from app.infrastructure.telegram.client_bot import ClientMessenger, build_client_bot
 from app.infrastructure.telegram.notifier import build_owner_notifier
-from app.jobs.context import RetryableTaskError, TaskContext
+from app.jobs.context import DeferTaskError, RetryableTaskError, TaskContext
 from app.jobs.tasks import HANDLERS, Handler
 from app.jobs.tasks.discovery import enqueue_due_targets
 from app.jobs.tasks.proposals import enqueue_qualified_leads
@@ -77,6 +80,8 @@ class JobRunner:
         fetcher_factory: Callable[[], SafeFetcher] = SafeFetcher,
         notifier: OwnerNotifier | None = None,
         client_bot_factory: Callable[[Settings], ClientMessenger | None] = build_client_bot,
+        email_sender_factory: Callable[[Settings], EmailSender | None] = build_email_sender,
+        inbox_factory: Callable[[Settings], Inbox | None] = build_inbox,
         worker_id: str | None = None,
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
@@ -87,6 +92,8 @@ class JobRunner:
         self.fetcher_factory = fetcher_factory
         self.notifier = notifier or build_owner_notifier(settings)
         self.client_bot_factory = client_bot_factory
+        self.email_sender_factory = email_sender_factory
+        self.inbox_factory = inbox_factory
         self.worker_id = (worker_id or f"{socket.gethostname()}-{uuid.uuid4().hex[:8]}")[:64]
         self.clock = clock
 
@@ -143,6 +150,18 @@ class JobRunner:
             gate = ControlGate(session, outbound_sending_enabled=False)
             if gate.state(AgentModule.PROPOSAL_REQUIREMENTS) is ControlState.ACTIVE:
                 summary.scheduled += enqueue_qualified_leads(session)
+        with self.database.transaction() as session:
+            gate = ControlGate(session, outbound_sending_enabled=False)
+            if gate.state(AgentModule.CONVERSATION) is ControlState.ACTIVE:
+                summary.scheduled += OutreachService(session, self.settings).plan()
+                if self.settings.imap_host:
+                    now = utcnow()
+                    _, new = JobRepository(session).enqueue(
+                        job_type=INBOX_JOB,
+                        agent_module=AgentModule.CONVERSATION.value,
+                        idempotency_key=f"inbox:{now:%Y%m%d%H}:{now.minute // 15}",
+                    )
+                    summary.scheduled += int(new)
 
     def _globally_stopped(self) -> bool:
         with self.database.transaction() as session:
@@ -176,24 +195,44 @@ class JobRunner:
             fetcher_factory=self.fetcher_factory,
             notifier=self.notifier,
             client_bot_factory=self.client_bot_factory,
+            email_sender_factory=self.email_sender_factory,
+            inbox_factory=self.inbox_factory,
         )
         outcome: str
         error: str | None = None
         retryable = False
         halted_state: ControlState | None = None
+        defer_until: datetime | None = None
         try:
             if handler is None:
                 raise LookupError(f"no handler for job type {job_type}")
             outcome = handler(ctx, payload)
         except AgentHaltedError as exc:
             halted_state, outcome = exc.state, f"halted: {exc.state.value}"
+        except DeferTaskError as exc:
+            defer_until, outcome = exc.run_after, f"deferred: {exc}"[:200]
         except (RetryableTaskError, ProviderError) as exc:
             retryable = not isinstance(exc, ProviderError) or exc.retryable
             error, outcome = str(exc)[:500], "error"
         except Exception as exc:  # one bad job must not stop the run
             logger.exception("job_failed", extra={"job_id": str(job_id), "job_type": job_type})
             error, outcome = f"{type(exc).__name__}", "error"
+        if defer_until is not None:
+            self._defer(job_id, run_id, outcome, defer_until)
+            return
         self._finish(job_id, run_id, outcome, error, retryable, halted_state, summary)
+
+    def _defer(self, job_id: uuid.UUID, run_id: uuid.UUID, outcome: str, until: datetime) -> None:
+        with self.database.transaction() as session:
+            job = JobRepository(session).get(job_id)
+            run = session.get(AgentRun, run_id)
+            if job is not None and job.status is JobStatus.RUNNING:
+                job.status, job.claimed_by, job.claimed_at = JobStatus.QUEUED, None, None
+                job.attempts = max(0, job.attempts - 1)
+                job.run_after = until
+            if run is not None:
+                run.status, run.current_step = AgentRunStatus.SUCCEEDED, outcome
+                run.finished_at = utcnow()
 
     def _finish(
         self,
