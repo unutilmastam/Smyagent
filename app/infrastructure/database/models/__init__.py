@@ -11,6 +11,12 @@ from app.infrastructure.database.models.jobs import Job, JobLock
 from app.infrastructure.database.models.leads import Lead
 from app.infrastructure.database.models.research import ResearchRun
 from app.infrastructure.database.models.runs import AgentRun, AgentRunStatus
+from app.infrastructure.database.models.scoring import (
+    LeadScore,
+    Opportunity,
+    ScoreComponent,
+    ScoringSettings,
+)
 from app.infrastructure.database.models.targets import DiscoveryTarget
 
 __all__ = [
@@ -27,9 +33,13 @@ __all__ = [
     "Job",
     "JobLock",
     "Lead",
+    "LeadScore",
     "LoginAttempt",
+    "Opportunity",
     "ResearchFinding",
     "ResearchRun",
+    "ScoreComponent",
+    "ScoringSettings",
     "User",
     "UserSession",
     "WebsiteAudit",

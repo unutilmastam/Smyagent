@@ -18,6 +18,8 @@ from app.infrastructure.database.models import (
     CompanySource,
     Contact,
     Lead,
+    LeadScore,
+    Opportunity,
     ResearchFinding,
     ResearchRun,
     WebsiteAudit,
@@ -91,6 +93,8 @@ class CompanyDetail:
     research_runs: list[ResearchRun] = field(default_factory=list)
     contacts: list[Contact] = field(default_factory=list)
     latest_audit: WebsiteAudit | None = None
+    opportunities: list[Opportunity] = field(default_factory=list)
+    latest_score: LeadScore | None = None
     findings: list[ResearchFinding] = field(default_factory=list)
     history: list[WorkflowEvent] = field(default_factory=list)
 
@@ -220,6 +224,20 @@ class CompanyQueryService:
             if latest_run_id
             else []
         )
+        opportunities = list(
+            self.session.scalars(
+                select(Opportunity)
+                .where(Opportunity.company_id == company_id)
+                .order_by(Opportunity.strength.desc(), Opportunity.service)
+            )
+        )
+        latest_score = self.session.scalars(
+            select(LeadScore)
+            .where(LeadScore.company_id == company_id)
+            .options(selectinload(LeadScore.components))
+            .order_by(LeadScore.computed_at.desc())
+            .limit(1)
+        ).first()
         return CompanyDetail(
             company=company,
             lead=lead,
@@ -228,4 +246,6 @@ class CompanyQueryService:
             contacts=contacts,
             latest_audit=latest_audit,
             findings=findings,
+            opportunities=opportunities,
+            latest_score=latest_score,
         )

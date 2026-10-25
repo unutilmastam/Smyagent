@@ -281,3 +281,28 @@ Not verified: auditing real public sites — this sandbox's proxy blocks direct 
 
 ### Next task
 **M6** — Opportunity & scoring: map findings to service categories (no website → website; not mobile → modernization; no online inquiry → Telegram bot / form; …), deterministic explainable score per company, owner-adjustable weights, create leads (`CANDIDATE` → `QUALIFIED`). Then M7 offers (no prices), M8/M9 conversation + order intake. **M5b**: AI research summary once an AI key is configured (Haiku, Batch API, ADR-0007).
+
+## Session 5 (cont.) — M6 Opportunity & scoring
+
+### Completed
+- Pure domain `app/domain/scoring.py`: findings → service opportunities by explicit rules (no website → business website / Telegram bot; not mobile-friendly → modernization; no online inquiry → Telegram bot / automation; …). Independent signals combine as `1 − Π(1 − s)`; inferences are scaled by their confidence. No finding → no opportunity (nothing invented).
+- Explainable score 0–100 from five components (service fit, evidence quality, geography, contactability, activity), weighted average over components **with data only** — missing components are listed, never imputed. Qualification needs an opportunity, a public business contact (personal emails don't count) and score ≥ threshold (default 55).
+- Tables `opportunities`, `lead_scores`, `score_components`, `scoring_settings` (migration `0008`); every opportunity keeps the ids of the findings it rests on.
+- Opportunity & Scoring agent task runs automatically after research (idempotent per research version): replaces opportunities, creates the lead (CANDIDATE → QUALIFIED when it qualifies), stores the score snapshot, company RESEARCHED → ANALYZED, owner gets one Telegram alert for a newly qualified lead with score ≥ 75.
+- Dashboard: `/leads` (sorted by score, stage tabs, main need), company page shows opportunities with reasons and the score breakdown, `/settings/scoring` (owner, CSRF, audit-logged; weights clamped 0–10).
+
+### Verification
+| Command | Result |
+|---|---|
+| `pytest` (SQLite, Python 3.11 and 3.13) | 429 passed |
+| `TEST_DATABASE_URL=…10.6… pytest tests/integration` | 174 passed |
+| same on MariaDB 10.11 | 174 passed |
+| `alembic downgrade base && upgrade head && check` (MariaDB 10.6) | no differences |
+| `ruff`, `ruff format --check`, `mypy` | clean |
+
+### Limitations
+- Scoring rules and weights are a first version; the owner can tune weights/threshold, rule strengths are code (reviewed via PR).
+- LLM explanations are not added yet (optional per CLAUDE.md; arrives with the AI layer, M5b).
+
+### Next task
+**M7** — offers without prices (ADR-0008): value-focused offer per qualified lead built from opportunities + evidence, Quality Gate (no price/commitment/unverified claim), versioning, owner approve/reject in dashboard and Telegram, Markdown export.

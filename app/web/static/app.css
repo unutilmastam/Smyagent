@@ -166,3 +166,7 @@ input[type="file"] { padding: 8px; }
 .badge-fact { background: #dbeafe; color: #1d4ed8; }
 .badge-inference { background: #f3e8ff; color: #7e22ce; }
 .findings li { margin: 8px 0; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.tabs a { padding: 8px 12px; border-radius: 999px; border: 1px solid var(--border); text-decoration: none; font-size: .85rem; min-height: 36px; display: inline-flex; align-items: center; }
+.tabs a[aria-current="page"] { background: var(--primary); color: var(--primary-text); border-color: var(--primary); }
+.bottom-nav a, .bottom-nav button { font-size: .7rem; }

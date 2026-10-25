@@ -13,7 +13,7 @@ Authoritative milestone definitions and acceptance criteria live in
 | M3c-office | Virtual Office view — CLAUDE.md §13A.3, ADR-0009 | ⏭ next (or M4 first — see progress) |
 | M4 | Company discovery (manual, CSV, one provider) | ✅ automatic via OpenStreetMap (ADR-0010) + manual + CSV |
 | M5 | Research & SSRF-safe website audit | ✅ fetcher + deterministic audit + automatic research (AI summary → M5b, needs AI key) |
-| M6 | Opportunity analysis & scoring | planned |
+| M6 | Opportunity analysis & scoring | ✅ rules-based opportunities, explainable score, automatic leads (LLM explanations → M5b/AI layer) |
 | M7 | Proposals & requirements | planned |
 | M8 | Mustafo client bot (client-initiated) | planned |
 | M9 | Outbound: automatic email, assisted Telegram | planned |

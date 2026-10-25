@@ -34,6 +34,10 @@ on MariaDB 10.6 + 10.11 in CI.
 | `discovery_targets` | Cities × categories the Discovery agent searches; seeded with 6 UZ cities (migration 0006) | unique (country, city) |
 | `website_audits` | Homepage audit: status, timing, size, title, score, checks (JSON), text excerpt + hash, error category — never raw HTML | index (company, fetched_at) |
 | `research_findings` | Facts / inferences with confidence, source URL and retrieval time | index (company, retrieved_at), key |
+| `opportunities` | Service a company likely needs, strength 0–1, finding keys + ids it rests on; replaced on each scoring | index company |
+| `lead_scores` | Score snapshot: total, version, weights used, missing components | index (company, computed_at), total |
+| `score_components` | One row per component: value (NULL = missing, never imputed), weight, explanation | index score |
+| `scoring_settings` | Owner-adjustable weights + qualification threshold (row `default`) | PK `key` |
 | `agent_controls` | Kill switch: `global` + 7 modules (ADR-0006) | PK `module`; seeded ACTIVE by migration 0001 |
 
 Duplicate detection (CLAUDE.md §8.1): by normalized domain (unique constraint) and

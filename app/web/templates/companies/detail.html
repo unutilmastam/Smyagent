@@ -39,6 +39,30 @@
   {% else %}<li class="muted">{{ t('company.none') }}</li>{% endfor %}
 </ul>
 
+<h2>{{ t('opp.title') }}</h2>
+{% if detail.opportunities %}
+<ul class="plain-list">
+  {% for o in detail.opportunities %}
+  <li><strong>{{ t('svc.' ~ o.service) }}</strong> · {{ (o.strength * 100)|round|int }}%
+    <span class="muted"> · {{ t('opp.because') }}: {{ o.reasons|join(', ') }}</span></li>
+  {% endfor %}
+</ul>
+{% else %}<p class="muted">{{ t('opp.none') }}</p>{% endif %}
+
+{% set sc = detail.latest_score %}
+{% if sc %}
+<section class="card">
+  <p><strong>{{ t('score.title', total=sc.total) }}</strong>
+    <span class="muted"> · {{ t('score.version') }} {{ sc.computed_at.strftime('%Y-%m-%d %H:%M') }} · {{ sc.version }}</span></p>
+  <ul class="plain-list">
+    {% for comp in sc.components %}
+    <li>{{ t('comp.' ~ comp.component) }}: <strong>{{ comp.value if comp.value is not none else t('score.missing') }}</strong>
+      <span class="muted"> · {{ t('score.weight') }} {{ comp.weight }} · {{ comp.explanation }}</span></li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
 <h2>{{ t('audit.title') }}</h2>
 {% set a = detail.latest_audit %}
 {% if a and a.score is not none %}
