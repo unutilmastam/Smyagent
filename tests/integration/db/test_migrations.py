@@ -8,7 +8,7 @@ from alembic.migration import MigrationContext
 from sqlalchemy import inspect, select
 
 from app.infrastructure.database import Base, Database
-from app.infrastructure.database.models import AgentControl
+from app.infrastructure.database.models import AgentControl, DiscoveryTarget
 from tests.integration.conftest import alembic_config
 
 
@@ -28,6 +28,9 @@ def test_upgrade_matches_models_and_downgrade_is_clean(database_url: str) -> Non
         with database.transaction() as session:
             modules = set(session.scalars(select(AgentControl.module)))
         assert "global" in modules and "discovery" in modules and len(modules) == 8
+        with database.transaction() as session:
+            cities = set(session.scalars(select(DiscoveryTarget.city)))
+        assert {"Denov", "Termiz", "Toshkent"} <= cities  # discovery works with zero setup
     finally:
         command.upgrade(cfg, "head")  # leave schema for the other tests
         database.dispose()

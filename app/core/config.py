@@ -48,7 +48,8 @@ class Settings(BaseSettings):
     ai_model_small: str = ""
     ai_model_large: str = ""
 
-    search_provider: str = ""
+    # "osm" = OpenStreetMap (free, no key); "" = automatic discovery off.
+    search_provider: str = "osm"
     search_api_key: SecretStr = SecretStr("")
 
     telegram_admin_bot_token: SecretStr = SecretStr("")
@@ -119,7 +120,11 @@ class Settings(BaseSettings):
             raise ValueError("DATABASE_URL must point to MySQL/MariaDB in production, not SQLite")
         if self.ai_provider and not self.ai_api_key.get_secret_value():
             raise ValueError("AI_API_KEY is required when AI_PROVIDER is set")
-        if self.search_provider and not self.search_api_key.get_secret_value():
+        if (
+            self.search_provider
+            and self.search_provider.lower() not in ("osm", "fixture")
+            and not self.search_api_key.get_secret_value()
+        ):
             raise ValueError("SEARCH_API_KEY is required when SEARCH_PROVIDER is set")
         if self.telegram_admin_bot_token.get_secret_value():
             if len(self.telegram_webhook_secret.get_secret_value()) < MIN_SECRET_LENGTH:

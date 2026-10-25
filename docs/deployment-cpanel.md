@@ -84,3 +84,19 @@ No WebSockets, no streaming responses, no reliance on FastAPI `BackgroundTasks`,
 
 Requires outbound HTTPS to `api.telegram.org` only for step 4 (replies are returned in the
 webhook response, so normal operation needs no outbound call). Verify with `check_environment.py`.
+
+## 7. Background agents (cron) — required for automatic discovery
+
+The agents work only when the job runner is invoked regularly. cPanel → **Cron Jobs** →
+"Every 10 minutes" (or the smallest interval allowed), command (adjust the virtualenv path
+shown at the top of the Python App page):
+
+```bash
+cd ~/smyagent && ~/virtualenv/smyagent/3.12/bin/python -m app.jobs.runner --max-jobs 5 --max-seconds 240 >> ~/logs/smy-runner.log 2>&1
+```
+
+Each run takes a DB lock (no overlap), requeues jobs of crashed runs, schedules due
+discovery searches (6 seeded cities × 9 categories, every 7 days), executes at most 5 jobs
+and exits. ⛔ STOP in the dashboard or `/stop_all` in the bot makes it exit at the next check.
+Discovery needs outbound HTTPS to `overpass-api.de` (see `check_environment.py` output).
+Keep `~/logs/smy-runner.log` small (rotate or truncate monthly).

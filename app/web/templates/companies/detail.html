@@ -34,6 +34,7 @@
     {% if s.is_fixture %}<span class="badge badge-fixture">{{ t('company.fixture') }}</span>{% endif %}
     <strong>{{ s.source_type }}</strong>{% if s.source_url %} · <span class="break">{{ s.source_url }}</span>{% endif %}
     <span class="muted"> · {{ t('company.retrieved') }} {{ s.retrieved_at.strftime('%Y-%m-%d %H:%M') }} UTC</span>
+    {% if s.source_type == 'osm' %}<br><small class="muted">{{ t('auto.osm_attribution') }}</small>{% endif %}
   </li>
   {% else %}<li class="muted">{{ t('company.none') }}</li>{% endfor %}
 </ul>

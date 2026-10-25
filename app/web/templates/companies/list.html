@@ -5,6 +5,7 @@
   <h1>{{ t('companies.title') }}</h1>
   {% if user and user.is_owner %}
   <div class="page-actions">
+    <a class="btn-link" href="/discovery">{{ t('auto.link') }}</a>
     <a class="btn-link" href="/companies/new">{{ t('companies.add') }}</a>
     <a class="btn-link" href="/companies/import">{{ t('companies.import') }}</a>
   </div>
