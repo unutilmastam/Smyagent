@@ -246,6 +246,24 @@ U o'zi kodni tortadi, zaxira oladi, bazani yangilaydi va saytni tekshiradi.
 
 ---
 
+## Oyda bir marta: zaxirani tekshirish va tiklash mashqi (10 daqiqa)
+
+Zaxira haqiqatan ishlashini bilish uchun uni **alohida bo'sh bazaga** tiklab ko'ramiz.
+Asosiy bazaga tegilmaydi.
+
+1. Faqat birinchi marta: 👆 cPanel → **MySQL Databases** → yangi baza `smyrestore`
+   (to'liq nomi `itcode_smyrestore`) yarating → pastda **Add User To Database**:
+   `itcode_smy` → `itcode_smyrestore` → **ALL PRIVILEGES**.
+2. 📋 Termius'da:
+   ```bash
+   cd ~/smyagent && source ~/virtualenv/smyagent/3.12/bin/activate && python -m app.cli db-backup-verify && python -m app.cli db-restore-drill --target-database itcode_smyrestore
+   ```
+   ✅ `✓ ... jadval tiklandi` va `✓ Mashq tugadi` — zaxira ishlaydi. `~` bilan boshlangan
+   qatorlar xato emas (zaxiradan keyin qo'shilgan ma'lumot).
+3. Istalgan payt umumiy tekshiruv: 📋 `python -m app.cli smoke-test` — hammasi ✓ bo'lsin.
+
+---
+
 ## Muammo bo'lsa
 
 | Belgi | Nima qilish |

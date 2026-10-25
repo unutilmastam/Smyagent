@@ -64,5 +64,23 @@ milestone named in brackets.
 - ✅ Dependencies declared with lower bounds in `pyproject.toml`; `pip-audit` runs in CI.
 - Pin exact versions in a lock/constraints file once hosting Python version is verified [M2].
 
+## Review M11 (2026-10-25)
+
+Checked in code and tests at the state of M11 (live at agent.itcode.uz):
+
+| Area | Result |
+|---|---|
+| Auth | Argon2 hashes, login throttling, session cookies `HttpOnly` + `SameSite` + `Secure` (https), no default admin (CLI bootstrap) — ✅ |
+| CSRF | Every state-changing form and JSON call requires the token (tests per page, incl. `/jobs` retry/cancel and Virtual Office controls) — ✅ |
+| Redirects | `next` targets white-listed (`/control`, `/control/office`; login keeps local paths only) — ✅ fixed in M3c-office |
+| Headers | CSP `'self'` (no inline script; JSON data blocks only), `frame-ancestors 'none'`, nosniff, Referrer-Policy, Permissions-Policy, HSTS in production — ✅ |
+| Output | Jinja2 autoescape; office/JS sets server text with `textContent`/canvas only (test asserts no `innerHTML`) — ✅ |
+| Webhooks | Constant-time secret compare, numeric admin IDs, idempotent updates, size limit — ✅ |
+| Secrets | `.env` mode 600 outside Git; setup wizard never echoes secrets and flushes pending input; tokens redacted in logs; DB password via mysqldump/mysql option file (mode 600), never argv — ✅ |
+| Backups | Mode 600 in `~/smyagent_data/backups` (outside the web root); verification + restore drill into a scratch DB that is emptied afterwards — ✅ M11 |
+| Dependencies | `pip-audit`: no known vulnerabilities (2026-10-25); runs in CI — ✅ |
+| API docs | `/docs` and `/openapi.json` disabled in production — ✅ |
+| Open items | Optional TOTP for the owner (M3-totp) still not built — recommended now that the dashboard is public; Telegram tokens were rotated once after being shown on screen (done by the owner). |
+
 ## Reporting
 Security issues: contact the owner directly (Telegram @ITcoDe_Uz). Do not open public issues with exploit details.
