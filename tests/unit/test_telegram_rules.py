@@ -115,3 +115,21 @@ def test_errors_never_contain_the_token() -> None:
 def test_client_requires_token() -> None:
     with pytest.raises(TelegramError):
         TelegramClient("")
+
+
+def test_inline_keyboard_and_callback_schema() -> None:
+    from app.application.controls import Button
+    from app.infrastructure.telegram.notifier import inline_keyboard
+    from app.infrastructure.telegram.schemas import TgUpdate
+
+    markup = inline_keyboard(
+        [Button("✅", data="pa:" + "x" * 80), Button("✏️", url="https://a.uz/p/1"), Button("-")]
+    )
+    row = markup["inline_keyboard"][0]
+    assert row[0] == {"text": "✅", "callback_data": "pa:" + "x" * 61}  # ≤ 64 bytes
+    assert row[1] == {"text": "✏️", "url": "https://a.uz/p/1"}
+    assert len(row) == 2  # a button with neither data nor url is dropped
+    update = TgUpdate.model_validate(
+        {"update_id": 1, "callback_query": {"id": "q", "from": {"id": 5}, "data": "pa:1"}}
+    )
+    assert update.callback_query is not None and update.callback_query.from_.id == 5

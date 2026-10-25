@@ -170,3 +170,12 @@ input[type="file"] { padding: 8px; }
 .tabs a { padding: 8px 12px; border-radius: 999px; border: 1px solid var(--border); text-decoration: none; font-size: .85rem; min-height: 36px; display: inline-flex; align-items: center; }
 .tabs a[aria-current="page"] { background: var(--primary); color: var(--primary-text); border-color: var(--primary); }
 .bottom-nav a, .bottom-nav button { font-size: .7rem; }
+/* proposals (M7) */
+.offer { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; margin: 0; }
+.action-card { margin-top: 12px; }
+.action-card summary { cursor: pointer; font-weight: 700; min-height: 40px; display: flex; align-items: center; }
+.inline-form { margin: 0; }
+.badge-gate-approved, .badge-pstatus-approved { background: #dcfce7; color: var(--ok); }
+.badge-gate-needs_review, .badge-pstatus-awaiting_approval { background: #fef3c7; color: var(--warn); }
+.badge-gate-rejected, .badge-pstatus-needs_edit, .badge-pstatus-rejected { background: #fee2e2; color: var(--bad); }
+.stat-attention .stat-value { color: var(--warn); }

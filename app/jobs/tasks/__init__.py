@@ -7,6 +7,12 @@ from typing import Any
 
 from app.jobs.context import TaskContext
 from app.jobs.tasks.discovery import DISCOVERY_SEARCH, run_discovery_search
+from app.jobs.tasks.proposals import (
+    GATE_REVIEW,
+    PROPOSAL_DRAFT,
+    run_proposal_draft,
+    run_quality_gate,
+)
 from app.jobs.tasks.research import RESEARCH_AUDIT, run_research_audit
 from app.jobs.tasks.scoring import SCORING_EVALUATE, run_scoring
 
@@ -16,4 +22,6 @@ HANDLERS: dict[str, Handler] = {
     DISCOVERY_SEARCH: run_discovery_search,
     RESEARCH_AUDIT: run_research_audit,
     SCORING_EVALUATE: run_scoring,
+    PROPOSAL_DRAFT: run_proposal_draft,
+    GATE_REVIEW: run_quality_gate,
 }

@@ -14,8 +14,9 @@ from app.core.config import Settings, get_settings
 from app.core.security import new_token, tokens_equal
 from app.domain.auth import SESSION_ABSOLUTE_LIFETIME
 from app.domain.jobs import JobStatus
+from app.domain.proposals import ProposalStatus
 from app.infrastructure.database import Database
-from app.infrastructure.database.models import Company, Job, Lead
+from app.infrastructure.database.models import Company, Job, Lead, Proposal
 from app.web.auth import (
     LOGIN_CSRF_COOKIE,
     SESSION_COOKIE,
@@ -165,6 +166,14 @@ def home(
     with database.transaction() as session:
         companies = session.scalar(select(func.count()).select_from(Company)) or 0
         leads = session.scalar(select(func.count()).select_from(Lead)) or 0
+        awaiting = (
+            session.scalar(
+                select(func.count())
+                .select_from(Proposal)
+                .where(Proposal.status == ProposalStatus.AWAITING_APPROVAL)
+            )
+            or 0
+        )
         job_counts = dict(
             session.execute(select(Job.status, func.count()).group_by(Job.status)).tuples().all()
         )
@@ -172,6 +181,7 @@ def home(
     context["stats"] = {
         "companies": companies,
         "leads": leads,
+        "awaiting": awaiting,
         "jobs_queued": job_counts.get(JobStatus.QUEUED, 0),
         "jobs_running": job_counts.get(JobStatus.RUNNING, 0),
         "jobs_failed": job_counts.get(JobStatus.FAILED, 0),

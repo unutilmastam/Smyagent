@@ -7,7 +7,8 @@
 {% endif %}
 <section class="stats" aria-label="{{ t('stats.companies') }}">
   <a class="stat" href="/companies"><span class="stat-value">{{ stats.companies }}</span><span class="stat-label">{{ t('stats.companies') }}</span></a>
-  <div class="stat"><span class="stat-value">{{ stats.leads }}</span><span class="stat-label">{{ t('stats.leads') }}</span></div>
+  <a class="stat" href="/leads"><span class="stat-value">{{ stats.leads }}</span><span class="stat-label">{{ t('stats.leads') }}</span></a>
+  <a class="stat {% if stats.awaiting %}stat-attention{% endif %}" href="/proposals?status=AWAITING_APPROVAL"><span class="stat-value">{{ stats.awaiting }}</span><span class="stat-label">{{ t('stats.awaiting') }}</span></a>
   <div class="stat"><span class="stat-value">{{ stats.jobs_queued }}</span><span class="stat-label">{{ t('stats.queued') }}</span></div>
   <div class="stat"><span class="stat-value">{{ stats.jobs_running }}</span><span class="stat-label">{{ t('stats.running') }}</span></div>
   <div class="stat {% if stats.jobs_failed %}stat-bad{% endif %}"><span class="stat-value">{{ stats.jobs_failed }}</span><span class="stat-label">{{ t('stats.failed') }}</span></div>

@@ -14,3 +14,4 @@
 
 Format: Context → Decision → Consequences. New ADRs get the next number; superseded ADRs are marked, never deleted.
 | [0010](0010-openstreetmap-first-discovery-source.md) | OpenStreetMap (Overpass) as the free first discovery source; seeded UZ cities | Accepted |
+| [0011](0011-deterministic-offers-and-quality-gate.md) | Deterministic price-free offer templates + rules-based Quality Gate; owner approves | Accepted |

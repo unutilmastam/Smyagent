@@ -38,6 +38,7 @@ from app.infrastructure.telegram.notifier import build_owner_notifier
 from app.jobs.context import RetryableTaskError, TaskContext
 from app.jobs.tasks import HANDLERS, Handler
 from app.jobs.tasks.discovery import enqueue_due_targets
+from app.jobs.tasks.proposals import enqueue_qualified_leads
 from app.jobs.tasks.research import enqueue_new_companies
 from app.jobs.tasks.scoring import enqueue_researched_companies
 
@@ -135,6 +136,10 @@ class JobRunner:
             gate = ControlGate(session, outbound_sending_enabled=False)
             if gate.state(AgentModule.OPPORTUNITY_SCORING) is ControlState.ACTIVE:
                 summary.scheduled += enqueue_researched_companies(session)
+        with self.database.transaction() as session:
+            gate = ControlGate(session, outbound_sending_enabled=False)
+            if gate.state(AgentModule.PROPOSAL_REQUIREMENTS) is ControlState.ACTIVE:
+                summary.scheduled += enqueue_qualified_leads(session)
 
     def _globally_stopped(self) -> bool:
         with self.database.transaction() as session:

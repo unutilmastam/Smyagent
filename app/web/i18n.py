@@ -552,6 +552,221 @@ _T: dict[str, dict[str, str]] = {
     "state.ANALYZED": {"uz": "Tahlil qilingan", "ru": "Проанализирована", "en": "Analyzed"},
     "state.RESEARCH_FAILED": {"uz": "Xato", "ru": "Ошибка", "en": "Failed"},
     "state.ARCHIVED": {"uz": "Arxivda", "ru": "В архиве", "en": "Archived"},
+    # proposals & quality gate (M7)
+    "nav.proposals": {"uz": "Takliflar", "ru": "Предложения", "en": "Proposals"},
+    "proposals.title": {"uz": "Takliflar", "ru": "Предложения", "en": "Proposals"},
+    "proposals.status": {"uz": "Holat", "ru": "Статус", "en": "Status"},
+    "proposals.empty": {
+        "uz": "Hali taklif yo'q — tayyor lidlar uchun agent o'zi tayyorlaydi.",
+        "ru": "Предложений пока нет — агент готовит их для квалифицированных лидов.",
+        "en": "No proposals yet — the agent drafts them for qualified leads.",
+    },
+    "proposals.no_price_note": {
+        "uz": "Taklifda narx, muddat va kafolat yo'q — narxni mijoz buyurtmasidan keyin o'zingiz "
+        "yuborasiz.",
+        "ru": "В предложении нет цен, сроков и гарантий — цену вы отправляете сами после заказа.",
+        "en": "Offers contain no price, deadline or guarantee — you send the price yourself "
+        "after the order.",
+    },
+    "proposals.text": {"uz": "Taklif matni", "ru": "Текст предложения", "en": "Offer text"},
+    "proposals.field_title": {"uz": "Sarlavha", "ru": "Заголовок", "en": "Title"},
+    "proposals.approve": {"uz": "Tasdiqlayman", "ru": "Одобрить", "en": "Approve"},
+    "proposals.reject": {"uz": "Rad etaman", "ru": "Отклонить", "en": "Reject"},
+    "proposals.reason": {
+        "uz": "Sabab (ixtiyoriy)",
+        "ru": "Причина (необязательно)",
+        "en": "Reason (optional)",
+    },
+    "proposals.reject_hint": {
+        "uz": "Rad etilsa, bu kompaniyaga murojaat qilinmaydi (lid: DISQUALIFIED).",
+        "ru": "После отклонения компании не пишем (лид: DISQUALIFIED).",
+        "en": "Rejecting means this company will not be contacted (lead: DISQUALIFIED).",
+    },
+    "proposals.edit": {"uz": "Tahrirlash", "ru": "Редактировать", "en": "Edit"},
+    "proposals.edit_hint": {
+        "uz": "Saqlanganda yangi versiya yaratiladi va Quality Gate qayta tekshiradi.",
+        "ru": "При сохранении создаётся новая версия и Quality Gate проверяет её снова.",
+        "en": "Saving creates a new version that the Quality Gate checks again.",
+    },
+    "proposals.evidence": {"uz": "Dalillar", "ru": "Доказательства", "en": "Evidence"},
+    "proposals.no_evidence": {
+        "uz": "Dalil yo'q.",
+        "ru": "Нет доказательств.",
+        "en": "No evidence.",
+    },
+    "proposals.assumptions": {"uz": "Farazlar", "ru": "Допущения", "en": "Assumptions"},
+    "proposals.questions": {
+        "uz": "Mijozdan so'raladigan savollar",
+        "ru": "Вопросы клиенту",
+        "en": "Questions for the client",
+    },
+    "proposals.export": {
+        "uz": "Markdown yuklab olish",
+        "ru": "Скачать Markdown",
+        "en": "Download Markdown",
+    },
+    "proposals.history": {"uz": "Tarix", "ru": "История", "en": "History"},
+    "proposals.error": {"uz": "Bajarilmadi", "ru": "Не выполнено", "en": "Not done"},
+    "proposals.done.approve": {
+        "uz": "Tasdiqlandi. Yuborish outreach (M9) yoqilganda bo'ladi.",
+        "ru": "Одобрено. Отправка — после включения рассылки (M9).",
+        "en": "Approved. Sending happens once outreach (M9) is enabled.",
+    },
+    "proposals.done.reject": {"uz": "Rad etildi.", "ru": "Отклонено.", "en": "Rejected."},
+    "proposals.done.edit": {
+        "uz": "Yangi versiya saqlandi va tekshirildi.",
+        "ru": "Новая версия сохранена и проверена.",
+        "en": "New version saved and checked.",
+    },
+    "pstatus.DRAFT": {"uz": "Qoralama", "ru": "Черновик", "en": "Draft"},
+    "pstatus.NEEDS_EDIT": {"uz": "Tahrir kerak", "ru": "Нужна правка", "en": "Needs edit"},
+    "pstatus.AWAITING_APPROVAL": {
+        "uz": "Tasdiq kutilmoqda",
+        "ru": "Ждёт одобрения",
+        "en": "Awaiting approval",
+    },
+    "pstatus.APPROVED": {"uz": "Tasdiqlangan", "ru": "Одобрено", "en": "Approved"},
+    "pstatus.REJECTED": {"uz": "Rad etilgan", "ru": "Отклонено", "en": "Rejected"},
+    "approval.PENDING": {"uz": "kutilmoqda", "ru": "ожидает", "en": "pending"},
+    "approval.APPROVED": {"uz": "tasdiqlandi", "ru": "одобрено", "en": "approved"},
+    "approval.REJECTED": {"uz": "rad etildi", "ru": "отклонено", "en": "rejected"},
+    "approval.CANCELLED": {
+        "uz": "bekor (yangi versiya)",
+        "ru": "отменено (новая версия)",
+        "en": "cancelled (new version)",
+    },
+    "gate.title": {
+        "uz": "Sifat nazorati (Quality Gate)",
+        "ru": "Контроль качества",
+        "en": "Quality Gate",
+    },
+    "gate.approved": {"uz": "Toza", "ru": "Чисто", "en": "Clean"},
+    "gate.needs_review": {"uz": "Ko'rib chiqing", "ru": "Проверьте", "en": "Needs review"},
+    "gate.rejected": {"uz": "Rad etdi", "ru": "Отклонено", "en": "Rejected"},
+    "gate.clean": {
+        "uz": "Muammo topilmadi: narx, va'da, tasdiqlanmagan da'vo yo'q; AI ekanligi va rad "
+        "etish yo'li yozilgan.",
+        "ru": "Проблем нет: без цен, обещаний и неподтверждённых заявлений; есть AI-раскрытие и "
+        "отказ.",
+        "en": "No issues: no price, promise or unsupported claim; AI disclosure and opt-out "
+        "present.",
+    },
+    "gate.pending": {
+        "uz": "Tekshiruv navbatda.",
+        "ru": "Проверка в очереди.",
+        "en": "Check queued.",
+    },
+    "gate.issue.empty": {"uz": "Matn bo'sh", "ru": "Пустой текст", "en": "Empty text"},
+    "gate.issue.price": {
+        "uz": 'Narx, summa, chegirma yoki "bepul" bor',
+        "ru": "Есть цена, сумма, скидка или «бесплатно»",
+        "en": 'Contains a price, amount, discount or "free"',
+    },
+    "gate.issue.commitment": {
+        "uz": "Va'da bor (kafolat, muddat, shartnoma, to'lov)",
+        "ru": "Есть обязательство (гарантия, срок, договор, оплата)",
+        "en": "Contains a commitment (guarantee, deadline, contract, payment)",
+    },
+    "gate.issue.unsupported_claim": {
+        "uz": 'Tasdiqlanmagan da\'vo ("eng yaxshi", "100%", mijozlar haqida)',
+        "ru": "Неподтверждённое заявление («лучший», «100%», о клиентах)",
+        "en": 'Unsupported claim ("the best", "100%", about clients)',
+    },
+    "gate.issue.missing_disclosure": {
+        "uz": "Mustafo AI ekanligi yozilmagan",
+        "ru": "Нет раскрытия, что Мустафо — AI",
+        "en": "Missing the AI disclosure (Mustafo)",
+    },
+    "gate.issue.missing_opt_out": {
+        "uz": 'Rad etish yo\'li yozilmagan ("kerak emas")',
+        "ru": "Нет способа отказаться («не пишите»)",
+        "en": 'Missing the opt-out ("stop")',
+    },
+    "gate.issue.no_evidence": {
+        "uz": "Dalilga asoslanmagan",
+        "ru": "Нет доказательств",
+        "en": "No evidence",
+    },
+    "gate.issue.language_mismatch": {
+        "uz": "Til/yozuv mijoz tiliga mos emas",
+        "ru": "Язык/алфавит не совпадает с языком клиента",
+        "en": "Language/script does not match the client's",
+    },
+    "gate.issue.too_long": {"uz": "Juda uzun", "ru": "Слишком длинно", "en": "Too long"},
+    "assume.public_data_only": {
+        "uz": "Faqat ochiq ma'lumot (xarita, bosh sahifa) asosida; bitta o'lchov.",
+        "ru": "Только по открытым данным (карты, главная страница); одно измерение.",
+        "en": "Based only on public data (maps, homepage); one measurement.",
+    },
+    "assume.inferences_marked": {
+        "uz": 'Ba\'zi kuzatuvlar taxmin — matnda "ehtimol" deb yozilgan.',
+        "ru": "Часть наблюдений — предположения, в тексте помечены «возможно».",
+        "en": "Some observations are inferences, phrased as possibilities.",
+    },
+    "question.goal": {
+        "uz": "Asosiy maqsad nima: ko'proq mijoz, buyurtmani tezlashtirish yoki vaqtni tejash?",
+        "ru": "Главная цель: больше клиентов, быстрее заказы или экономия времени?",
+        "en": "Main goal: more customers, faster orders or saving time?",
+    },
+    "question.business_website": {
+        "uz": "Saytda qaysi xizmat/mahsulotlar, nechta til va qanday aloqa usullari bo'lsin?",
+        "ru": "Какие услуги/товары, языки и способы связи нужны на сайте?",
+        "en": "Which services/products, languages and contact options should the site have?",
+    },
+    "question.landing_page": {
+        "uz": "Sahifa qaysi bitta xizmatni taklif qilsin?",
+        "ru": "Какую одну услугу должна продвигать страница?",
+        "en": "Which single offer should the page promote?",
+    },
+    "question.ecommerce": {
+        "uz": "Nechta mahsulot, to'lov va yetkazib berish qanday?",
+        "ru": "Сколько товаров, как оплата и доставка?",
+        "en": "How many products, and how are payment and delivery handled?",
+    },
+    "question.telegram_bot": {
+        "uz": "Bot nima qilsin: buyurtma, savol-javob, katalog yoki yozilish?",
+        "ru": "Что должен делать бот: заказы, ответы, каталог или запись?",
+        "en": "What should the bot do: orders, Q&A, catalog or bookings?",
+    },
+    "question.automation": {
+        "uz": "Qaysi takroriy ish ko'p vaqt oladi?",
+        "ru": "Какая повторяющаяся работа отнимает больше всего времени?",
+        "en": "Which repetitive task takes the most time?",
+    },
+    "question.crm": {
+        "uz": "Hozir mijoz va buyurtmalar qayerda yuritiladi?",
+        "ru": "Где сейчас ведутся клиенты и заказы?",
+        "en": "Where are customers and orders tracked today?",
+    },
+    "question.ai_assistant": {
+        "uz": "Mijozlar eng ko'p qanday savollar beradi?",
+        "ru": "Какие вопросы клиенты задают чаще всего?",
+        "en": "Which questions do customers ask most?",
+    },
+    "question.website_modernization": {
+        "uz": "Hozirgi saytning nimasi yoqmaydi, nima qolishi kerak?",
+        "ru": "Что не нравится в текущем сайте, что оставить?",
+        "en": "What do you dislike about the current site, and what must stay?",
+    },
+    "question.maintenance": {
+        "uz": "Saytni hozir kim yangilaydi va qanchalik tez-tez?",
+        "ru": "Кто сейчас обновляет сайт и как часто?",
+        "en": "Who updates the site now, and how often?",
+    },
+    "stats.awaiting": {"uz": "Tasdiq kutmoqda", "ru": "Ждут одобрения", "en": "Awaiting approval"},
+    "stage.PROPOSAL_DRAFTED": {
+        "uz": "Taklif yozildi",
+        "ru": "Предложение готово",
+        "en": "Proposal drafted",
+    },
+    "stage.AWAITING_APPROVAL": {
+        "uz": "Tasdiq kutmoqda",
+        "ru": "Ждёт одобрения",
+        "en": "Awaiting approval",
+    },
+    "stage.APPROVED": {"uz": "Tasdiqlangan", "ru": "Одобрен", "en": "Approved"},
+    "stage.DISQUALIFIED": {"uz": "Chiqarilgan", "ru": "Исключён", "en": "Disqualified"},
+    "company.proposal": {"uz": "Taklif", "ru": "Предложение", "en": "Proposal"},
 }
 
 

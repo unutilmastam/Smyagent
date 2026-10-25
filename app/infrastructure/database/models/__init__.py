@@ -9,6 +9,11 @@ from app.infrastructure.database.models.controls import AgentControl
 from app.infrastructure.database.models.inbound import InboundEvent
 from app.infrastructure.database.models.jobs import Job, JobLock
 from app.infrastructure.database.models.leads import Lead
+from app.infrastructure.database.models.proposals import (
+    ApprovalRequest,
+    Proposal,
+    ProposalVersion,
+)
 from app.infrastructure.database.models.research import ResearchRun
 from app.infrastructure.database.models.runs import AgentRun, AgentRunStatus
 from app.infrastructure.database.models.scoring import (
@@ -23,6 +28,7 @@ __all__ = [
     "AgentControl",
     "AgentRun",
     "AgentRunStatus",
+    "ApprovalRequest",
     "AuditLog",
     "Company",
     "CompanyDomain",
@@ -36,6 +42,8 @@ __all__ = [
     "LeadScore",
     "LoginAttempt",
     "Opportunity",
+    "Proposal",
+    "ProposalVersion",
     "ResearchFinding",
     "ResearchRun",
     "ScoreComponent",

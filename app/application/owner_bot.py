@@ -3,21 +3,28 @@
 from __future__ import annotations
 
 import logging
+import uuid
 from dataclasses import dataclass
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.application.controls import AgentControlService, describe_change
+from app.application.proposals import (
+    CALLBACK_APPROVE,
+    CALLBACK_REJECT,
+    ProposalService,
+)
 from app.domain.actors import Actor
 from app.domain.agents import GLOBAL_CONTROL, AgentModule, ControlState
+from app.domain.errors import DomainError
 from app.domain.jobs import JobStatus
 from app.domain.telegram import is_owner_message, parse_command
 from app.infrastructure.database.models import Company, Job, Lead
 from app.infrastructure.repositories.controls import AgentControlRepository
 from app.infrastructure.repositories.inbound import InboundEventRepository
 from app.infrastructure.repositories.workflow import AuditLogRepository
-from app.infrastructure.telegram.schemas import TgUpdate
+from app.infrastructure.telegram.schemas import TgCallbackQuery, TgUpdate
 
 logger = logging.getLogger("app.owner_bot")
 
@@ -29,6 +36,9 @@ HELP_TEXT = (
     "/stop_all — ⛔ hammasini to'xtatish\n"
     "/resume_all — hammasini faollashtirish\n"
     "/agent <nom> on|pause|off — bitta agent\n"
+    "/proposals — tasdiqlashni kutayotgan takliflar\n"
+    "/approve <id> — taklifni tasdiqlash\n"
+    "/reject <id> [sabab] — taklifni rad etish\n"
     "/help — buyruqlar ro'yxati\n\n"
     "Agent nomlari: " + ", ".join(m.value for m in AgentModule)
 )
@@ -46,6 +56,8 @@ STATE_ICONS = {ControlState.ACTIVE: "🟢", ControlState.PAUSED: "🟡", Control
 class BotReply:
     chat_id: int
     text: str
+    # Set for inline-button presses: the reply is shown as a callback answer.
+    callback_query_id: str | None = None
 
 
 class OwnerBotService:
@@ -58,6 +70,8 @@ class OwnerBotService:
         if not InboundEventRepository(self.session).register(CHANNEL, str(update.update_id)):
             logger.info("owner_bot.duplicate_update", extra={"update_id": update.update_id})
             return None
+        if update.callback_query is not None:
+            return self._callback(update.callback_query)
         message = update.message
         if message is None:
             return None
@@ -97,7 +111,70 @@ class OwnerBotService:
             if len(parts) != 2 or parts[0] not in modules or parts[1] not in AGENT_ACTIONS:
                 return BotReply(chat_id, "Foydalanish: /agent <nom> on|pause|off\n\n" + HELP_TEXT)
             return BotReply(chat_id, self._set(parts[0], AGENT_ACTIONS[parts[1]], actor))
+        if command.name == "proposals":
+            return BotReply(chat_id, self._pending_text())
+        if command.name in ("approve", "reject"):
+            prefix, _, reason = command.args.partition(" ")
+            proposal = ProposalService(self.session).find_by_prefix(prefix)
+            if proposal is None:
+                return BotReply(chat_id, "Taklif topilmadi. /proposals ro'yxatidagi ID ni yozing.")
+            approve = command.name == "approve"
+            return BotReply(chat_id, self._decide(proposal.id, approve, actor, reason))
         return BotReply(chat_id, f"Noma'lum buyruq: /{command.name}\n\n{HELP_TEXT}")
+
+    def _callback(self, query: TgCallbackQuery) -> BotReply | None:
+        chat = query.message.chat if query.message else None
+        if not is_owner_message(
+            sender_id=query.from_.id,
+            sender_is_bot=query.from_.is_bot,
+            chat_type=chat.type if chat else None,
+            admin_ids=self.admin_ids,
+        ):
+            logger.warning("owner_bot.unauthorized_callback", extra={"sender_id": query.from_.id})
+            AuditLogRepository(self.session).add(
+                actor=Actor.system("owner_bot"),
+                action="telegram.unauthorized",
+                details={"sender_id": query.from_.id, "callback": True},
+            )
+            return None
+        assert chat is not None
+        action, _, raw_id = (query.data or "").partition(":")
+        try:
+            proposal_id = uuid.UUID(raw_id)
+        except ValueError:
+            proposal_id = None
+        if action not in (CALLBACK_APPROVE, CALLBACK_REJECT) or proposal_id is None:
+            return BotReply(chat.id, "Noma'lum tugma.", callback_query_id=query.id)
+        actor = Actor.user(f"tg-{query.from_.id}")
+        text = self._decide(proposal_id, action == CALLBACK_APPROVE, actor, "Telegram")
+        return BotReply(chat.id, text, callback_query_id=query.id)
+
+    def _decide(self, proposal_id: uuid.UUID, approve: bool, actor: Actor, reason: str) -> str:
+        service = ProposalService(self.session)
+        try:
+            # A savepoint keeps the update registration even if the decision fails.
+            with self.session.begin_nested():
+                if approve:
+                    service.approve(proposal_id, actor)
+                else:
+                    service.reject(proposal_id, actor, reason or "Telegram")
+        except DomainError as exc:  # state, not-found or invalid lead transition
+            return f"⚠️ Bajarilmadi: {exc}"
+        short = str(proposal_id)[:8]
+        if approve:
+            return f"✅ Taklif {short} tasdiqlandi. Yuborish M9 (outreach) ishga tushganda bo'ladi."
+        return f"❌ Taklif {short} rad etildi; kompaniyaga murojaat qilinmaydi."
+
+    def _pending_text(self) -> str:
+        rows = ProposalService(self.session).pending()
+        if not rows:
+            return "Tasdiqlashni kutayotgan taklif yo'q."
+        lines = ["📝 Takliflar:"]
+        for proposal, company in rows:
+            mark = "⛔ tahrir kerak" if proposal.status.value == "NEEDS_EDIT" else "⏳"
+            lines.append(f"{str(proposal.id)[:8]} · {company.name} · {mark}")
+        lines.append("\n/approve <id> yoki /reject <id> [sabab]")
+        return "\n".join(lines)
 
     def _set(self, key: str, state: ControlState, actor: Actor) -> str:
         change = AgentControlService(self.session).set_state(key, state, actor, "owner bot")

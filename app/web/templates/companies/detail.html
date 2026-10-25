@@ -6,8 +6,9 @@
 <h1>{{ c.name }}</h1>
 <p class="badges">
   <span class="badge badge-{{ c.research_state.value|lower }}">{{ t('state.' ~ c.research_state.value) }}</span>
-  {% if detail.lead %}<span class="badge">{{ t('company.lead') }}: {{ detail.lead.stage.value }}</span>{% endif %}
+  {% if detail.lead %}<span class="badge">{{ t('company.lead') }}: {% set k = 'stage.' ~ detail.lead.stage.value %}{% set tx = t(k) %}{{ detail.lead.stage.value if tx == k else tx }}</span>{% endif %}
 </p>
+{% if detail.proposal %}<p><a class="btn-link" href="/proposals/{{ detail.proposal.id }}">📝 {{ t('company.proposal') }} · {{ t('pstatus.' ~ detail.proposal.status.value) }}</a></p>{% endif %}
 <section class="card">
   <dl class="facts">
     <dt>{{ t('companies.country') }}</dt><dd>{{ c.country }}</dd>

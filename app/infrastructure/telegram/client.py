@@ -54,5 +54,10 @@ class TelegramClient:
         result = self._call("getWebhookInfo", {})
         return result if isinstance(result, dict) else {}
 
-    def send_message(self, chat_id: int, text: str) -> None:
-        self._call("sendMessage", {"chat_id": chat_id, "text": text[:4096]})
+    def send_message(
+        self, chat_id: int, text: str, *, reply_markup: dict[str, Any] | None = None
+    ) -> None:
+        payload: dict[str, Any] = {"chat_id": chat_id, "text": text[:4096]}
+        if reply_markup:
+            payload["reply_markup"] = reply_markup
+        self._call("sendMessage", payload)

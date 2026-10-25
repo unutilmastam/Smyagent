@@ -12,6 +12,7 @@ from app.infrastructure.database import Database
 from app.infrastructure.database.models import AuditLog, InboundEvent
 from app.infrastructure.repositories.companies import CompanyRepository, NewCompany
 from app.main import create_app
+from tests.integration.proposal_helpers import awaiting_proposal
 
 URL = "/api/v1/telegram/webhook"
 SECRET = "w" * 40
@@ -162,3 +163,81 @@ def test_non_admin_cannot_stop(bot: TestClient, db: Database) -> None:
             s.scalars(select(AgentControl.state).where(AgentControl.module == "global")).one().value
             == "ACTIVE"
         )
+
+
+# -- proposals (M7) -------------------------------------------------------------
+
+
+def _callback(update_id: int, data: str, *, sender: int = ADMIN_ID) -> dict[str, Any]:
+    return {
+        "update_id": update_id,
+        "callback_query": {
+            "id": f"cb{update_id}",
+            "from": {"id": sender, "is_bot": False},
+            "message": {"message_id": 1, "chat": {"id": sender, "type": "private"}},
+            "data": data,
+        },
+    }
+
+
+def _stage(db: Database, pid: Any) -> str:
+    from app.infrastructure.database.models import Lead, Proposal
+
+    with db.transaction() as s:
+        proposal = s.get(Proposal, pid)
+        return s.get(Lead, proposal.lead_id).stage.value  # type: ignore[union-attr]
+
+
+def test_approve_button_answers_callback(bot: TestClient, db: Database) -> None:
+    pid = awaiting_proposal(db)
+    r = _post(bot, _callback(200, f"pa:{pid}"))
+    body = r.json()
+    assert body["method"] == "answerCallbackQuery" and body["callback_query_id"] == "cb200"
+    assert "tasdiqlandi" in body["text"]
+    assert _stage(db, pid) == "APPROVED"
+    # Pressing again (new update) is refused politely, nothing changes.
+    again = _post(bot, _callback(201, f"pa:{pid}")).json()
+    assert "Bajarilmadi" in again["text"] and _stage(db, pid) == "APPROVED"
+
+
+def test_reject_button(bot: TestClient, db: Database) -> None:
+    pid = awaiting_proposal(db)
+    assert "rad etildi" in _post(bot, _callback(210, f"pr:{pid}")).json()["text"]
+    assert _stage(db, pid) == "DISQUALIFIED"
+
+
+def test_callback_from_stranger_is_ignored(bot: TestClient, db: Database) -> None:
+    pid = awaiting_proposal(db)
+    r = _post(bot, _callback(220, f"pa:{pid}", sender=999))
+    assert r.status_code == 200 and r.content == b""
+    assert _stage(db, pid) == "AWAITING_APPROVAL"
+
+
+@pytest.mark.parametrize("data", ["pa:not-a-uuid", "xx:00000000-0000-0000-0000-000000000000", ""])
+def test_bad_callback_data(bot: TestClient, db: Database, data: str) -> None:
+    body = _post(bot, _callback(230, data)).json()
+    assert body["text"] == "Noma'lum tugma."
+
+
+def test_unknown_proposal_callback(bot: TestClient) -> None:
+    body = _post(bot, _callback(240, "pa:00000000-0000-0000-0000-000000000000")).json()
+    assert "Bajarilmadi" in body["text"]
+
+
+def test_proposal_commands(bot: TestClient, db: Database) -> None:
+    pid = awaiting_proposal(db)
+    listing = _post(bot, _update(250, "/proposals")).json()["text"]
+    assert str(pid)[:8] in listing and "Lazzat Oshxonasi" in listing
+    assert "topilmadi" in _post(bot, _update(251, "/approve abc")).json()["text"]
+    done = _post(bot, _update(252, f"/approve {str(pid)[:8]}")).json()["text"]
+    assert "tasdiqlandi" in done and _stage(db, pid) == "APPROVED"
+    assert "yo'q" in _post(bot, _update(253, "/proposals")).json()["text"]
+
+
+def test_reject_command_with_reason(bot: TestClient, db: Database) -> None:
+    pid = awaiting_proposal(db)
+    _post(bot, _update(260, f"/reject {str(pid)[:8]} juda kichik biznes"))
+    from app.infrastructure.database.models import ApprovalRequest
+
+    with db.transaction() as s:
+        assert s.scalars(select(ApprovalRequest)).one().reason == "juda kichik biznes"

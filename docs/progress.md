@@ -306,3 +306,31 @@ Not verified: auditing real public sites — this sandbox's proxy blocks direct 
 
 ### Next task
 **M7** — offers without prices (ADR-0008): value-focused offer per qualified lead built from opportunities + evidence, Quality Gate (no price/commitment/unverified claim), versioning, owner approve/reject in dashboard and Telegram, Markdown export.
+
+## Session 5 (cont.) — M7 Proposals & Quality Gate
+
+### Completed
+- Persona defaults (`app/domain/persona.py`): disclosure, signature and opt-out in UZ Latin / UZ Cyrillic / RU / EN; client language by country (UZ → uz, KZ/KG/TJ → ru).
+- Offer builder (`app/domain/proposals.py`, pure): value-focused offer from recorded findings + opportunities only — facts plainly, inferences as possibilities, top 3 services with benefits, **no number at all** (no price, amount, deadline); AI disclosure first, opt-out and signature last. Owner-side assumptions and client questions per service.
+- Quality Gate (`app/domain/quality_gate.py`, pure rules, ADR-0011): blocks prices/currency amounts (incl. "so'mdan", "долларов"), discounts, "free", guarantees, deadlines, contracts, prepayment, missing disclosure/opt-out/evidence; flags superlatives, claims about clients, wrong script, length for review.
+- Tables `proposals`, `proposal_versions` (immutable versions with evidence finding ids and gate verdict), `approval_requests` (migration `0009`).
+- Agents: Proposal (`proposal.draft`, scheduled for every QUALIFIED lead without an offer) → Quality Gate (`quality_gate.review`, separate job so its kill switch works) → lead `PROPOSAL_DRAFTED → AWAITING_APPROVAL`, approval request, one Telegram message to the owner with **✅ Tasdiqlayman / ❌ Rad etaman** inline buttons (+ edit link when `APP_BASE_URL` is https).
+- Owner decisions: approve (lead APPROVED), reject (lead DISQUALIFIED, reason kept), edit (new version, re-checked immediately; a priced edit goes to NEEDS_EDIT and cannot be approved). All audit-logged. Owner bot: inline buttons, `/proposals`, `/approve <id>`, `/reject <id> [sabab]`.
+- Dashboard: `/proposals` (status tabs), detail (offer text, gate issues, evidence with sources, assumptions, questions, history, approve/reject/edit), Markdown export, home counter "Tasdiq kutmoqda", proposal link on the company page.
+
+### Verification
+| Command | Result |
+|---|---|
+| `pytest` (SQLite, Python 3.11 and 3.13) | 507 passed |
+| `TEST_DATABASE_URL=…10.6… pytest tests/integration` | 204 passed |
+| same on MariaDB 10.11 | 204 passed |
+| `alembic downgrade base && upgrade head && check` (MariaDB 10.6) | no differences |
+| `ruff`, `ruff format --check`, `mypy` | clean |
+
+### Limitations / decisions
+- Offers are template-based (no AI key yet); wording is generic but evidence-specific. Uzbek Cyrillic offers fall back to Latin until M8 language detection.
+- Nothing is sent yet: approved offers wait for M9 (outbound email / assisted Telegram).
+- M7b (later): internal pricing rules (never shown to clients) and PDF export.
+
+### Next task
+**M8** — Mustafo client bot (client-initiated): disclosure, language detection, message classification, opt-out → suppression, owner-approved replies, **Order Brief interview → client confirmation → `ORDER_CONFIRMED` → "✅ Yangi buyurtma" to the owner**, Markdown project spec.
