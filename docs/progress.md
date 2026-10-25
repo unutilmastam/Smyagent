@@ -356,3 +356,10 @@ Not verified: auditing real public sites — this sandbox's proxy blocks direct 
 
 ### Next task
 **M8** — Mustafo client bot + order intake (`ORDER_CONFIRMED`); its persona/FAQ settings join `/settings/agents/conversation`.
+
+## 2026-10-25 — Hosting verified (hostmaster.uz)
+Owner ran `scripts/check_environment.py` (0 internal errors). Findings and decisions recorded in `docs/deployment-cpanel.md`:
+- Runtime: Python **3.12** via Setup Python App (3.10–3.13 available). System python 3.9 lacks `ensurepip` — never use it for the app.
+- Database is **MySQL 8.0**, not MariaDB → CI gains a MySQL 8.0 job; `cryptography` added for PyMySQL `caching_sha2_password`.
+- All external APIs reachable; no Node/Docker/Redis (as assumed).
+- **Open:** `smy.itcode.uz/api` is already used by `smarthome-api` — owner to choose a subdomain for SMY Agent. LVE limits, cron minimum interval, MySQL server version, nested startup path still to read manually in cPanel.
