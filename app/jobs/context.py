@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import signal
+import threading
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
 
@@ -24,6 +27,10 @@ from app.infrastructure.telegram.client_bot import ClientMessenger, build_client
 
 class RetryableTaskError(RuntimeError):
     """Temporary failure (rate limit, timeout): the job is retried with backoff."""
+
+
+class JobTimeoutError(RetryableTaskError):
+    """The handler ran longer than the per-job limit (runner `--max-job-seconds`)."""
 
 
 class DeferTaskError(RuntimeError):
@@ -73,3 +80,32 @@ class TaskContext:
             ControlGate(
                 session, outbound_sending_enabled=self.settings.outbound_sending_enabled
             ).checkpoint(self.module)
+
+
+@contextmanager
+def time_limit(seconds: float) -> Iterator[None]:
+    """Raise JobTimeoutError inside the block after `seconds` (SIGALRM, main thread only).
+
+    The cron runner is a plain CLI process on Linux, so SIGALRM is available. Elsewhere
+    (threads, Windows) the limit is skipped and the runner's stale-job requeue remains
+    the safety net.
+    """
+    usable = (
+        seconds > 0
+        and hasattr(signal, "setitimer")
+        and threading.current_thread() is threading.main_thread()
+    )
+    if not usable:
+        yield
+        return
+
+    def _expired(_signum: int, _frame: object) -> None:
+        raise JobTimeoutError(f"timeout: job ran longer than {int(seconds)} s")
+
+    previous = signal.signal(signal.SIGALRM, _expired)
+    signal.setitimer(signal.ITIMER_REAL, seconds)
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous)

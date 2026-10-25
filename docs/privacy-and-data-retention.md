@@ -14,6 +14,8 @@ database on hostmaster.uz (Uzbekistan).
 | Source records (`company_sources`) | provider + URL + retrieval time | evidence and attribution | as long as the company | with the company |
 | Owner account, sessions, login attempts (IP stored only as HMAC) | owner | authentication, security | sessions ≤ 30 days; login attempts pruned (15-min window used) | automatic expiry |
 | Audit log | system | accountability | 2 years | manual, by the owner |
+| Job history (`jobs`, `agent_runs`): job type, ids of the records worked on, progress text, error class | runner | monitoring, retries, diagnosis | finished (succeeded/cancelled) jobs and agent runs **30 days**; failed jobs kept until retried or deleted | daily automatic cleanup by the runner (M10) |
+| Runner invocations (`runner_runs`) and alert dedup state (`owner_alerts`): counts, error class, alert key | runner | cron liveness, one alert per 6 h | 14 days / 30 days | daily automatic cleanup |
 
 Rules:
 - Only **business** contact data is collected; no private individuals' data from social networks.

@@ -267,3 +267,60 @@ def test_reply_and_order_buttons(bot: TestClient, db: Database) -> None:
         stages = {lead.stage.value for lead in s.scalars(select(Lead))}
         assert "WON" in stages
     assert "Bajarilmadi" in _post(bot, _callback(303, f"or:{brief_id}")).json()["text"]
+
+
+# -- background jobs (M10) -------------------------------------------------------
+
+
+def _failed_job(db: Database) -> Any:
+    from app.domain.jobs import JobStatus
+    from app.infrastructure.database.models import Job
+    from app.infrastructure.database.types import utcnow
+
+    with db.transaction() as s:
+        job = Job(
+            job_type="research.audit",
+            agent_module="research_audit",
+            status=JobStatus.FAILED,
+            payload={},
+            attempts=3,
+            last_error="dns: lookup failed",
+            finished_at=utcnow(),
+        )
+        s.add(job)
+        s.flush()
+        return job.id
+
+
+def _job_status(db: Database, job_id: Any) -> str:
+    from app.infrastructure.database.models import Job
+
+    with db.transaction() as s:
+        return s.get(Job, job_id).status.value  # type: ignore[union-attr]
+
+
+def test_jobs_command_shows_cron_and_failures(bot: TestClient, db: Database) -> None:
+    job_id = _failed_job(db)
+    text = _post(bot, _update(300, "/jobs")).json()["text"]
+    assert "Cron hali ishga tushmagan" in text
+    assert str(job_id)[:8] in text and "dns" in text and "/retry" in text
+    assert "Cron: ⏰ sozlanmagan" in _post(bot, _update(301, "/status")).json()["text"]
+
+
+def test_retry_command_and_button(bot: TestClient, db: Database) -> None:
+    job_id = _failed_job(db)
+    reply = _post(bot, _update(310, f"/retry {str(job_id)[:8]}")).json()["text"]
+    assert "navbatga qaytdi" in reply and _job_status(db, job_id) == "QUEUED"
+    assert "topilmadi" in _post(bot, _update(311, "/retry zz")).json()["text"]
+    # Button from the failure alert: already queued -> refused, nothing changes.
+    body = _post(bot, _callback(312, f"job_retry:{job_id}")).json()
+    assert body["method"] == "answerCallbackQuery" and "Bajarilmadi" in body["text"]
+    other = _failed_job(db)
+    assert "navbatga" in _post(bot, _callback(313, f"job_retry:{other}")).json()["text"]
+    assert _job_status(db, other) == "QUEUED"
+
+
+def test_retry_button_from_stranger_is_ignored(bot: TestClient, db: Database) -> None:
+    job_id = _failed_job(db)
+    r = _post(bot, _callback(320, f"job_retry:{job_id}", sender=999))
+    assert r.content == b"" and _job_status(db, job_id) == "FAILED"

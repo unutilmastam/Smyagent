@@ -9,6 +9,7 @@ from email.message import EmailMessage
 import pytest
 from sqlalchemy import select
 
+from app.application.control_snapshot import start_of_local_day
 from app.application.controls import AgentControlService
 from app.application.outreach import Deferred, OutreachError, OutreachService
 from app.application.proposals import ProposalService
@@ -221,7 +222,9 @@ def test_daily_cap_and_spacing_defer(db: Database) -> None:
         other_id = other.id
     with pytest.raises(DeferTaskError) as exc:
         run_send_email(_ctx(db, settings, FakeSender()), {"event_id": str(other_id)})
-    assert "cap" in str(exc.value) and exc.value.run_after > utcnow() + timedelta(hours=1)
+    # Deferred to the next local day (plus jitter), whatever the time of day now.
+    tomorrow = start_of_local_day(utcnow(), settings.default_timezone) + timedelta(days=1)
+    assert "cap" in str(exc.value) and exc.value.run_after >= tomorrow + timedelta(minutes=5)
     _cfg(db, email_warmup_start=10, email_min_gap_minutes=10)
     with pytest.raises(DeferTaskError) as gap:
         run_send_email(_ctx(db, settings, FakeSender()), {"event_id": str(other_id)})

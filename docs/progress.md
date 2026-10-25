@@ -440,3 +440,30 @@ Bug found and fixed during the dry run: the EXIT trap referenced a `local` varia
 
 ### Next task
 Owner runs `docs/deploy-first-time-uz.md`; then M10 → M11 → M3c-office → M5b.
+
+## Session 6 (cont.) — M10 Background automation hardening
+
+### Completed
+- **Cron liveness:** every runner invocation writes a `runner_runs` row (`OK | LOCKED | STOPPED | ERROR`, counts, error class). Dashboard `/`, `/control`, `/jobs` and the owner bot (`/status`, `/jobs`) show "last run N min ago", red after 15 min without a run, a setup hint if it never ran. Snapshot API gains `cron_health`, `cron_minutes_ago` (for the Virtual Office).
+- **Per-job time limit:** `--max-job-seconds` (default 120 s, SIGALRM in the cron process) cuts a hanging handler → retried with backoff; the DB pool is reset after an interrupt. Lock TTL covers the job limit.
+- **Stale jobs** (process killed): requeued only while attempts remain, otherwise `FAILED` (`stale: …`) — no endless loop on a job that kills the process.
+- **Owner alerts** (`owner_alerts`): final job failures and runner crashes go to the owner bot with 🔁 *Qayta urinish* / 🔎 *Ko'rish* buttons; one message per key (job type + error class) per 6 h, repeats counted; sent after commit. Retries are not alerted.
+- **Job monitoring:** `/jobs` (filter by status/agent, pagination, error class), `/jobs/<id>` (input, error, every run with step/cost), owner-only CSRF-protected retry (FAILED/CANCELLED) and cancel (QUEUED), audit-logged. Bot: `/jobs`, `/retry <id>`, `job_retry:` button.
+- **Retention:** daily cleanup after the jobs — finished jobs and agent runs > 30 days, runner rows > 14 days, idle alert rows; FAILED jobs are kept. Documented in `privacy-and-data-retention.md`.
+- **Logs:** `--log-file` (rotating 1 MB × 3); cron line updated in both deploy guides; `docs/operations.md` (how it runs, alerts, owner actions, troubleshooting).
+- Fixed a time-of-day dependent test (`test_daily_cap_and_spacing_defer` failed near Tashkent midnight).
+- Migration `0013` (`runner_runs`, `owner_alerts`).
+
+### Verification
+| Command | Result |
+|---|---|
+| `pytest` (SQLite, Python 3.13) | 698 passed, 1 skipped (shellcheck not in this venv) |
+| `TEST_DATABASE_URL=… pytest tests/integration` on MariaDB 10.6 / 10.11 / MySQL 8.0 | 281 / 281 / 281 passed |
+| `alembic check` (MySQL 8.0); `downgrade 0012` + `upgrade head` (MariaDB 10.6) | no differences; both directions OK |
+| `python -m app.jobs.runner --log-file …` (SQLite) | exit 0, JSON lines in the log, `runner_runs` row `OK`, cleanup ran |
+| `ruff check`, `ruff format --check`, `mypy app` | clean |
+
+Not verified: SIGALRM behaviour under the real cPanel cron (expected to work: plain Linux process); real Telegram delivery of alerts (notifier is the existing, tested owner-bot client).
+
+### Next task
+**M11** analytics (funnel), budgets, provider usage, backup restore drill, deployment smoke test → **M3c-office** Virtual Office → **M5b** AI layer once the key is configured.

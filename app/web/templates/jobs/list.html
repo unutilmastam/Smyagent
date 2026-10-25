@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}{{ t('jobs.title') }} — SMY Agent{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>{{ t('jobs.title') }}</h1>
+  <div class="page-actions"><a class="btn-link" href="/control">◉ {{ t('control.title') }}</a></div>
+</div>
+{% include "jobs/_cron.html" %}
+<nav class="tabs" aria-label="{{ t('jobs.status') }}">
+  <a href="/jobs{% if module %}?module={{ module }}{% endif %}" {% if not status %}aria-current="page"{% endif %}>{{ t('companies.all') }}</a>
+  {% for s in statuses %}<a href="/jobs?status={{ s.value }}{% if module %}&module={{ module }}{% endif %}" {% if status == s %}aria-current="page"{% endif %}>{{ t('jstatus.' ~ s.value) }} ({{ counts.get(s.value, 0) }})</a>{% endfor %}
+</nav>
+<form method="get" action="/jobs" class="filters">
+  {% if status %}<input type="hidden" name="status" value="{{ status.value }}">{% endif %}
+  <label>{{ t('jobs.agent') }}
+    <select name="module">
+      <option value="">{{ t('companies.all') }}</option>
+      {% for m in modules %}<option value="{{ m }}" {% if module == m %}selected{% endif %}>{{ t('agent.' ~ m) }}</option>{% endfor %}
+    </select>
+  </label>
+  <button type="submit" class="btn-small">{{ t('jobs.filter') }}</button>
+</form>
+{% if jobs %}
+<ul class="company-list">
+  {% for job in jobs %}
+  <li><a class="company-item" href="/jobs/{{ job.id }}">
+    <span class="company-name">{{ job.job_type }}</span>
+    <span class="company-meta">{{ t('agent.' ~ job.agent_module) }} · {{ job.updated_at.strftime('%Y-%m-%d %H:%M') }} UTC · {{ t('jobs.attempts') }} {{ job.attempts }}/{{ job.max_attempts }}</span>
+    {% if job.last_error and job.status.value in ('FAILED', 'QUEUED') %}<span class="company-meta job-error">⚠ {{ category(job.last_error) }}</span>{% endif %}
+    <span class="badges"><span class="badge badge-jstatus-{{ job.status.value|lower }}">{{ t('jstatus.' ~ job.status.value) }}</span></span>
+  </a></li>
+  {% endfor %}
+</ul>
+{% if pages > 1 %}
+<nav class="pager" aria-label="{{ t('jobs.pages') }}">
+  {% set base = '/jobs?' ~ ('status=' ~ status.value ~ '&' if status else '') ~ ('module=' ~ module ~ '&' if module else '') %}
+  {% if page > 1 %}<a href="{{ base }}page={{ page - 1 }}">← {{ t('jobs.prev') }}</a>{% endif %}
+  <span class="muted">{{ page }} / {{ pages }}</span>
+  {% if page < pages %}<a href="{{ base }}page={{ page + 1 }}">{{ t('jobs.next') }} →</a>{% endif %}
+</nav>
+{% endif %}
+{% else %}<section class="card empty"><p>{{ t('jobs.empty') }}</p></section>{% endif %}
+{% endblock %}

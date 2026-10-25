@@ -2,9 +2,11 @@
 
     python -m app.jobs.runner --max-jobs 5 --max-seconds 240
 
-One run: take the overlap lock -> requeue jobs of crashed runs -> schedule due
-discovery -> claim and execute jobs of ACTIVE modules until the job or time limit
--> release the lock. A global STOP makes the runner exit at its next check.
+One run: record the invocation (cron liveness) -> take the overlap lock -> requeue
+jobs of crashed runs -> schedule due work -> claim and execute jobs of ACTIVE modules
+until the job or time limit (each job also has its own time limit) -> release the
+lock. A global STOP makes the runner exit at its next check. Final job failures and a
+crash of the runner itself are reported to the owner bot, deduplicated (M10).
 """
 
 from __future__ import annotations
@@ -16,19 +18,22 @@ import sys
 import time
 import uuid
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass, field
+from contextlib import suppress
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 
-from sqlalchemy import update
+from sqlalchemy import select, update
 
+from app.application.automation import AlertOutbox, AlertService, cleanup
 from app.application.controls import ControlGate, OwnerNotifier
 from app.application.outreach import INBOX_JOB, OutreachService
 from app.core.config import ConfigurationError, Settings, get_settings
 from app.core.logging import configure_logging
 from app.domain.agents import GLOBAL_CONTROL, AgentHaltedError, AgentModule, ControlState
+from app.domain.automation import CLEANUP_EVERY, RunnerStatus
 from app.domain.jobs import JobStatus
 from app.infrastructure.database import Database
-from app.infrastructure.database.models import AgentRun, AgentRunStatus
+from app.infrastructure.database.models import AgentRun, AgentRunStatus, RunnerRun
 from app.infrastructure.database.types import utcnow
 from app.infrastructure.email.inbox import Inbox, build_inbox
 from app.infrastructure.email.smtp import EmailSender, build_email_sender
@@ -39,7 +44,13 @@ from app.infrastructure.search_providers.base import ProviderError, SearchProvid
 from app.infrastructure.search_providers.factory import build_search_provider
 from app.infrastructure.telegram.client_bot import ClientMessenger, build_client_bot
 from app.infrastructure.telegram.notifier import build_owner_notifier
-from app.jobs.context import DeferTaskError, RetryableTaskError, TaskContext
+from app.jobs.context import (
+    DeferTaskError,
+    JobTimeoutError,
+    RetryableTaskError,
+    TaskContext,
+    time_limit,
+)
 from app.jobs.tasks import HANDLERS, Handler
 from app.jobs.tasks.discovery import enqueue_due_targets
 from app.jobs.tasks.proposals import enqueue_qualified_leads
@@ -52,6 +63,8 @@ LOCK_NAME = "job-runner"
 # (job id, agent run id, job type, module, payload) of a claimed job
 Claimed = tuple[uuid.UUID, uuid.UUID, str, str, dict[str, object]]
 STALE_AFTER = timedelta(minutes=10)
+# Per-job limit; well under STALE_AFTER so a slow job is cut before it looks dead.
+DEFAULT_MAX_JOB_SECONDS = 120.0
 
 
 @dataclass
@@ -64,6 +77,11 @@ class RunSummary:
     retried: int = 0
     halted: int = 0
     stopped_globally: bool = False
+    failed_stale: int = 0
+    timed_out: int = 0
+    alerts_sent: int = 0
+    cleaned_up: bool = False
+    error: str | None = None
     messages: list[str] = field(default_factory=list)
 
 
@@ -84,6 +102,7 @@ class JobRunner:
         inbox_factory: Callable[[Settings], Inbox | None] = build_inbox,
         worker_id: str | None = None,
         clock: Callable[[], float] = time.monotonic,
+        max_job_seconds: float = DEFAULT_MAX_JOB_SECONDS,
     ) -> None:
         self.database = database
         self.settings = settings
@@ -96,15 +115,33 @@ class JobRunner:
         self.inbox_factory = inbox_factory
         self.worker_id = (worker_id or f"{socket.gethostname()}-{uuid.uuid4().hex[:8]}")[:64]
         self.clock = clock
+        self.max_job_seconds = max_job_seconds
+        self.alerts = AlertOutbox()
 
     def run(self, *, max_jobs: int, max_seconds: float) -> RunSummary:
         summary = RunSummary()
+        record_id = self._start_record()
+        try:
+            self._run(summary, max_jobs=max_jobs, max_seconds=max_seconds)
+        except Exception as exc:  # the runner itself broke (DB down, bug): tell the owner
+            logger.exception("runner_crashed")
+            summary.error = type(exc).__name__
+            with suppress(Exception), self.database.transaction() as session:
+                self.alerts.add(AlertService(session).runner_crashed(summary.error))
+        finally:
+            with suppress(Exception):
+                self._finish_record(record_id, summary)
+            summary.alerts_sent = self.alerts.flush(self.notifier)
+        return summary
+
+    def _run(self, summary: RunSummary, *, max_jobs: int, max_seconds: float) -> None:
         deadline = self.clock() + max_seconds
-        ttl = timedelta(seconds=max_seconds + 120)
+        # A job started just before the deadline may run up to its own limit.
+        ttl = timedelta(seconds=max_seconds + max(0.0, self.max_job_seconds) + 120)
         with self.database.transaction() as session:
             if not JobLockRepository(session).acquire(LOCK_NAME, self.worker_id, ttl=ttl):
                 summary.lock_acquired = False
-                return summary
+                return
         try:
             self._prepare(summary)
             while summary.succeeded + summary.failed + summary.retried < max_jobs:
@@ -115,16 +152,74 @@ class JobRunner:
                 if job is None:
                     break
                 self._execute(job, summary)
+            if self.clock() < deadline:
+                self._maybe_cleanup(summary)
         finally:
             with self.database.transaction() as session:
                 JobLockRepository(session).release(LOCK_NAME, self.worker_id)
-        return summary
+
+    def _maybe_cleanup(self, summary: RunSummary) -> None:
+        """Retention cleanup about once a day, after the jobs (never delays real work)."""
+        now = utcnow()
+        with self.database.transaction() as session:
+            recent = session.scalar(
+                select(RunnerRun.id)
+                .where(RunnerRun.cleaned_up.is_(True), RunnerRun.started_at > now - CLEANUP_EVERY)
+                .limit(1)
+            )
+            if recent is not None:
+                return
+            result = cleanup(session, now=now)
+        summary.cleaned_up = True
+        logger.info("retention_cleanup", extra=asdict(result))
+
+    # -- invocation record (cron liveness, M10) ----------------------------
+
+    def _start_record(self) -> uuid.UUID | None:
+        try:
+            with self.database.transaction() as session:
+                record = RunnerRun(worker_id=self.worker_id)
+                session.add(record)
+                session.flush()
+                return record.id
+        except Exception:  # DB unreachable: the run itself will report it
+            logger.warning("runner_record_failed")
+            return None
+
+    def _finish_record(self, record_id: uuid.UUID | None, summary: RunSummary) -> None:
+        if record_id is None:
+            return
+        if summary.error:
+            status = RunnerStatus.ERROR
+        elif not summary.lock_acquired:
+            status = RunnerStatus.LOCKED
+        elif summary.stopped_globally:
+            status = RunnerStatus.STOPPED
+        else:
+            status = RunnerStatus.OK
+        with self.database.transaction() as session:
+            record = session.get(RunnerRun, record_id)
+            if record is None:
+                return
+            record.status, record.finished_at = status, utcnow()
+            record.scheduled, record.succeeded = summary.scheduled, summary.succeeded
+            record.failed = summary.failed + summary.failed_stale
+            record.retried, record.halted = summary.retried, summary.halted
+            record.requeued_stale = summary.requeued_stale
+            record.cleaned_up = summary.cleaned_up
+            record.error = summary.error[:120] if summary.error else None
 
     # -- steps -------------------------------------------------------------
 
     def _prepare(self, summary: RunSummary) -> None:
         with self.database.transaction() as session:
-            summary.requeued_stale = JobRepository(session).requeue_stale(stale_after=STALE_AFTER)
+            jobs = JobRepository(session)
+            dead = jobs.fail_stale(stale_after=STALE_AFTER)
+            summary.failed_stale = len(dead)
+            alerts = AlertService(session)
+            for job in dead:
+                self.alerts.add(alerts.job_failed(job, base_url=self.settings.app_base_url))
+            summary.requeued_stale = jobs.requeue_stale(stale_after=STALE_AFTER)
             session.execute(
                 update(AgentRun)
                 .where(
@@ -137,7 +232,7 @@ class JobRunner:
         with self.database.transaction() as session:
             gate = ControlGate(session, outbound_sending_enabled=False)
             if gate.state(AgentModule.DISCOVERY) is ControlState.ACTIVE:
-                summary.scheduled = enqueue_due_targets(session)
+                summary.scheduled += enqueue_due_targets(session)
         with self.database.transaction() as session:
             gate = ControlGate(session, outbound_sending_enabled=False)
             if gate.state(AgentModule.RESEARCH_AUDIT) is ControlState.ACTIVE:
@@ -206,11 +301,17 @@ class JobRunner:
         try:
             if handler is None:
                 raise LookupError(f"no handler for job type {job_type}")
-            outcome = handler(ctx, payload)
+            with time_limit(self.max_job_seconds):
+                outcome = handler(ctx, payload)
         except AgentHaltedError as exc:
             halted_state, outcome = exc.state, f"halted: {exc.state.value}"
         except DeferTaskError as exc:
             defer_until, outcome = exc.run_after, f"deferred: {exc}"[:200]
+        except JobTimeoutError as exc:
+            # The alarm may have fired mid-query: drop pooled connections, start clean.
+            self.database.dispose()
+            summary.timed_out += 1
+            retryable, error, outcome = True, str(exc)[:500], "error"
         except (RetryableTaskError, ProviderError) as exc:
             retryable = not isinstance(exc, ProviderError) or exc.retryable
             error, outcome = str(exc)[:500], "error"
@@ -277,6 +378,9 @@ class JobRunner:
                     summary.retried += 1
                 else:
                     summary.failed += 1
+                    self.alerts.add(
+                        AlertService(session).job_failed(job, base_url=self.settings.app_base_url)
+                    )
             run.finished_at = now
             run.heartbeat_at = now
 
@@ -285,18 +389,22 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m app.jobs.runner")
     parser.add_argument("--max-jobs", type=int, default=5)
     parser.add_argument("--max-seconds", type=float, default=240)
+    parser.add_argument("--max-job-seconds", type=float, default=DEFAULT_MAX_JOB_SECONDS)
+    parser.add_argument(
+        "--log-file", help="append JSON logs here, rotated at 1 MB x 3 (cron on shared hosting)"
+    )
     args = parser.parse_args(argv)
     try:
         settings = get_settings()
     except ConfigurationError as exc:
         print(exc, file=sys.stderr)
         return 1
-    configure_logging(settings.log_level)
+    configure_logging(settings.log_level, log_file=args.log_file)
     database = Database(settings.database_url.get_secret_value())
     try:
-        summary = JobRunner(database, settings).run(
-            max_jobs=max(1, args.max_jobs), max_seconds=max(10.0, args.max_seconds)
-        )
+        summary = JobRunner(
+            database, settings, max_job_seconds=max(10.0, args.max_job_seconds)
+        ).run(max_jobs=max(1, args.max_jobs), max_seconds=max(10.0, args.max_seconds))
     finally:
         database.dispose()
     logger.info(
@@ -309,9 +417,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             "retried": summary.retried,
             "halted": summary.halted,
             "stopped_globally": summary.stopped_globally,
+            "failed_stale": summary.failed_stale,
+            "timed_out": summary.timed_out,
+            "alerts_sent": summary.alerts_sent,
+            "error": summary.error,
         },
     )
-    return 0
+    return 1 if summary.error else 0
 
 
 if __name__ == "__main__":

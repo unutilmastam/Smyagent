@@ -10,6 +10,7 @@ from sqlalchemy import func, select
 
 from app.api.deps import get_database
 from app.application.auth import AuthError, AuthService, ThrottledError
+from app.application.automation import cron_view
 from app.core.config import Settings, get_settings
 from app.core.security import new_token, tokens_equal
 from app.domain.auth import SESSION_ABSOLUTE_LIFETIME
@@ -179,7 +180,9 @@ def home(
         job_counts = dict(
             session.execute(select(Job.status, func.count()).group_by(Job.status)).tuples().all()
         )
+        cron = cron_view(session)
         context = layout_context(session, user)
+    context["cron"] = cron
     context["stats"] = {
         "companies": companies,
         "leads": leads,

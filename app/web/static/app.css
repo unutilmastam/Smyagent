@@ -200,3 +200,12 @@ input[type="file"] { padding: 8px; }
 .badge-ostatus-sent, .badge-ostatus-done { background: #dcfce7; color: var(--ok); }
 .badge-ostatus-queued, .badge-ostatus-sending, .badge-ostatus-task { background: #fef3c7; color: var(--warn); }
 .badge-ostatus-bounced, .badge-ostatus-failed, .badge-ostatus-blocked, .badge-ostatus-unknown { background: #fee2e2; color: var(--bad); }
+
+/* --- M10: job monitoring ------------------------------------------------- */
+.badge-jstatus-succeeded { background: #dcfce7; color: var(--ok); }
+.badge-jstatus-running { background: #dbeafe; color: #1d4ed8; }
+.badge-jstatus-queued { background: #f3f4f6; color: var(--muted); }
+.badge-jstatus-failed { background: #fee2e2; color: var(--bad); }
+.badge-jstatus-cancelled, .badge-jstatus-budget_deferred { background: #fef3c7; color: var(--warn); }
+.job-error { color: var(--bad); overflow-wrap: anywhere; }
+.cron-ok { font-size: .85rem; }

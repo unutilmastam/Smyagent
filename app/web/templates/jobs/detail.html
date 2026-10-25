@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ job.job_type }} — SMY Agent{% endblock %}
+{% block content %}
+<p><a href="/jobs">← {{ t('jobs.title') }}</a></p>
+<h1 class="break">{{ job.job_type }}</h1>
+<p class="badges">
+  <span class="badge badge-jstatus-{{ job.status.value|lower }}">{{ t('jstatus.' ~ job.status.value) }}</span>
+  <span class="badge">{{ t('agent.' ~ job.agent_module) }}</span>
+</p>
+{% if done %}<p class="alert alert-ok" role="status">{{ t('jobs.done.' ~ done) }}</p>{% endif %}
+<section class="card">
+  <dl class="facts">
+    <dt>ID</dt><dd class="break">{{ job.id }}</dd>
+    <dt>{{ t('jobs.attempts') }}</dt><dd>{{ job.attempts }}/{{ job.max_attempts }}</dd>
+    <dt>{{ t('jobs.created') }}</dt><dd>{{ job.created_at.strftime('%Y-%m-%d %H:%M:%S') }} UTC</dd>
+    <dt>{{ t('jobs.run_after') }}</dt><dd>{{ job.run_after.strftime('%Y-%m-%d %H:%M:%S') }} UTC</dd>
+    {% if job.finished_at %}<dt>{{ t('jobs.finished') }}</dt><dd>{{ job.finished_at.strftime('%Y-%m-%d %H:%M:%S') }} UTC</dd>{% endif %}
+    {% if job.claimed_by %}<dt>{{ t('jobs.worker') }}</dt><dd class="break">{{ job.claimed_by }}</dd>{% endif %}
+  </dl>
+</section>
+{% if job.last_error %}
+<h2>{{ t('jobs.error') }}</h2>
+<section class="card"><p><strong>{{ category(job.last_error) }}</strong></p><pre class="offer">{{ job.last_error }}</pre></section>
+{% endif %}
+{% if job.payload %}
+<h2>{{ t('jobs.input') }}</h2>
+<section class="card"><dl class="facts">{% for k, v in job.payload.items() %}<dt>{{ k }}</dt><dd class="break">{{ v }}</dd>{% endfor %}</dl></section>
+{% endif %}
+<h2>{{ t('jobs.runs') }}</h2>
+{% if runs %}
+<ol class="timeline">
+  {% for r in runs %}
+  <li><span class="muted">{{ r.started_at.strftime('%m-%d %H:%M:%S') }}</span> · {{ r.status.value }} · {{ r.current_step or '—' }}{% if r.error_category %} · <span class="job-error">{{ r.error_category }}</span>{% endif %}{% if r.cost_usd %} · ${{ r.cost_usd }}{% endif %}</li>
+  {% endfor %}
+</ol>
+{% else %}<p class="muted">{{ t('jobs.no_runs') }}</p>{% endif %}
+{% if user.is_owner %}
+<div class="module-actions">
+  {% if job.status.value in ('FAILED', 'CANCELLED') %}
+  <form method="post" action="/jobs/{{ job.id }}/retry">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <button type="submit" class="btn-primary">🔁 {{ t('jobs.retry') }}</button>
+  </form>
+  {% elif job.status.value == 'QUEUED' %}
+  <form method="post" action="/jobs/{{ job.id }}/cancel" data-confirm="{{ t('jobs.cancel.confirm') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <button type="submit" class="btn-danger">✕ {{ t('jobs.cancel') }}</button>
+  </form>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

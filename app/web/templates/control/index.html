@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 {% block title %}{{ t('control.title') }} — SMY Agent{% endblock %}
 {% block content %}
-<h1>{{ t('control.title') }}</h1>
+<div class="page-head">
+  <h1>{{ t('control.title') }}</h1>
+  <div class="page-actions"><a class="btn-link" href="/jobs">🧾 {{ t('jobs.open') }}</a></div>
+</div>
+{% include "jobs/_cron.html" %}
 {% if changed %}<p class="alert alert-ok" role="status">{{ t('control.changed') }}</p>{% endif %}
 {% if user.is_owner %}
 <div class="control-global">

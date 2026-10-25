@@ -8,6 +8,7 @@ import re
 import sys
 from contextvars import ContextVar
 from datetime import datetime, timezone
+from logging.handlers import RotatingFileHandler
 from typing import Any
 
 request_id_var: ContextVar[str | None] = ContextVar("request_id", default=None)
@@ -63,8 +64,13 @@ class JsonFormatter(logging.Formatter):
         return json.dumps(payload, ensure_ascii=False, default=str)
 
 
-def configure_logging(level: str = "INFO") -> None:
-    handler = logging.StreamHandler(sys.stderr)
+def configure_logging(level: str = "INFO", *, log_file: str | None = None) -> None:
+    """JSON logs to stderr, or to a size-rotated file (cron on shared hosting: 1 MB x 3)."""
+    handler: logging.Handler
+    if log_file:
+        handler = RotatingFileHandler(log_file, maxBytes=1_000_000, backupCount=3, encoding="utf-8")
+    else:
+        handler = logging.StreamHandler(sys.stderr)
     handler.setFormatter(JsonFormatter())
     root = logging.getLogger()
     root.handlers[:] = [handler]
