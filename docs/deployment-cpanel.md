@@ -77,6 +77,8 @@ No WebSockets, no streaming responses, no reliance on FastAPI `BackgroundTasks`,
 
 ## 6. Owner Telegram bot (M3c) — from the phone
 
+**Created 2026-10-25:** owner bot **@direktorsmybot** (*DIREKTOR-SMY*), client bot **@mustafosmybot** (*Mustafo SMY agent*). Tokens and the owner's numeric ID are kept by the owner only — set them as environment variables, never in Git or chat.
+
 1. Telegram → **@BotFather** → `/newbot` → choose a name (e.g. *SMY Agent Control*) and
    a username ending in `bot`. Copy the token. Keep this bot **private**; do not share its link.
 2. Find your **numeric** Telegram ID: message **@userinfobot** (or any "user ID" bot) and copy
