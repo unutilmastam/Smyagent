@@ -9,8 +9,8 @@ Authoritative milestone definitions and acceptance criteria live in
 | M1 | FastAPI foundation, settings, logging, health, WSGI bridge, tests, CI | ✅ done |
 | M2 | SQLAlchemy, Alembic, core models, repositories, MariaDB in CI | ✅ done |
 | M3 | Auth, mobile dashboard, owner Telegram bot | 🟡 M3-auth, M3-ui, M3-bot done; M3-totp open (optional) |
-| M3b | Agent Control Center (live graph, kill switch) — CLAUDE.md §13A.1–2 | ⏭ next |
-| M3c-office | Virtual Office view — CLAUDE.md §13A.3, ADR-0009 | planned (after M3b) |
+| M3b | Agent Control Center (live graph, kill switch) — CLAUDE.md §13A.1–2 | ✅ done |
+| M3c-office | Virtual Office view — CLAUDE.md §13A.3, ADR-0009 | ⏭ next (or M4 first — see progress) |
 | M4 | Company discovery (manual, CSV, one provider) | planned |
 | M5 | Research & SSRF-safe website audit | planned |
 | M6 | Opportunity analysis & scoring | planned |
@@ -37,7 +37,7 @@ clash with CLAUDE.md's separate milestones **M3b** (Control Center) and **M3c-of
 - ✅ **M3-bot** Owner Telegram bot: webhook with `secret_token`, numeric-ID authorization (private chats only), idempotent updates, `/status`, `/help`; CLI `telegram-set-webhook` / `telegram-webhook-info`.
 - **M3-totp** Optional TOTP for the owner (recommended before the dashboard is public).
 
-## M3b — Agent Control Center (next)
+## M3b — Agent Control Center (done)
 
 1. `agent_runs` table (module, job_id, status, `current_step`, `progress_pct`, `heartbeat_at`, tokens/cost), migration.
 2. `AgentControlService`: set state (owner only, audit-logged, reason), global EMERGENCY STOP (cancels queued outbound jobs, marks running jobs CANCELLED at next checkpoint); reactivation by owner only.

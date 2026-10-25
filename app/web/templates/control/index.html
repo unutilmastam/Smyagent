@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ t('control.title') }} — SMY Agent{% endblock %}
+{% block content %}
+<h1>{{ t('control.title') }}</h1>
+{% if changed %}<p class="alert alert-ok" role="status">{{ t('control.changed') }}</p>{% endif %}
+{% if user.is_owner %}
+<div class="control-global">
+  {% if snap.global_state == 'ACTIVE' %}
+  <form method="post" action="/control/global" data-confirm="{{ t('control.stop_all.confirm') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="state" value="STOPPED">
+    <button type="submit" class="btn-danger btn-big">⛔ {{ t('control.stop_all') }}</button>
+  </form>
+  {% else %}
+  <form method="post" action="/control/global">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="state" value="ACTIVE">
+    <button type="submit" class="btn-primary">▶ {{ t('control.resume_all') }}</button>
+  </form>
+  {% endif %}
+</div>
+{% else %}
+<p class="muted">{{ t('control.viewer') }}</p>
+{% endif %}
+<div id="control-live" data-poll="/control" aria-live="polite">
+  {% include "control/_live.html" %}
+</div>
+{% endblock %}

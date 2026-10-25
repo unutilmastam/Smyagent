@@ -6,6 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 
 from app.core.exceptions import error_body
+from app.domain.errors import DomainError
 from app.web.auth import CsrfError, ForbiddenError, LoginRequiredError, login_url
 
 
@@ -27,6 +28,11 @@ def register_web_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(ForbiddenError)
     async def _forbidden(request: Request, _: ForbiddenError) -> Response:
         return JSONResponse(error_body("forbidden", "Not allowed"), status_code=403)
+
+    @app.exception_handler(DomainError)
+    async def _domain(request: Request, exc: DomainError) -> Response:
+        # Business-rule violations are client errors, never 500s. Messages are ours, not user data.
+        return JSONResponse(error_body("invalid_request", str(exc)[:200]), status_code=400)
 
     @app.exception_handler(CsrfError)
     async def _csrf(request: Request, _: CsrfError) -> Response:

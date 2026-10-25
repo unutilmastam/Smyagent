@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from itertools import pairwise
 
 
 class AgentModule(str, Enum):
@@ -34,3 +35,36 @@ def effective_state(global_state: ControlState, module_state: ControlState) -> C
 
 def may_take_new_work(state: ControlState) -> bool:
     return state is ControlState.ACTIVE
+
+
+# Workflow order shown on the Control Center graph (CLAUDE.md §13A.1).
+PIPELINE: tuple[AgentModule, ...] = (
+    AgentModule.DISCOVERY,
+    AgentModule.RESEARCH_AUDIT,
+    AgentModule.OPPORTUNITY_SCORING,
+    AgentModule.PROPOSAL_REQUIREMENTS,
+    AgentModule.QUALITY_GATE,
+    AgentModule.CONVERSATION,
+)
+GRAPH_EDGES: tuple[tuple[AgentModule, AgentModule], ...] = tuple(pairwise(PIPELINE))
+
+# Jobs whose type starts with this prefix send something outside the system
+# (email, Telegram, ...). A global STOP cancels them while still queued.
+OUTBOUND_JOB_PREFIX = "outbound."
+
+
+def is_outbound_job(job_type: str) -> bool:
+    return job_type.startswith(OUTBOUND_JOB_PREFIX)
+
+
+class AgentHaltedError(RuntimeError):
+    """Raised at a checkpoint when the module may not continue (PAUSED or STOPPED)."""
+
+    def __init__(self, module: AgentModule, state: ControlState) -> None:
+        super().__init__(f"{module.value} is {state.value}")
+        self.module = module
+        self.state = state
+
+
+class SendingBlockedError(RuntimeError):
+    """Raised immediately before an outbound provider call that must not happen."""

@@ -8,9 +8,12 @@ from app.infrastructure.database.models.inbound import InboundEvent
 from app.infrastructure.database.models.jobs import Job, JobLock
 from app.infrastructure.database.models.leads import Lead
 from app.infrastructure.database.models.research import ResearchRun
+from app.infrastructure.database.models.runs import AgentRun, AgentRunStatus
 
 __all__ = [
     "AgentControl",
+    "AgentRun",
+    "AgentRunStatus",
     "AuditLog",
     "Company",
     "CompanyDomain",

@@ -45,6 +45,9 @@ First run `scripts/check_environment.py` in cPanel Terminal and share the output
 | GET | `/api/v1/companies`, `/api/v1/companies/{id}` | same data as JSON (session auth) |
 | GET | `/lang/{uz,ru,en}` | interface language |
 | POST | `/api/v1/telegram/webhook` | owner bot webhook (secret header) |
+| GET | `/control` | Agent Control Center: live graph (4 s polling), activity feed, controls |
+| GET | `/api/v1/control/snapshot` | live state JSON |
+| POST | `/control/{key}`, `/api/v1/control/{key}` | ACTIVE / PAUSED / STOPPED (owner, CSRF) |
 | GET | `/manifest.webmanifest`, `/sw.js` | PWA |
 
 CLI: `python -m app.cli create-owner --username <name>`, `check-config`, `telegram-set-webhook`, `telegram-webhook-info`.
