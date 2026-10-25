@@ -231,3 +231,57 @@ def test_all_ui_strings_translated() -> None:
 
 def test_htmx_vendored_file_present() -> None:
     assert (Path(STATIC_DIR) / "vendor" / "htmx-2.0.4.min.js").stat().st_size > 40_000
+
+
+def test_detail_shows_audit_and_labeled_findings(authed: TestClient, db: Database) -> None:
+    from app.domain.audit import Kind
+    from app.infrastructure.database.models import ResearchFinding, ResearchRun, WebsiteAudit
+    from app.infrastructure.database.types import utcnow
+
+    with db.transaction() as s:
+        cid = (
+            CompanyRepository(s)
+            .add(NewCompany(name="Audit Firm", country="UZ", domains=("audit.uz",)))
+            .id
+        )
+        run = ResearchRun(company_id=cid)
+        s.add(run)
+        s.flush()
+        s.add(
+            WebsiteAudit(
+                company_id=cid,
+                research_run_id=run.id,
+                url="https://audit.uz/",
+                final_url="https://audit.uz/",
+                status_code=200,
+                score=44,
+                fetched_at=utcnow(),
+                checks=[{"key": "mobile_viewport", "severity": "bad", "evidence": "—"}],
+            )
+        )
+        s.add(
+            ResearchFinding(
+                company_id=cid,
+                research_run_id=run.id,
+                key="not_mobile_friendly",
+                kind=Kind.FACT,
+                statement="x",
+                source_url="https://audit.uz/",
+                retrieved_at=utcnow(),
+            )
+        )
+        s.add(
+            ResearchFinding(
+                company_id=cid,
+                research_run_id=run.id,
+                key="possibly_outdated",
+                kind=Kind.INFERENCE,
+                statement="x",
+                confidence=0.5,
+                retrieved_at=utcnow(),
+            )
+        )
+    html = authed.get(f"/companies/{cid}").text
+    assert "Sayt holati: 44/100" in html
+    assert "Telefonga moslashgan" in html and "✗" in html
+    assert "Sayt telefonga moslashmagan" in html and "taxmin · 50%" in html and ">fakt<" in html

@@ -256,3 +256,28 @@ Not verified: a live Overpass query — this sandbox's proxy blocks `overpass-ap
 
 ### Next task
 **M5** — SSRF-safe fetcher + deterministic website audit, run automatically by the Research & Audit agent for every newly discovered company with a website (then M6 scoring, M7 offers, M8/M9 conversation and outreach).
+
+## Session 5 (cont.) — M5 Research & website audit
+
+### Completed
+- SSRF-safe fetcher (`app/infrastructure/http_fetcher/`): URL/port policy, full DNS answer validation (IPv4/IPv6, mapped/6to4/Teredo/NAT64), pinned-IP connection with SNI + certificate check against the name, no env proxy, manual redirects (max 5, re-validated), timeouts + budget, 2 MB limit, content-type allowlist, robots.txt, per-host throttle, honest User-Agent.
+- Deterministic audit (`app/domain/audit.py`, pure): HTTPS, status, title, description, mobile viewport, response time, size, visible contacts, Telegram link, forms, image alt, lang, copyright year, site builder; weighted score (critical checks ×2); findings labeled **fact** (observed) or **inference** (with confidence).
+- `website_audits` + `research_findings` (migration `0007`); no raw HTML stored.
+- Research & Audit agent task: runs automatically for every NEW company (runner schedules up to 20 per run, NEW → RESEARCH_PENDING → RESEARCHED / RESEARCH_FAILED); no website / unreachable / robots-disallowed are recorded as findings; https → http fallback for connect/TLS/timeout; one site's failure never stops the batch.
+- Company page: audit score, ✓/✗ checks with evidence, translated findings with kind, confidence, source and date.
+
+### Verification
+| Command | Result |
+|---|---|
+| `pytest` (SQLite, Python 3.11 and 3.13) | 406 passed |
+| `TEST_DATABASE_URL=…10.6… pytest tests/integration` | 162 passed |
+| same on MariaDB 10.11 | 162 passed |
+| `alembic downgrade base && upgrade head && check` (MariaDB 10.6) | no differences |
+| Local TLS server (`smy.test` cert): pinned-IP fetch with SNI | 200, Host header correct; mismatched name rejected (`tls`) |
+| Playwright 375×812: company page with audit | renders; no console errors; no horizontal scroll |
+| `ruff`, `ruff format --check`, `mypy` | clean |
+
+Not verified: auditing real public sites — this sandbox's proxy blocks direct connections; all fetch paths are covered with mocked transports and the local TLS test.
+
+### Next task
+**M6** — Opportunity & scoring: map findings to service categories (no website → website; not mobile → modernization; no online inquiry → Telegram bot / form; …), deterministic explainable score per company, owner-adjustable weights, create leads (`CANDIDATE` → `QUALIFIED`). Then M7 offers (no prices), M8/M9 conversation + order intake. **M5b**: AI research summary once an AI key is configured (Haiku, Batch API, ADR-0007).

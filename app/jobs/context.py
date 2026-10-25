@@ -14,6 +14,7 @@ from app.domain.agents import AgentModule
 from app.infrastructure.database import Database
 from app.infrastructure.database.models import AgentRun, Job
 from app.infrastructure.database.types import utcnow
+from app.infrastructure.http_fetcher.fetcher import SafeFetcher
 from app.infrastructure.search_providers.base import SearchProvider
 
 
@@ -29,6 +30,7 @@ class TaskContext:
     job_id: uuid.UUID
     run_id: uuid.UUID
     search_provider_factory: Callable[[Settings], SearchProvider | None]
+    fetcher_factory: Callable[[], SafeFetcher] = SafeFetcher
 
     def progress(self, step: str, pct: int) -> None:
         """Visible on the Control Center immediately (own short transaction)."""

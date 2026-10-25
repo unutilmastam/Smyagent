@@ -24,6 +24,7 @@ from app.infrastructure.database.models import (
     Job,
 )
 from app.infrastructure.database.types import utcnow
+from app.infrastructure.http_fetcher.fetcher import FetchError
 from app.infrastructure.repositories.jobs import JobLockRepository
 from app.infrastructure.search_providers.base import ProviderError, SearchQuery, SearchResult
 from app.jobs.runner import LOCK_NAME, JobRunner
@@ -86,9 +87,23 @@ def _target(db: Database, categories: list[str] | None = None) -> Any:
         return target.id
 
 
+class OfflineFetcher:
+    """Tests never touch the network: every site is 'unreachable'."""
+
+    def fetch(self, url: str) -> Any:
+        raise FetchError("dns", "offline test")
+
+    def close(self) -> None:
+        pass
+
+
 def _runner(db: Database, settings: Settings, provider: Any) -> JobRunner:
     return JobRunner(
-        db, settings, search_provider_factory=lambda _s: provider, worker_id="test-runner"
+        db,
+        settings,
+        search_provider_factory=lambda _s: provider,
+        fetcher_factory=OfflineFetcher,  # type: ignore[arg-type]
+        worker_id="test-runner",
     )
 
 
@@ -123,9 +138,12 @@ def test_runner_discovers_companies_end_to_end(db: Database, settings: Settings)
     assert run.status is AgentRunStatus.SUCCEEDED and run.progress_pct == 100
     assert run.current_step == "Denov/retail: 2 yangi, 0 dublikat, 0 xato"
     assert job.status is JobStatus.SUCCEEDED
-    # Second run the same day: nothing new scheduled, duplicates never re-created.
+    # Second run the same day: no new discovery, but both new companies go to research
+    # (one has no website, the other's site is unreachable offline); no duplicates.
     again = _runner(db, settings, provider).run(max_jobs=5, max_seconds=60)
-    assert again.scheduled == 0 and _count(db, Company) == 2
+    assert again.scheduled == 2 and again.succeeded == 2 and _count(db, Company) == 2
+    third = _runner(db, settings, provider).run(max_jobs=5, max_seconds=60)
+    assert third.scheduled == 0 and third.succeeded == 0
 
 
 def test_overlapping_runs_are_prevented(db: Database, settings: Settings) -> None:
@@ -194,9 +212,12 @@ def test_bad_request_fails_without_retry(db: Database, settings: Settings) -> No
 
 def test_provider_off_is_reported_not_crashing(db: Database, settings: Settings) -> None:
     _target(db)
-    summary = JobRunner(db, settings, search_provider_factory=lambda _s: None).run(
-        max_jobs=5, max_seconds=60
-    )
+    summary = JobRunner(
+        db,
+        settings,
+        search_provider_factory=lambda _s: None,
+        fetcher_factory=OfflineFetcher,  # type: ignore[arg-type]
+    ).run(max_jobs=5, max_seconds=60)
     assert summary.succeeded == 1 and "SEARCH_PROVIDER" in summary.messages[0]
 
 

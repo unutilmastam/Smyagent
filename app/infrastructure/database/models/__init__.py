@@ -1,6 +1,7 @@
 """ORM models. Import this package so every table is registered on `Base.metadata`."""
 
 from app.infrastructure.database.models.audit import AuditLog, WorkflowEvent
+from app.infrastructure.database.models.audits import ResearchFinding, WebsiteAudit
 from app.infrastructure.database.models.auth import LoginAttempt, User, UserSession
 from app.infrastructure.database.models.companies import Company, CompanyDomain, CompanySource
 from app.infrastructure.database.models.contacts import Contact
@@ -27,8 +28,10 @@ __all__ = [
     "JobLock",
     "Lead",
     "LoginAttempt",
+    "ResearchFinding",
     "ResearchRun",
     "User",
     "UserSession",
+    "WebsiteAudit",
     "WorkflowEvent",
 ]

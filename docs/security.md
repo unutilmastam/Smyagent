@@ -25,6 +25,14 @@ milestone named in brackets.
 - ✅ No default admin; owner created once with `python -m app.cli create-owner` (refuses if an owner exists).
 - Optional TOTP for the owner [M3d].
 
+## SSRF-safe fetcher (M5) — `app/infrastructure/http_fetcher/`
+- ✅ http/https only; ports 80/443/8080/8443; no credentials in URLs.
+- ✅ DNS resolved by us; **every** answer must be public (`is_blocked_ip`: private, loopback, link-local incl. 169.254.169.254, CGNAT, multicast, reserved, unspecified, IPv6 ULA/link-local, IPv4-mapped, 6to4, Teredo and NAT64 judged by the embedded IPv4).
+- ✅ Connection goes to the validated IP (Host header + TLS SNI keep the name; certificate verified against the name — tested locally with a self-signed CA); no env proxy (`trust_env=False`) so the name is never re-resolved.
+- ✅ Redirects followed manually, max 5, each hop fully re-validated.
+- ✅ Timeouts (5 s connect / 10 s read / 25 s budget), 2 MB body limit (header and streamed), content-type allowlist, 2 s per-host spacing, robots.txt respected, honest User-Agent.
+- ✅ No raw HTML stored: extracted text excerpt + SHA-256 hash + checks only.
+
 ## Kill switch (M3b)
 - ✅ Only the owner changes agent states (dashboard, API, owner bot); viewers and non-admin Telegram users get 403 / no effect. Every change is audit-logged with actor, previous/new state and reason.
 - ✅ `ControlGate` re-reads the DB at every check: job claim, between steps, immediately before any outbound send (also blocked while `OUTBOUND_SENDING_ENABLED=false`), before any AI call. Missing control rows count as STOPPED (fail closed).
