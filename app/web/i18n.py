@@ -1943,6 +1943,192 @@ _T: dict[str, dict[str, str]] = {
         "ru": "Поисковых запросов: {n}",
         "en": "Search requests: {n}",
     },
+    "totp.title": {
+        "uz": "Ikki bosqichli kirish (2FA)",
+        "ru": "Двухфакторный вход (2FA)",
+        "en": "Two-factor login (2FA)",
+    },
+    "totp.intro": {
+        "uz": "Parolga qo'shimcha: kirishda telefoningizdagi ilova (Google yoki Microsoft "
+        "Authenticator) ko'rsatgan 6 xonali kod so'raladi.",
+        "ru": "В дополнение к паролю при входе нужен 6-значный код из приложения на телефоне "
+        "(Google или Microsoft Authenticator).",
+        "en": "In addition to the password, logging in asks for the 6-digit code from the app "
+        "on your phone (Google or Microsoft Authenticator).",
+    },
+    "totp.off": {
+        "uz": "2FA o'chiq. Dashboard internetda ochiq — yoqish tavsiya etiladi.",
+        "ru": "2FA выключена. Панель открыта в интернете — рекомендуем включить.",
+        "en": "2FA is off. The dashboard is on the internet — turning it on is recommended.",
+    },
+    "totp.on": {
+        "uz": "2FA yoqilgan",
+        "ru": "2FA включена",
+        "en": "2FA is on",
+    },
+    "totp.enable": {
+        "uz": "2FA ni yoqish",
+        "ru": "Включить 2FA",
+        "en": "Turn on 2FA",
+    },
+    "totp.setup.title": {
+        "uz": "Ilovaga ulash",
+        "ru": "Подключение приложения",
+        "en": "Connect the app",
+    },
+    "totp.setup.step1": {
+        "uz": "Telefonga Google Authenticator yoki Microsoft Authenticator o'rnating.",
+        "ru": "Установите на телефон Google Authenticator или Microsoft Authenticator.",
+        "en": "Install Google Authenticator or Microsoft Authenticator on your phone.",
+    },
+    "totp.setup.step2": {
+        "uz": "Ilovada «+» → «QR kodni skanerlash» va quyidagi kodni skanerlang (kod shu "
+        "telefonda bo'lsa — pastdagi kalitni qo'lda kiriting yoki havolani bosing).",
+        "ru": "В приложении «+» → «Сканировать QR-код» и отсканируйте код ниже (если код на "
+        "этом же телефоне — введите ключ вручную или нажмите ссылку).",
+        "en": "In the app tap «+» → «Scan a QR code» and scan the code below (if it is on this "
+        "same phone, type the key by hand or tap the link).",
+    },
+    "totp.setup.qr_alt": {
+        "uz": "2FA uchun QR kod",
+        "ru": "QR-код для 2FA",
+        "en": "QR code for 2FA",
+    },
+    "totp.setup.manual": {
+        "uz": "Qo'lda kiritish uchun kalit (hisob nomi: SMY Agent):",
+        "ru": "Ключ для ручного ввода (аккаунт: SMY Agent):",
+        "en": "Key for manual entry (account: SMY Agent):",
+    },
+    "totp.setup.link": {
+        "uz": "Shu telefonda:",
+        "ru": "На этом телефоне:",
+        "en": "On this phone:",
+    },
+    "totp.setup.open_app": {
+        "uz": "ilovada ochish",
+        "ru": "открыть в приложении",
+        "en": "open in the app",
+    },
+    "totp.setup.step3": {
+        "uz": "Ilova ko'rsatgan 6 xonali kod",
+        "ru": "6-значный код из приложения",
+        "en": "The 6-digit code shown in the app",
+    },
+    "totp.setup.confirm": {
+        "uz": "Tasdiqlash va yoqish",
+        "ru": "Подтвердить и включить",
+        "en": "Confirm and turn on",
+    },
+    "totp.setup.cancel": {
+        "uz": "Bekor qilish",
+        "ru": "Отмена",
+        "en": "Cancel",
+    },
+    "totp.code": {
+        "uz": "Ilovadagi kod yoki zaxira kod",
+        "ru": "Код из приложения или резервный код",
+        "en": "App code or recovery code",
+    },
+    "totp.code.app": {
+        "uz": "Ilovadagi 6 xonali kod",
+        "ru": "6-значный код из приложения",
+        "en": "6-digit app code",
+    },
+    "totp.codes.title": {
+        "uz": "10 ta zaxira kod",
+        "ru": "10 резервных кодов",
+        "en": "10 recovery codes",
+    },
+    "totp.codes.warn": {
+        "uz": "Bu kodlar faqat HOZIR ko'rsatiladi. Telefon yo'qolsa, har biri bir marta kirish "
+        "uchun ishlaydi.",
+        "ru": "Коды показываются только СЕЙЧАС. Если потеряете телефон, каждый работает для "
+        "одного входа.",
+        "en": "These codes are shown only NOW. If you lose your phone, each one works for one "
+        "login.",
+    },
+    "totp.codes.copy": {
+        "uz": "Nusxa olish",
+        "ru": "Скопировать",
+        "en": "Copy",
+    },
+    "totp.codes.copied": {
+        "uz": "Nusxa olindi",
+        "ru": "Скопировано",
+        "en": "Copied",
+    },
+    "totp.codes.where": {
+        "uz": "Telefondan boshqa joyda saqlang: qog'ozga yozing yoki parol menejeriga qo'ying "
+        "(chatga yubormang).",
+        "ru": "Храните не в телефоне: запишите на бумаге или в менеджере паролей (не "
+        "отправляйте в чат).",
+        "en": "Keep them off the phone: on paper or in a password manager (never in a chat).",
+    },
+    "totp.codes.new": {
+        "uz": "Yangi zaxira kodlar",
+        "ru": "Новые резервные коды",
+        "en": "New recovery codes",
+    },
+    "totp.remaining": {
+        "uz": "Ishlatilmagan zaxira kodlar: {n}",
+        "ru": "Неиспользованных резервных кодов: {n}",
+        "en": "Unused recovery codes: {n}",
+    },
+    "totp.remaining.low": {
+        "uz": "Zaxira kodlar kam qoldi — yangilarini oling.",
+        "ru": "Резервных кодов мало — создайте новые.",
+        "en": "Few recovery codes left — create new ones.",
+    },
+    "totp.disable": {
+        "uz": "2FA ni o'chirish",
+        "ru": "Выключить 2FA",
+        "en": "Turn off 2FA",
+    },
+    "totp.disable.confirm": {
+        "uz": "2FA ni o'chirasizmi? Kirish faqat parol bilan bo'ladi.",
+        "ru": "Выключить 2FA? Вход будет только по паролю.",
+        "en": "Turn off 2FA? Login will need only the password.",
+    },
+    "totp.done.disabled": {
+        "uz": "2FA o'chirildi.",
+        "ru": "2FA выключена.",
+        "en": "2FA turned off.",
+    },
+    "totp.lost": {
+        "uz": "Telefon ham, zaxira kodlar ham yo'qolsa — cPanel Terminal'da:",
+        "ru": "Если потеряны и телефон, и коды — в cPanel Terminal:",
+        "en": "Lost both the phone and the codes? In cPanel Terminal:",
+    },
+    "totp.error.code": {
+        "uz": "Kod noto'g'ri yoki eskirgan. Ilovadagi yangi kodni kiriting.",
+        "ru": "Неверный или устаревший код. Введите новый код из приложения.",
+        "en": "Wrong or expired code. Enter the current code from the app.",
+    },
+    "totp.error.password": {
+        "uz": "Parol noto'g'ri.",
+        "ru": "Неверный пароль.",
+        "en": "Wrong password.",
+    },
+    "totp.login.title": {
+        "uz": "Tasdiqlash kodi",
+        "ru": "Код подтверждения",
+        "en": "Verification code",
+    },
+    "totp.login.hint": {
+        "uz": "Authenticator ilovasidagi 6 xonali kodni kiriting.",
+        "ru": "Введите 6-значный код из приложения Authenticator.",
+        "en": "Enter the 6-digit code from your Authenticator app.",
+    },
+    "totp.login.recovery": {
+        "uz": "Telefon yo'qmi? Zaxira kodlardan birini kiriting (masalan abcde-fghjk).",
+        "ru": "Нет телефона? Введите один из резервных кодов (например abcde-fghjk).",
+        "en": "No phone? Enter one of your recovery codes (e.g. abcde-fghjk).",
+    },
+    "totp.login.back": {
+        "uz": "Boshqa akkaunt bilan kirish",
+        "ru": "Войти под другим аккаунтом",
+        "en": "Log in with another account",
+    },
 }
 
 

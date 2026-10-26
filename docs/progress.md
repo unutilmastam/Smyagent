@@ -549,3 +549,27 @@ None required: `MONTHLY_AI_BUDGET_USD` defaults to 10 when missing from `.env`. 
 
 ### Next task
 **M5b** AI layer once the owner has the Anthropic API key; meanwhile optional TOTP for the owner.
+
+## Session 7 — M3-totp two-factor login
+
+### Completed
+- `app/core/totp.py`: RFC 6238 (SHA-1, 6 digits, 30 s, ±1 step), standard library only, replay protection via the last used step; `otpauth://` URI for Google / Microsoft Authenticator.
+- `app/core/crypto.py`: Fernet with a key derived from `APP_SECRET_KEY` — TOTP seeds are encrypted in `users` (a DB dump alone cannot produce codes).
+- `TotpService`: setup (pending seed → QR as SVG data URI via `segno` + manual key + link) → confirm with one code → 10 one-time recovery codes `xxxxx-xxxxx` (Argon2-hashed, shown once, `Cache-Control: no-store`); regenerate codes; disable with password + code; `disable_by_operator`.
+- Login: password step returns a signed 5-minute challenge (HttpOnly, SameSite=Strict cookie on `/login`) instead of a session; `/login/totp` accepts an app code or a recovery code; failures count towards the existing throttle (5 per 15 min); audit `auth.password_ok_totp_pending`, `auth.totp_failed`, `auth.totp_recovery_used`, `auth.login {method}`.
+- Dashboard: ⚙ Sozlamalar → 🔐 2FA (`/settings/security`), mobile-first; owner bot notified on enable/disable.
+- CLI: `python -m app.cli disable-totp --username bahrullo` (audit `auth.totp_disabled_cli`, owner bot notified).
+- Migration `0015` (`users.totp_*`, `totp_recovery_codes`); dependency `segno` (pure Python).
+- Uzbek guide `docs/2fa-uz.md`.
+
+### Verification
+| Check | Result |
+|---|---|
+| RFC 6238 Appendix B vectors (59, 1111111109, 1234567890, 2000000000) | match |
+| Full flow test: enable via QR page → logout → password → wrong code 401 → replayed code refused → fresh code → session; recovery code once; throttle 429 on the 6th wrong code; tampered challenge → back to password; disable needs password + code; CLI disable | pass on SQLite and MySQL 8.0 |
+| Playwright 375 px setup page + `zbarimg` on the screenshot | QR decodes to `otpauth://totp/SMY%20Agent%3Abahrullo?secret=…` matching the manual key |
+
+Not verified: scanning with a physical phone (only decoded from the rendered page).
+
+### Next task
+**M5b** AI layer once the owner has the Anthropic API key.

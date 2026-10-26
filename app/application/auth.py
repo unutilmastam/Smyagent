@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import uuid
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from sqlalchemy.orm import Session
 
@@ -14,6 +15,7 @@ from app.core.security import (
     keyed_hash,
     needs_rehash,
     new_token,
+    tokens_equal,
     verify_password,
 )
 from app.domain.actors import Actor
@@ -60,6 +62,17 @@ class LoginResult:
     token: str  # raw cookie value; never stored or logged
 
 
+@dataclass(frozen=True)
+class TotpChallenge:
+    """Password was right; the authenticator code is still needed (second step)."""
+
+    user_id: uuid.UUID
+    token: str  # signed, short-lived; kept in an HttpOnly cookie on /login
+
+
+TOTP_CHALLENGE_LIFETIME = timedelta(minutes=5)
+
+
 class AuthService:
     def __init__(self, session: Session, *, secret_key: str) -> None:
         self.session = session
@@ -93,7 +106,7 @@ class AuthService:
 
     def login(
         self, username: str, password: str, *, client_ip: str, now: datetime | None = None
-    ) -> LoginResult:
+    ) -> LoginResult | TotpChallenge:
         now = now or utcnow()
         name = username.strip().lower()[:64]
         ip_hash = keyed_hash(self.secret_key, client_ip or "unknown")
@@ -121,6 +134,68 @@ class AuthService:
 
         if needs_rehash(user.password_hash):
             user.password_hash = hash_password(password)
+        if user.totp_enabled:
+            self.audit.add(
+                actor=Actor.user(str(user.id)),
+                action="auth.password_ok_totp_pending",
+                entity_type="user",
+                entity_id=user.id,
+            )
+            return TotpChallenge(user.id, self._challenge_token(user.id, now))
+        return self._start_session(user, ip_hash, now)
+
+    def complete_totp(
+        self, challenge: str, code: str, *, client_ip: str, now: datetime | None = None
+    ) -> LoginResult:
+        """Second step: a fresh authenticator code or an unused recovery code."""
+        from app.application.totp import TotpService
+
+        now = now or utcnow()
+        user_id = self._challenge_user(challenge, now)
+        user = self.session.get(User, user_id) if user_id else None
+        if user is None or not user.is_active or not user.totp_enabled:
+            raise AuthError("login step expired")
+        ip_hash = keyed_hash(self.secret_key, client_ip or "unknown")
+        since = now - LOGIN_WINDOW
+        if is_throttled(
+            self.attempts.failures_since(since, username=user.username),
+            self.attempts.failures_since(since, ip_hash=ip_hash),
+        ):
+            raise ThrottledError("Too many failed attempts. Try again in 15 minutes.")
+        method = TotpService(self.session, secret_key=self.secret_key).verify_login(
+            user, code, now=now
+        )
+        if method is None:
+            self.attempts.record(username=user.username, ip_hash=ip_hash, success=False, now=now)
+            self.audit.add(
+                actor=Actor.system("auth"),
+                action="auth.totp_failed",
+                details={"username": user.username},
+            )
+            raise AuthError("wrong code")
+        return self._start_session(user, ip_hash, now, method=method)
+
+    def _challenge_token(self, user_id: uuid.UUID, now: datetime) -> str:
+        expires = int((now + TOTP_CHALLENGE_LIFETIME).timestamp())
+        body = f"{user_id}.{expires}"
+        return f"{body}.{keyed_hash(self.secret_key, 'totp-challenge:' + body)}"
+
+    def _challenge_user(self, token: str, now: datetime) -> uuid.UUID | None:
+        try:
+            user_part, expires, signature = token.split(".")
+            body = f"{user_part}.{expires}"
+            if not tokens_equal(signature, keyed_hash(self.secret_key, "totp-challenge:" + body)):
+                return None
+            if int(expires) < now.timestamp():
+                return None
+            return uuid.UUID(user_part)
+        except (ValueError, AttributeError):
+            return None
+
+    def _start_session(
+        self, user: User, ip_hash: str, now: datetime, *, method: str = "password"
+    ) -> LoginResult:
+        name = user.username
         user.last_login_at = now
         self.attempts.record(username=name, ip_hash=ip_hash, success=True, now=now)
         self.sessions.delete_expired(now)
@@ -140,6 +215,7 @@ class AuthService:
             action="auth.login",
             entity_type="user",
             entity_id=user.id,
+            details={"method": method},
         )
         return LoginResult(user=user, session=user_session, token=token)
 

@@ -245,3 +245,9 @@ input[type="file"] { padding: 8px; }
 .an-agents { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
 .an-agents li { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid var(--border); padding: 6px 0; }
 .card + .card { margin-top: 12px; }
+
+/* --- M3-totp: two-factor login ------------------------------------------- */
+.totp-qr { text-align: center; }
+.totp-qr img { background: #fff; padding: 8px; border-radius: 8px; max-width: 100%; height: auto; }
+.totp-secret code, .totp-code-list code { font-size: 1.05rem; letter-spacing: .05em; overflow-wrap: anywhere; }
+.totp-code-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 16px; padding-left: 24px; }

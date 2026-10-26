@@ -9,6 +9,7 @@ python -m app.cli db-backup [--dir ~/smyagent_data/backups] [--keep 14]
 python -m app.cli db-backup-verify [--file PATH]
 python -m app.cli db-restore-drill --target-database itcode_smyrestore
 python -m app.cli smoke-test [--no-http]
+python -m app.cli disable-totp --username bahrullo
 """
 
 from __future__ import annotations
@@ -226,6 +227,40 @@ def _smoke_test(directory: str, check_http: bool) -> int:
     return code
 
 
+def _disable_totp(username: str) -> int:
+    """Lost phone and recovery codes: turn 2FA off from cPanel Terminal (audit-logged)."""
+    from sqlalchemy import select
+
+    from app.application.totp import TotpService
+    from app.infrastructure.database.models import User
+    from app.infrastructure.telegram.notifier import build_owner_notifier
+
+    try:
+        settings = get_settings()
+    except ConfigurationError as exc:
+        print(exc, file=sys.stderr)
+        return 1
+    database = Database(settings.database_url.get_secret_value())
+    name = username.strip().lower()
+    try:
+        with database.transaction() as session:
+            user = session.scalars(select(User).where(User.username == name)).first()
+            if user is None:
+                print(f"Foydalanuvchi topilmadi: {name}", file=sys.stderr)
+                return 1
+            if not user.totp_enabled and user.totp_pending_enc is None:
+                print(f"{name}: 2FA allaqachon o'chiq.")
+                return 0
+            TotpService(
+                session, secret_key=settings.app_secret_key.get_secret_value()
+            ).disable_by_operator(user)
+    finally:
+        database.dispose()
+    build_owner_notifier(settings).notify(f"⚠️ {name}: 2FA cPanel Terminal'dan o'chirildi.")
+    print(f"✓ {name}: 2FA o'chirildi. Endi faqat parol bilan kiring va 2FA ni qayta yoqing.")
+    return 0
+
+
 def _telegram_webhook_info() -> int:
     prepared = _telegram_client()
     if prepared is None:
@@ -273,7 +308,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     smoke = sub.add_parser("smoke-test", help="post-deploy health check of the live system")
     smoke.add_argument("--dir", default="~/smyagent_data/backups")
     smoke.add_argument("--no-http", action="store_true", help="skip the HTTPS health check")
+    totp_off = sub.add_parser("disable-totp", help="turn off 2FA for a user (lost phone)")
+    totp_off.add_argument("--username", required=True)
     args = parser.parse_args(argv)
+    if args.command == "disable-totp":
+        return _disable_totp(args.username)
     if args.command == "db-backup-verify":
         return _backup_verify(args.dir, args.file)
     if args.command == "db-restore-drill":
