@@ -74,8 +74,38 @@ def database_url(name: str, user: str, password: str, host: str = "localhost") -
     )
 
 
+BOOL_KEYS = {"OUTBOUND_SENDING_ENABLED", "SMTP_USE_SSL"}
+INT_KEYS = {"SMTP_PORT", "IMAP_PORT", "DAILY_SEARCH_LIMIT"}
+DECIMAL_KEYS = {"MONTHLY_AI_BUDGET_USD", "DAILY_AI_BUDGET_USD"}
+_TRUE = {"true", "ha", "yes", "1", "on"}
+_FALSE = {"false", "yoq", "yo'q", "no", "0", "off"}
+
+
+def _typed(key: str, value: str) -> str | None:
+    """Normalized value for typed settings, so a typo never reaches .env (and the app)."""
+    lowered = value.lower()
+    if key in BOOL_KEYS:
+        if lowered in _TRUE:
+            return "true"
+        if lowered in _FALSE:
+            return "false"
+        raise SetupError("faqat true yoki false deb yozing")
+    if key in INT_KEYS:
+        if not value.isdigit():
+            raise SetupError("faqat butun son yozing (masalan 465)")
+        return str(int(value))
+    if key in DECIMAL_KEYS:
+        if not re.fullmatch(r"\d+(\.\d{1,4})?", value):
+            raise SetupError("son yozing, masalan 10 yoki 0.5")
+        return value
+    return None
+
+
 def validate(key: str, value: str) -> str:
     value = value.strip()
+    typed = _typed(key, value)
+    if typed is not None:
+        return typed
     bot_token = key in ("TELEGRAM_ADMIN_BOT_TOKEN", "TELEGRAM_CLIENT_BOT_TOKEN")
     if bot_token and value and not _TOKEN.match(value):
         raise SetupError("token shunday ko'rinishda bo'ladi: 123456789:AA... (BotFather)")
