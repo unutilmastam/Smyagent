@@ -573,3 +573,16 @@ Not verified: scanning with a physical phone (only decoded from the rendered pag
 
 ### Next task
 **M5b** AI layer once the owner has the Anthropic API key.
+## Session 7 (cont.) — Email setup for the owner
+
+### Completed
+- `docs/email-uz.md`: Uzbek step by step — mailbox in cPanel, SPF/DKIM (Email Deliverability) + DMARC (Zone Editor), `.env`, self-test, turning sending on, dashboard limits (warm-up 10/day), monitoring and STOP.
+- `scripts/setup_env.py --email`: one question set (server, address, hidden password) fills `SMTP_*` and `IMAP_*`; `SMTP_FROM=Mustafo — ITcoDe.Uz <agent@itcode.uz>`; `OUTBOUND_SENDING_ENABLED` is left untouched.
+- `python -m app.cli email-test --to <address>`: one test mail via SMTP + read-only IMAP login check; outside the outreach queue, prints whether sending to clients is on.
+- Owner bot: after "approve" it now says honestly how the offer will be delivered (email queued / email configured but sending off / email not connected → Telegram/phone task) instead of the stale "M9 ishga tushganda".
+- Smoke test: new "Email" line. `deployment-cpanel.md` §6c no longer points to the Setup Python App screen.
+
+### Verification
+`pytest` 767 passed, 1 skipped; integration on MariaDB 10.6 / 10.11 / MySQL 8.0: 310 / 310 / 310 passed (incl. new tests for `--email`, `email-test` with fake SMTP/IMAP, bot delivery note, smoke email line).
+
+Not verified: real delivery from hostmaster.uz (needs the owner's mailbox and password).

@@ -35,7 +35,7 @@ def _answers(*values: str) -> Any:
     queue = list(values)
 
     def ask(question: str, default: str, hidden: bool) -> str:
-        return queue.pop(0)
+        return queue.pop(0) or default  # empty answer = the default, like the terminal
 
     return ask
 
@@ -163,3 +163,35 @@ def test_failed_run_discards_pasted_input(tmp_path: Path, monkeypatch: pytest.Mo
     monkeypatch.setattr(env, "_discard_pending_input", lambda: flushed.append(True))
     assert env.main([]) == 1
     assert flushed == [True] and not (tmp_path / ".env").exists()
+
+
+def test_email_mode_fills_smtp_and_imap_from_one_mailbox() -> None:
+    values = env.email_values(
+        {"OUTBOUND_SENDING_ENABLED": "false"},
+        _answers("", "Agent@ITcoDe.uz", "Pochta#Parol-2026"),  # empty host → default
+    )
+    assert values["SMTP_HOST"] == values["IMAP_HOST"] == "mail.itcode.uz"
+    assert values["SMTP_USERNAME"] == values["IMAP_USERNAME"] == "agent@itcode.uz"
+    assert values["SMTP_PASSWORD"] == values["IMAP_PASSWORD"] == "Pochta#Parol-2026"
+    assert values["SMTP_PORT"] == "465" and values["IMAP_PORT"] == "993"
+    assert values["SMTP_FROM"] == "Mustafo — ITcoDe.Uz <agent@itcode.uz>"
+    assert values["OUTBOUND_SENDING_ENABLED"] == "false"  # turned on separately
+
+
+def test_email_mode_rejects_bad_input_then_accepts() -> None:
+    values = env.email_values(
+        {}, _answers("not a host", "mail.itcode.uz", "nope", "agent@itcode.uz", "Secret-2026x")
+    )
+    assert values["SMTP_HOST"] == "mail.itcode.uz"
+
+
+def test_email_mode_written_env_is_read_by_the_app(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    values = env.email_values({}, _answers("", "", "P@ss#$x-2026"))
+    text = env.render(EXAMPLE, values)
+    (tmp_path / ".env").write_text(text, encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    settings = load_settings(_env_file=tmp_path / ".env")
+    assert settings.email_enabled and settings.smtp_from.startswith("Mustafo — ITcoDe.Uz")
+    assert settings.imap_password.get_secret_value() == values["IMAP_PASSWORD"]

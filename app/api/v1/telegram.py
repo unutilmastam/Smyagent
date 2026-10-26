@@ -58,6 +58,7 @@ async def owner_webhook(
             session,
             admin_ids=settings.telegram_admin_ids,
             outbound_sending_enabled=settings.outbound_sending_enabled,
+            email_enabled=settings.email_enabled,
         ).handle(update)
     if reply is None:
         return Response(status_code=200)

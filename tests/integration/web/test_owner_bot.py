@@ -194,6 +194,7 @@ def test_approve_button_answers_callback(bot: TestClient, db: Database) -> None:
     body = r.json()
     assert body["method"] == "answerCallbackQuery" and body["callback_query_id"] == "cb200"
     assert "tasdiqlandi" in body["text"]
+    assert "email-uz" in body["text"]  # honest: email is not connected in this test
     assert _stage(db, pid) == "APPROVED"
     # Pressing again (new update) is refused politely, nothing changes.
     again = _post(bot, _callback(201, f"pa:{pid}")).json()

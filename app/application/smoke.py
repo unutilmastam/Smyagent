@@ -79,6 +79,7 @@ class SmokeTest:
         if self.check_http:
             checks.append(self._http())
         checks += self._webhooks()
+        checks.append(self._email())
         checks.append(self._backup())
         return checks
 
@@ -164,6 +165,16 @@ class SmokeTest:
             else:
                 checks.append(Check(name, Level.OK, "webhook to'g'ri, xato yo'q"))
         return checks
+
+    def _email(self) -> Check:
+        s = self.settings
+        if not s.email_enabled:
+            return Check("Email", Level.WARN, "ulanmagan — docs/email-uz.md")
+        reading = "javoblar o'qiladi" if s.imap_host else "IMAP yo'q — javoblar o'qilmaydi"
+        if not s.outbound_sending_enabled:
+            return Check("Email", Level.OK, f"sozlangan, yuborish o'chiq; {reading}")
+        level = Level.OK if s.imap_host else Level.WARN
+        return Check("Email", level, f"sozlangan, yuborish YOQILGAN; {reading}")
 
     def _backup(self) -> Check:
         latest = latest_backup(self.backup_dir) if self.backup_dir.is_dir() else None

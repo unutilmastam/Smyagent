@@ -116,3 +116,43 @@ def test_telegram_commands_need_configuration(
 ) -> None:
     assert cli.main(["telegram-webhook-info"]) == 1
     assert "TELEGRAM_ADMIN_BOT_TOKEN" in capsys.readouterr().err
+
+
+def test_email_test_sends_to_owner_and_checks_imap(
+    monkeypatch: pytest.MonkeyPatch, database_url: str, capsys: pytest.CaptureFixture[str]
+) -> None:
+    from email.message import EmailMessage
+
+    sent: list[EmailMessage] = []
+
+    class FakeSender:
+        def send(self, message: EmailMessage) -> None:
+            sent.append(message)
+
+    monkeypatch.setenv("DATABASE_URL", database_url)
+    for key, value in {
+        "SMTP_HOST": "mail.itcode.uz",
+        "SMTP_USERNAME": "agent@itcode.uz",
+        "SMTP_PASSWORD": "secret-pass-2026",
+        "SMTP_FROM": "Mustafo — ITcoDe.Uz <agent@itcode.uz>",
+        "IMAP_HOST": "mail.itcode.uz",
+        "IMAP_USERNAME": "agent@itcode.uz",
+    }.items():
+        monkeypatch.setenv(key, value)
+    get_settings.cache_clear()
+    monkeypatch.setattr("app.infrastructure.email.smtp.build_email_sender", lambda _s: FakeSender())
+    monkeypatch.setattr("app.infrastructure.email.inbox.check_login", lambda _s: 3)
+    assert cli.main(["email-test", "--to", "bahrullo@example.com"]) == 0
+    out = capsys.readouterr().out
+    assert "✓ Test xat yuborildi" in out and "3 ta o'qilmagan" in out and "o'chiq" in out
+    assert sent[0]["To"] == "bahrullo@example.com" and "secret" not in sent[0].as_string()
+    assert cli.main(["email-test", "--to", "not-an-address"]) == 1
+
+
+def test_email_test_without_smtp(
+    monkeypatch: pytest.MonkeyPatch, database_url: str, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("DATABASE_URL", database_url)
+    get_settings.cache_clear()
+    assert cli.main(["email-test", "--to", "me@example.com"]) == 1
+    assert "setup_env.py --email" in capsys.readouterr().err

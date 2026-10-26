@@ -136,13 +136,11 @@ webhook response, so normal operation needs no outbound call). Verify with `chec
    **SPF** and **DKIM** until both show "valid". Then add a **DMARC** record in
    **Zone Editor** → `TXT` `_dmarc.itcode.uz` = `v=DMARC1; p=none; rua=mailto:agent@itcode.uz`
    (move to `p=quarantine` after a few clean weeks). Without SPF/DKIM most mail lands in spam.
-3. cPanel → Setup Python App → Environment variables (values from **Connect Devices** in
-   Email Accounts):
-   - `SMTP_HOST` (e.g. `mail.itcode.uz`), `SMTP_PORT=465`, `SMTP_USE_SSL=true`,
-     `SMTP_USERNAME=agent@itcode.uz`, `SMTP_PASSWORD`, `SMTP_FROM=Mustafo — ITcoDe.Uz <agent@itcode.uz>`
-   - `IMAP_HOST` (same host), `IMAP_PORT=993`, `IMAP_USERNAME`, `IMAP_PASSWORD` — the agent
-     reads replies, "STOP", bounces and complaints every 15 minutes.
-   - `OUTBOUND_SENDING_ENABLED=true` only when you are ready. Restart the app.
+3. Terminal: `python scripts/setup_env.py --email` writes `SMTP_*` and `IMAP_*` (one mailbox,
+   SMTP 465/SSL, IMAP 993) into `~/smyagent/.env` — not the Setup Python App screen. Then
+   `python -m app.cli email-test --to <your address>` (test mail + IMAP login, ignores the
+   outreach queue). Only after it passes: `setup_env.py --set OUTBOUND_SENDING_ENABLED` → `true`
+   and `bash scripts/deploy.sh --no-pull`. Step by step in Uzbek: `docs/email-uz.md`.
 4. Dashboard → ⚙ Agent sozlamalari → Mustafo: daily cap (default 30, warm-up from 10/day,
    +5/day), minimum gap between emails, follow-up after N ≥ 5 days (once). Optional:
    "email clean offers without my approval".
