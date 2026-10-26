@@ -3,7 +3,12 @@
 from app.infrastructure.database.models.agent_settings import AgentSetting, AgentSettingVersion
 from app.infrastructure.database.models.audit import AuditLog, WorkflowEvent
 from app.infrastructure.database.models.audits import ResearchFinding, WebsiteAudit
-from app.infrastructure.database.models.auth import LoginAttempt, User, UserSession
+from app.infrastructure.database.models.auth import (
+    LoginAttempt,
+    TotpRecoveryCode,
+    User,
+    UserSession,
+)
 from app.infrastructure.database.models.automation import OwnerAlert, RunnerRun
 from app.infrastructure.database.models.companies import Company, CompanyDomain, CompanySource
 from app.infrastructure.database.models.contacts import Contact
@@ -69,6 +74,7 @@ __all__ = [
     "ScoreComponent",
     "ScoringSettings",
     "SuppressionRecord",
+    "TotpRecoveryCode",
     "User",
     "UserSession",
     "WebsiteAudit",

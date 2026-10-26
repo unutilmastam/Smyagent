@@ -80,7 +80,8 @@ Checked in code and tests at the state of M11 (live at agent.itcode.uz):
 | Backups | Mode 600 in `~/smyagent_data/backups` (outside the web root); verification + restore drill into a scratch DB that is emptied afterwards — ✅ M11 |
 | Dependencies | `pip-audit`: no known vulnerabilities (2026-10-25); runs in CI — ✅ |
 | API docs | `/docs` and `/openapi.json` disabled in production — ✅ |
-| Open items | Optional TOTP for the owner (M3-totp) still not built — recommended now that the dashboard is public; Telegram tokens were rotated once after being shown on screen (done by the owner). |
+| 2FA | Optional TOTP (M3-totp): RFC 6238, seed encrypted with a key derived from `APP_SECRET_KEY`, replay-protected, 10 Argon2-hashed one-time recovery codes, second step throttled like passwords, signed 5-min challenge cookie; disable needs password + code, or the `disable-totp` CLI (owner bot notified) — ✅ |
+| Open items | Telegram tokens were rotated once after being shown on screen (done by the owner). |
 
 ## Reporting
 Security issues: contact the owner directly (Telegram @ITcoDe_Uz). Do not open public issues with exploit details.

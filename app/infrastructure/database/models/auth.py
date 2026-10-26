@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, ForeignKey, Index, String
+from sqlalchemy import Boolean, ForeignKey, Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.domain.auth import Role
@@ -23,6 +23,15 @@ class User(UUIDPrimaryKey, Timestamps, Base):
     role: Mapped[Role] = mapped_column(enum_column(Role, length=16), default=Role.VIEWER)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     last_login_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+    # Two-factor login (TOTP). Seeds are encrypted with a key from APP_SECRET_KEY.
+    totp_secret_enc: Mapped[str | None] = mapped_column(String(255))
+    totp_pending_enc: Mapped[str | None] = mapped_column(String(255))  # during setup
+    totp_enabled_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+    totp_last_step: Mapped[int | None] = mapped_column(Integer)  # replay protection
+
+    @property
+    def totp_enabled(self) -> bool:
+        return self.totp_enabled_at is not None and self.totp_secret_enc is not None
 
     sessions: Mapped[list[UserSession]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
@@ -46,6 +55,19 @@ class UserSession(UUIDPrimaryKey, Base):
     user: Mapped[User] = relationship(back_populates="sessions")
 
     __table_args__ = (Index("ix_sessions_expires", "expires_at"),)
+
+
+class TotpRecoveryCode(UUIDPrimaryKey, Base):
+    """One-time backup code for a lost phone; only its Argon2 hash is stored."""
+
+    __tablename__ = "totp_recovery_codes"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        GUID(), ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    code_hash: Mapped[str] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    used_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
 
 
 class LoginAttempt(UUIDPrimaryKey, Base):

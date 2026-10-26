@@ -31,6 +31,7 @@ from app.web.outreach import router as outreach_router
 from app.web.proposals import router as proposals_router
 from app.web.pwa import router as pwa_router
 from app.web.routes import router as web_router
+from app.web.security import router as security_router
 from app.web.templating import STATIC_DIR
 
 build_notifier = build_owner_notifier
@@ -78,6 +79,7 @@ def create_app(
     app.include_router(outreach_router)
     app.include_router(jobs_router)
     app.include_router(analytics_router)
+    app.include_router(security_router)
     app.include_router(pwa_router)
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
     return app

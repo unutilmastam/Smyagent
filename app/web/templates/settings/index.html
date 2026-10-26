@@ -2,6 +2,7 @@
 {% block title %}{{ t('agentset.title') }} — SMY Agent{% endblock %}
 {% block content %}
 <h1>{{ t('agentset.title') }}</h1>
+<p><a class="btn-link office-home-link" href="/settings/security">🔐 {{ t('totp.title') }}</a></p>
 <p class="muted">{{ t('agentset.intro') }}</p>
 <ul class="company-list">
   {% for m in modules %}
