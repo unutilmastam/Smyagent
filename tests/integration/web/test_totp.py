@@ -138,7 +138,10 @@ def test_tampered_or_missing_challenge(client: TestClient, owner: str, db: Datab
     assert client.get("/login/totp").status_code == 303  # no challenge cookie
     csrf = _password_step(client)
     token = client.cookies.get("smy_totp") or ""
-    client.cookies.set("smy_totp", token[:-4] + "aaaa", path="/login")
+    assert token
+    client.cookies.delete("smy_totp")  # replace, not add a duplicate cookie
+    client.cookies.set("smy_totp", token[:-4] + ("bbbb" if token.endswith("aaaa") else "aaaa"))
+    assert client.cookies.get("smy_totp") != token
     r = client.post("/login/totp", data={"csrf_token": csrf, "code": "123456"})
     assert r.status_code == 400  # back to the password step
 
