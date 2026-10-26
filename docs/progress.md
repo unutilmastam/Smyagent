@@ -583,6 +583,6 @@ Not verified: scanning with a physical phone (only decoded from the rendered pag
 - Smoke test: new "Email" line. `deployment-cpanel.md` §6c no longer points to the Setup Python App screen.
 
 ### Verification
-Unit + integration tests for `--email`, `email-test` (fake SMTP/IMAP), bot delivery note, smoke email line; full suite and MariaDB/MySQL runs in the PR.
+`pytest` 767 passed, 1 skipped; integration on MariaDB 10.6 / 10.11 / MySQL 8.0: 310 / 310 / 310 passed (incl. new tests for `--email`, `email-test` with fake SMTP/IMAP, bot delivery note, smoke email line).
 
 Not verified: real delivery from hostmaster.uz (needs the owner's mailbox and password).
