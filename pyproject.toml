@@ -24,6 +24,8 @@ dependencies = [
     "jinja2>=3.1.4,<4.0",
     "python-multipart>=0.0.18",
     "argon2-cffi>=23.1,<26.0",
+    # QR code (SVG) for the authenticator app; pure Python, no dependencies.
+    "segno>=1.6,<2.0",
 ]
 
 [project.optional-dependencies]

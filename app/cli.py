@@ -9,6 +9,7 @@ python -m app.cli db-backup [--dir ~/smyagent_data/backups] [--keep 14]
 python -m app.cli db-backup-verify [--file PATH]
 python -m app.cli db-restore-drill --target-database itcode_smyrestore
 python -m app.cli smoke-test [--no-http]
+python -m app.cli disable-totp --username bahrullo
 python -m app.cli email-test --to you@example.com
 """
 
@@ -227,6 +228,40 @@ def _smoke_test(directory: str, check_http: bool) -> int:
     return code
 
 
+def _disable_totp(username: str) -> int:
+    """Lost phone and recovery codes: turn 2FA off from cPanel Terminal (audit-logged)."""
+    from sqlalchemy import select
+
+    from app.application.totp import TotpService
+    from app.infrastructure.database.models import User
+    from app.infrastructure.telegram.notifier import build_owner_notifier
+
+    try:
+        settings = get_settings()
+    except ConfigurationError as exc:
+        print(exc, file=sys.stderr)
+        return 1
+    database = Database(settings.database_url.get_secret_value())
+    name = username.strip().lower()
+    try:
+        with database.transaction() as session:
+            user = session.scalars(select(User).where(User.username == name)).first()
+            if user is None:
+                print(f"Foydalanuvchi topilmadi: {name}", file=sys.stderr)
+                return 1
+            if not user.totp_enabled and user.totp_pending_enc is None:
+                print(f"{name}: 2FA allaqachon o'chiq.")
+                return 0
+            TotpService(
+                session, secret_key=settings.app_secret_key.get_secret_value()
+            ).disable_by_operator(user)
+    finally:
+        database.dispose()
+    build_owner_notifier(settings).notify(f"⚠️ {name}: 2FA cPanel Terminal'dan o'chirildi.")
+    print(f"✓ {name}: 2FA o'chirildi. Endi faqat parol bilan kiring va 2FA ni qayta yoqing.")
+    return 0
+
+
 def _email_test(to: str) -> int:
     """Send one test email to the owner's own address and check IMAP login.
 
@@ -340,13 +375,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     smoke.add_argument("--no-http", action="store_true", help="skip the HTTPS health check")
     mail_test = sub.add_parser("email-test", help="send a test email to yourself, check IMAP")
     mail_test.add_argument("--to", required=True, help="your own address")
+    totp_off = sub.add_parser("disable-totp", help="turn off 2FA for a user (lost phone)")
+    totp_off.add_argument("--username", required=True)
     args = parser.parse_args(argv)
+    if args.command == "email-test":
+        return _email_test(args.to.strip())
+    if args.command == "disable-totp":
+        return _disable_totp(args.username)
     if args.command == "db-backup-verify":
         return _backup_verify(args.dir, args.file)
     if args.command == "db-restore-drill":
         return _restore_drill(args.dir, args.file, args.target_database, args.keep)
-    if args.command == "email-test":
-        return _email_test(args.to.strip())
     if args.command == "smoke-test":
         return _smoke_test(args.dir, not args.no_http)
     if args.command == "check-config":

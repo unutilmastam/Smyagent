@@ -17,6 +17,7 @@ from app.infrastructure.database import Database
 
 SESSION_COOKIE = "smy_session"
 LOGIN_CSRF_COOKIE = "smy_login_csrf"
+TOTP_CHALLENGE_COOKIE = "smy_totp"
 CSRF_HEADER = "x-csrf-token"
 CSRF_FORM_FIELD = "csrf_token"
 

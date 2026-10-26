@@ -36,7 +36,7 @@ clash with CLAUDE.md's separate milestones **M3b** (Control Center) and **M3c-of
 - ✅ **M3-auth** `users` (role column: owner/viewer), `sessions`, `login_attempts`; `create-owner` CLI; login/logout, CSRF, throttling, audit log, security headers; mobile-first base layout with bottom nav and a home page with counts.
 - ✅ **M3-ui** Company list with search/filter/sort/pagination (HTMX), company detail page, UZ/RU/EN interface, installable PWA (app-shell-only service worker), read-only companies API.
 - ✅ **M3-bot** Owner Telegram bot: webhook with `secret_token`, numeric-ID authorization (private chats only), idempotent updates, `/status`, `/help`; CLI `telegram-set-webhook` / `telegram-webhook-info`.
-- **M3-totp** Optional TOTP for the owner (recommended before the dashboard is public).
+- ✅ **M3-totp** Optional TOTP (Google/Microsoft Authenticator, QR), 10 recovery codes, `disable-totp` CLI — `docs/2fa-uz.md`.
 
 ## M3b — Agent Control Center (done)
 
