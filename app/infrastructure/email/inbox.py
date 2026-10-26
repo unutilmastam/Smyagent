@@ -101,3 +101,14 @@ def build_inbox(settings: Settings) -> Inbox | None:
         settings.imap_username,
         settings.imap_password.get_secret_value(),
     )
+
+
+def check_login(settings: Settings) -> int:
+    """IMAP login test for the setup guide: number of unseen messages, nothing marked seen."""
+    with imaplib.IMAP4_SSL(
+        settings.imap_host, settings.imap_port, ssl_context=ssl.create_default_context(), timeout=20
+    ) as client:
+        client.login(settings.imap_username, settings.imap_password.get_secret_value())
+        client.select("INBOX", readonly=True)
+        _, data = client.search(None, "UNSEEN")
+        return len((data[0] or b"").split())

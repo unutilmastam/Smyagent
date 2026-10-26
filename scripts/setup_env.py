@@ -194,6 +194,7 @@ def ask_valid(
     hidden: bool,
     check: Callable[[str], str],
     attempts: int = ATTEMPTS,
+    default: str = "",
 ) -> str:
     """Ask again (up to `attempts` times) on an empty or invalid answer instead of exiting.
 
@@ -203,11 +204,70 @@ def ask_valid(
     last = ""
     for _ in range(attempts):
         try:
-            return check(ask(question, "", hidden))
+            return check(ask(question, default, hidden))
         except SetupError as exc:
             last = str(exc)
             print(f"  ✗ {last}. Qayta kiriting (avval Paste, keyin Enter).")
     raise SetupError(f"{question}: {last}")
+
+
+EMAIL_HOST = "mail.itcode.uz"
+EMAIL_ADDRESS = "agent@itcode.uz"
+SENDER_NAME = "Mustafo — ITcoDe.Uz"
+_HOST = re.compile(r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$")
+_ADDRESS = re.compile(r"^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$")
+
+
+def _check_host(value: str) -> str:
+    value = value.strip().lower()
+    if not _HOST.match(value):
+        raise SetupError("server nomi masalan mail.itcode.uz ko'rinishida bo'ladi")
+    return value
+
+
+def _check_address(value: str) -> str:
+    value = value.strip().lower()
+    if not _ADDRESS.match(value):
+        raise SetupError("email manzil masalan agent@itcode.uz ko'rinishida bo'ladi")
+    return value
+
+
+def email_values(current: dict[str, str], ask: Callable[[str, str, bool], str]) -> dict[str, str]:
+    """One mailbox for sending (SMTP 465/SSL) and reading replies (IMAP 993).
+
+    OUTBOUND_SENDING_ENABLED is not touched: the owner turns sending on separately,
+    after the test email (docs/email-uz.md).
+    """
+    values = dict(current)
+    host = ask_valid(
+        ask,
+        "Pochta serveri (Connect Devices → Outgoing Server)",
+        False,
+        _check_host,
+        default=EMAIL_HOST,
+    )
+    address = ask_valid(ask, "Pochta manzili", False, _check_address, default=EMAIL_ADDRESS)
+    password = ask_valid(
+        ask,
+        f"{address} paroli (Email Accounts'da qo'ygan)",
+        True,
+        partial(validate, "SMTP_PASSWORD"),
+    )
+    values.update(
+        {
+            "SMTP_HOST": host,
+            "SMTP_PORT": "465",
+            "SMTP_USE_SSL": "true",
+            "SMTP_USERNAME": address,
+            "SMTP_PASSWORD": password,
+            "SMTP_FROM": f"{SENDER_NAME} <{address}>",
+            "IMAP_HOST": host,
+            "IMAP_PORT": "993",
+            "IMAP_USERNAME": address,
+            "IMAP_PASSWORD": password,
+        }
+    )
+    return values
 
 
 def _ask_terminal(question: str, default: str, hidden: bool) -> str:
@@ -240,6 +300,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--database", action="store_true", help="re-enter MySQL name, user and password"
     )
+    parser.add_argument(
+        "--email", action="store_true", help="mailbox for outreach (SMTP + IMAP, one password)"
+    )
     args = parser.parse_args(argv)
     if not EXAMPLE.exists():
         print("Xato: .env.example topilmadi — buyruqni ilova papkasida bajaring.", file=sys.stderr)
@@ -263,6 +326,8 @@ def main(argv: list[str] | None = None) -> int:
             )
             current[key] = value
             values = current
+        elif args.email:
+            values = email_values(current, _ask_terminal)
         else:
             if args.database:
                 current.pop("DATABASE_URL", None)

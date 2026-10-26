@@ -9,6 +9,7 @@ python -m app.cli db-backup [--dir ~/smyagent_data/backups] [--keep 14]
 python -m app.cli db-backup-verify [--file PATH]
 python -m app.cli db-restore-drill --target-database itcode_smyrestore
 python -m app.cli smoke-test [--no-http]
+python -m app.cli email-test --to you@example.com
 """
 
 from __future__ import annotations
@@ -226,6 +227,70 @@ def _smoke_test(directory: str, check_http: bool) -> int:
     return code
 
 
+def _email_test(to: str) -> int:
+    """Send one test email to the owner's own address and check IMAP login.
+
+    An explicit operator action: it does not use the outreach queue, caps or
+    OUTBOUND_SENDING_ENABLED, and never writes to companies or leads.
+    """
+    import imaplib
+    from email.message import EmailMessage
+    from email.utils import formatdate, make_msgid, parseaddr
+
+    from app.infrastructure.email.inbox import check_login
+    from app.infrastructure.email.smtp import EmailSendError, build_email_sender
+
+    try:
+        settings = get_settings()
+    except ConfigurationError as exc:
+        print(exc, file=sys.stderr)
+        return 1
+    if "@" not in to or len(to) > 254:
+        print("✗ --to: email manzil noto'g'ri.", file=sys.stderr)
+        return 1
+    sender = build_email_sender(settings)
+    if sender is None:
+        print("✗ SMTP sozlanmagan. Avval: python scripts/setup_env.py --email", file=sys.stderr)
+        return 1
+    _, address = parseaddr(settings.smtp_from)
+    message = EmailMessage()
+    message["From"] = settings.smtp_from
+    message["To"] = to
+    message["Subject"] = "SMY Agent — test xat"
+    message["Date"] = formatdate(usegmt=True)
+    message["Message-ID"] = make_msgid(domain=address.rsplit("@", 1)[-1])
+    message.set_content(
+        "Assalomu alaykum!\n\nBu SMY Agent pochtasi ishlashini tekshirish uchun test xat.\n"
+        f"Yuboruvchi: {settings.smtp_from}\n\n"
+        "Agar bu xat «Spam» papkasiga tushgan bo'lsa — SPF/DKIM/DMARC ni tekshiring "
+        "(docs/email-uz.md, 2-qadam) va xatni «Spam emas» deb belgilang.\n",
+        charset="utf-8",
+    )
+    code = 0
+    try:
+        sender.send(message)
+        print(f"✓ Test xat yuborildi: {to} (spam papkasini ham ko'ring)")
+    except EmailSendError as exc:
+        print(f"✗ Yuborilmadi: {exc}. Server, port 465 va parolni tekshiring.", file=sys.stderr)
+        code = 1
+    if settings.imap_host and settings.imap_username:
+        try:
+            unseen = check_login(settings)
+            print(f"✓ IMAP (javoblarni o'qish) ishlayapti: {unseen} ta o'qilmagan xat")
+        except (OSError, imaplib.IMAP4.error) as exc:
+            print(f"✗ IMAP ulanmadi ({type(exc).__name__}). Parol va port 993.", file=sys.stderr)
+            code = 1
+    else:
+        print("⚠ IMAP sozlanmagan — javoblar va STOP avtomatik o'qilmaydi.")
+    state = (
+        "YOQILGAN"
+        if settings.outbound_sending_enabled
+        else "o'chiq (OUTBOUND_SENDING_ENABLED=false)"
+    )
+    print(f"Mijozlarga avtomatik yuborish: {state}")
+    return code
+
+
 def _telegram_webhook_info() -> int:
     prepared = _telegram_client()
     if prepared is None:
@@ -273,11 +338,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     smoke = sub.add_parser("smoke-test", help="post-deploy health check of the live system")
     smoke.add_argument("--dir", default="~/smyagent_data/backups")
     smoke.add_argument("--no-http", action="store_true", help="skip the HTTPS health check")
+    mail_test = sub.add_parser("email-test", help="send a test email to yourself, check IMAP")
+    mail_test.add_argument("--to", required=True, help="your own address")
     args = parser.parse_args(argv)
     if args.command == "db-backup-verify":
         return _backup_verify(args.dir, args.file)
     if args.command == "db-restore-drill":
         return _restore_drill(args.dir, args.file, args.target_database, args.keep)
+    if args.command == "email-test":
+        return _email_test(args.to.strip())
     if args.command == "smoke-test":
         return _smoke_test(args.dir, not args.no_http)
     if args.command == "check-config":

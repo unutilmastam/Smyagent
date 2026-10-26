@@ -549,3 +549,17 @@ None required: `MONTHLY_AI_BUDGET_USD` defaults to 10 when missing from `.env`. 
 
 ### Next task
 **M5b** AI layer once the owner has the Anthropic API key; meanwhile optional TOTP for the owner.
+
+## Session 7 (cont.) — Email setup for the owner
+
+### Completed
+- `docs/email-uz.md`: Uzbek step by step — mailbox in cPanel, SPF/DKIM (Email Deliverability) + DMARC (Zone Editor), `.env`, self-test, turning sending on, dashboard limits (warm-up 10/day), monitoring and STOP.
+- `scripts/setup_env.py --email`: one question set (server, address, hidden password) fills `SMTP_*` and `IMAP_*`; `SMTP_FROM=Mustafo — ITcoDe.Uz <agent@itcode.uz>`; `OUTBOUND_SENDING_ENABLED` is left untouched.
+- `python -m app.cli email-test --to <address>`: one test mail via SMTP + read-only IMAP login check; outside the outreach queue, prints whether sending to clients is on.
+- Owner bot: after "approve" it now says honestly how the offer will be delivered (email queued / email configured but sending off / email not connected → Telegram/phone task) instead of the stale "M9 ishga tushganda".
+- Smoke test: new "Email" line. `deployment-cpanel.md` §6c no longer points to the Setup Python App screen.
+
+### Verification
+Unit + integration tests for `--email`, `email-test` (fake SMTP/IMAP), bot delivery note, smoke email line; full suite and MariaDB/MySQL runs in the PR.
+
+Not verified: real delivery from hostmaster.uz (needs the owner's mailbox and password).

@@ -53,6 +53,7 @@ def test_healthy_system(db: Database, database_url: str, tmp_path: Path) -> None
     assert checks["Direktor boti"].level is Level.OK
     assert checks["Mustafo boti"].level is Level.WARN  # no client token configured
     assert checks["Cron"].level is Level.WARN  # never ran in this test DB
+    assert checks["Email"].level is Level.WARN and "email-uz" in checks["Email"].message
     if database_url.startswith("sqlite"):
         assert checks["Zaxira"].level is Level.OK
     assert exit_code(list(checks.values())) == 0

@@ -93,11 +93,17 @@ class BotReply:
 
 class OwnerBotService:
     def __init__(
-        self, session: Session, *, admin_ids: list[int], outbound_sending_enabled: bool = False
+        self,
+        session: Session,
+        *,
+        admin_ids: list[int],
+        outbound_sending_enabled: bool = False,
+        email_enabled: bool = False,
     ) -> None:
         self.session = session
         self.admin_ids = admin_ids
         self.outbound_sending_enabled = outbound_sending_enabled
+        self.email_enabled = email_enabled
 
     def handle(self, update: TgUpdate) -> BotReply | None:
         """Process one update. Returns the reply for the owner, or None (ignored)."""
@@ -231,7 +237,7 @@ class OwnerBotService:
             return f"⚠️ Bajarilmadi: {exc}"
         short = str(proposal_id)[:8]
         if approve:
-            return f"✅ Taklif {short} tasdiqlandi. Yuborish M9 (outreach) ishga tushganda bo'ladi."
+            return f"✅ Taklif {short} tasdiqlandi.\n{self._delivery_note()}"
         return f"❌ Taklif {short} rad etildi; kompaniyaga murojaat qilinmaydi."
 
     def _retry(self, job_id: uuid.UUID, actor: Actor) -> str:
@@ -269,6 +275,20 @@ class OwnerBotService:
                 )
             lines.append("\n/retry <id> — qayta urinish")
         return "\n".join(lines)
+
+    def _delivery_note(self) -> str:
+        """How the approved offer reaches the company (honest about what is switched on)."""
+        if self.email_enabled and self.outbound_sending_enabled:
+            return "📧 Kompaniyada ochiq email bo'lsa — navbatga qo'yildi (kunlik limit ichida)."
+        if self.email_enabled:
+            return (
+                "📧 Email sozlangan, lekin yuborish o'chiq (OUTBOUND_SENDING_ENABLED=false). "
+                "Telegram/telefon bo'lsa — 📤 Yuborish sahifasida vazifa."
+            )
+        return (
+            "📧 Email hali ulanmagan (docs/email-uz.md). Hozircha Telegram/telefon bo'lsa — "
+            "📤 Yuborish sahifasida siz uchun vazifa bo'ladi."
+        )
 
     def _pending_text(self) -> str:
         rows = ProposalService(self.session).pending()
