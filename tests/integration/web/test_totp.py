@@ -98,12 +98,17 @@ def test_full_flow(client: TestClient, owner: str, db: Database, notes: Notes) -
     csrf = _password_step(client, next_path="/leads")
     bad = client.post("/login/totp", data={"csrf_token": csrf, "code": "000000", "next": "/leads"})
     assert bad.status_code == 401 and "alert-error" in bad.text
-    # The current code was used to enable 2FA in this 30 s step: replay is refused.
-    same = totp.code_at(secret, totp.current_step())
-    replay = client.post("/login/totp", data={"csrf_token": csrf, "code": same, "next": "/"})
+    # The code that enabled 2FA must not work again (replay). Take the exact step that was
+    # used, not "now": the test may cross a 30 s boundary.
+    with db.transaction() as s:
+        used_step = s.scalars(select(User.totp_last_step)).one()
+    assert used_step is not None
+    used = totp.code_at(secret, used_step)
+    replay = client.post("/login/totp", data={"csrf_token": csrf, "code": used, "next": "/"})
     assert replay.status_code == 401
     _age_last_step(db)
-    ok = client.post("/login/totp", data={"csrf_token": csrf, "code": same, "next": "/leads"})
+    fresh = totp.code_at(secret, totp.current_step())
+    ok = client.post("/login/totp", data={"csrf_token": csrf, "code": fresh, "next": "/leads"})
     assert ok.status_code == 303 and ok.headers["location"] == "/leads"
     assert client.get("/leads").status_code == 200
     _logout(client)

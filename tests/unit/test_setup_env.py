@@ -195,3 +195,41 @@ def test_email_mode_written_env_is_read_by_the_app(
     settings = load_settings(_env_file=tmp_path / ".env")
     assert settings.email_enabled and settings.smtp_from.startswith("Mustafo — ITcoDe.Uz")
     assert settings.imap_password.get_secret_value() == values["IMAP_PASSWORD"]
+
+
+@pytest.mark.parametrize(
+    ("key", "raw", "stored"),
+    [
+        ("OUTBOUND_SENDING_ENABLED", "true", "true"),
+        ("OUTBOUND_SENDING_ENABLED", " TRUE ", "true"),
+        ("OUTBOUND_SENDING_ENABLED", "ha", "true"),
+        ("OUTBOUND_SENDING_ENABLED", "false", "false"),
+        ("SMTP_PORT", "465", "465"),
+        ("MONTHLY_AI_BUDGET_USD", "10", "10"),
+        ("DAILY_AI_BUDGET_USD", "0.5", "0.5"),
+    ],
+)
+def test_typed_values_are_normalized(key: str, raw: str, stored: str) -> None:
+    assert env.validate(key, raw) == stored
+
+
+@pytest.mark.parametrize(
+    ("key", "raw"),
+    [
+        ("OUTBOUND_SENDING_ENABLED", "ture"),  # the owner's real typo (2026-10-26)
+        ("SMTP_USE_SSL", "yess"),
+        ("SMTP_PORT", "46a"),
+        ("MONTHLY_AI_BUDGET_USD", "ten"),
+    ],
+)
+def test_typos_in_typed_values_are_rejected(key: str, raw: str) -> None:
+    with pytest.raises(env.SetupError):
+        env.validate(key, raw)
+
+
+def test_set_asks_again_after_a_typo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(env, "TARGET", tmp_path / ".env")
+    answers = iter(["ture", "true"])
+    monkeypatch.setattr(env, "_ask_terminal", lambda q, d, h: next(answers))
+    assert env.main(["--set", "OUTBOUND_SENDING_ENABLED"]) == 0
+    assert "OUTBOUND_SENDING_ENABLED=true" in (tmp_path / ".env").read_text(encoding="utf-8")
